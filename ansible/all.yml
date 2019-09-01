@@ -1,0 +1,12 @@
+---
+- hosts: localhost
+  gather_facts: false
+  roles:
+    - ssh_agent
+  tags:
+    - always
+
+- hosts: all
+  roles:
+    - sshd
+    - service_user
