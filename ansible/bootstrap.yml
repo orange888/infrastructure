@@ -1,0 +1,7 @@
+---
+- hosts: all
+  vars:
+    ansible_user: root
+  roles:
+    - service_user
+    - sshd
