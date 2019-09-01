@@ -1,0 +1,6 @@
+---
+- name: Apply UFW rule
+  become: true
+  ufw: "{{ item }}"
+  loop: "{{ ufw_rules }}"
+  notify: Enable UFW
