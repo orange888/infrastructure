@@ -1,0 +1,37 @@
+---
+- name: Create {{ service_user_group }} group
+  become: true
+  group:
+    name: "{{ service_user_group }}"
+
+- name: Create {{ service_user_name }} user
+  become: true
+  user:
+    name: "{{ service_user_name }}"
+    group: "{{ service_user_group }}"
+    password: |-
+      {{ lookup("password", "/dev/null chars=ascii_letters,digits,punctuation length=64") | password_hash("sha512") }}
+    update_password: on_create
+  register: service_user
+
+- name: Lock {{ service_user_name }} user's password
+  become: true
+  user:
+    name: "{{ service_user_name }}"
+    password_lock: true
+
+- name: Set authorized SSH key for {{ service_user_name }} user
+  authorized_key:
+    user: "{{ service_user_name }}"
+    key: |-
+      {{ lookup("file", "files/ssh/id_ed25519.pub") }}
+
+- name: Set {{ service_user_name }} user sudoers configuration
+  become: true
+  template:
+    src: sudoers.d/00-ansible.j2
+    dest: /etc/sudoers.d/00-{{ service_user_name }}
+    owner: root
+    group: root
+    mode: 0400
+    validate: /usr/sbin/visudo -cf %s
