@@ -1,6 +1,6 @@
 ---
 - name: Load SSH key into ssh-agent
-  shell: ssh-add -t 600 -
+  command: ssh-add -t 600 -
   args:
     stdin: |-
       {{ lookup("file", "files/ssh/id_ed25519") }}
