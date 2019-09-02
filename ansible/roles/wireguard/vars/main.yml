@@ -1,0 +1,5 @@
+---
+ufw_rules:
+  - rule: allow
+    port: "{{ wireguard_port }}"
+    proto: udp

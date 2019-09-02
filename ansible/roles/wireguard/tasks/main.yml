@@ -1,0 +1,11 @@
+---
+- name: Add WireGuard PPA
+  become: true
+  apt_repository:
+    repo: ppa:wireguard/wireguard
+
+- name: Install WireGuard
+  become: true
+  package:
+    name: wireguard
+    state: present
