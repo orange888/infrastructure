@@ -1,0 +1,205 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: external-dns
+  namespace: default
+  labels:
+    app.kubernetes.io/instance: external-dns
+    app.kubernetes.io/name: external-dns
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  labels:
+    api: externaldns
+    kubebuilder.k8s.io: 1.0.0
+  name: dnsendpoints.externaldns.k8s.io
+spec:
+  group: externaldns.k8s.io
+  names:
+    kind: DNSEndpoint
+    plural: dnsendpoints
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      properties:
+        apiVersion:
+          type: string
+        kind:
+          type: string
+        metadata:
+          type: object
+        spec:
+          properties:
+            endpoints:
+              items:
+                properties:
+                  dnsName:
+                    type: string
+                  labels:
+                    type: object
+                  providerSpecific:
+                    items:
+                      properties:
+                        name:
+                          type: string
+                        value:
+                          type: string
+                      type: object
+                    type: array
+                  recordTTL:
+                    format: int64
+                    type: integer
+                  recordType:
+                    type: string
+                  targets:
+                    items:
+                      type: string
+                    type: array
+                type: object
+              type: array
+          type: object
+        status:
+          properties:
+            observedGeneration:
+              format: int64
+              type: integer
+          type: object
+  version: v1alpha1
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/instance: external-dns
+    app.kubernetes.io/name: external-dns
+  name: external-dns
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - services
+      - pods
+      - nodes
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - extensions
+    resources:
+      - ingresses
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - externaldns.k8s.io
+    resources:
+      - dnsendpoints
+    verbs:
+      - get
+      - list
+      - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/instance: external-dns
+    app.kubernetes.io/name: external-dns
+  name: external-dns
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: external-dns
+subjects:
+  - kind: ServiceAccount
+    name: external-dns
+    namespace: default
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: external-dns
+  namespace: default
+  labels:
+    app.kubernetes.io/instance: external-dns
+    app.kubernetes.io/name: external-dns
+spec:
+  ports:
+    - port: 7979
+      protocol: TCP
+      targetPort: 7979
+      name: http
+  selector:
+    app.kubernetes.io/instance: external-dns
+    app.kubernetes.io/name: external-dns
+  type: ClusterIP
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: external-dns
+  namespace: default
+  labels:
+    app.kubernetes.io/instance: external-dns
+    app.kubernetes.io/name: external-dns
+  annotations:
+    flux.weave.works/tag.external-dns: semver:~0
+    flux.weave.works/automated: "true"
+spec:
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: external-dns
+        app.kubernetes.io/name: external-dns
+    spec:
+      containers:
+        - name: external-dns
+          image: registry.opensource.zalan.do/teapot/external-dns:v0.5.15
+          imagePullPolicy: IfNotPresent
+          args:
+            - --log-level=info
+            - --domain-filter=hannahs.family
+            - --policy=sync
+            - --provider=cloudflare
+            - --interval=1m
+            - --registry=txt
+            - --txt-owner-id=external-dns-$(CLUSTER_NAME)
+            - --source=service
+            - --source=ingress
+            - --source=crd
+          env:
+            - name: CLUSTER_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: cluster-name
+                  key: CLUSTER_NAME
+            - name: CF_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: cloudflare
+                  key: CF_API_KEY
+            - name: CF_API_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: cloudflare
+                  key: CF_API_EMAIL
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 7979
+          ports:
+            - containerPort: 7979
+          securityContext:
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 65534
+      serviceAccountName: external-dns
