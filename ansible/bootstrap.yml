@@ -3,5 +3,6 @@
   vars:
     ansible_user: root
   roles:
+    - apt
     - service_user
     - sshd

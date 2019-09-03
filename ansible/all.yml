@@ -8,5 +8,6 @@
 
 - hosts: all
   roles:
+    - apt
     - sshd
     - service_user
