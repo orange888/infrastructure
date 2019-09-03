@@ -1,6 +1,7 @@
 import tarfile
 from pathlib import Path
 
+import yaml
 from invoke import Collection, task
 
 
@@ -17,25 +18,23 @@ def helm_fetch(c, chart, repo=None, username=None, password=None):
 
     Example:
 
-        inv helm.fetch stable/traefik
+        hfi helm.fetch stable/traefik
     """
     cmd = ["helm", "fetch"]
-    args = []
 
     if repo is not None:
-        args.extend(["--repo", repo])
+        cmd += ["--repo", repo]
         chart_base = chart
     else:
         repo, chart_base = chart.split("/")
 
     if username is not None:
-        args.extend(["--username", username])
+        cmd += ["--username", username]
 
     if password is not None:
-        args.extend(["--password", password])
+        cmd += ["--password", password]
 
-    cmd.extend(args)
-    cmd.append(chart)
+    cmd += [chart]
     c.run(" ".join(cmd))
 
 
@@ -46,8 +45,8 @@ def helm_values(c, chart):
 
     Example:
 
-        inv helm.fetch stable/traefik
-        inv helm.values traefik
+        hfi helm.fetch stable/traefik
+        hfi helm.values traefik
     """
     cwd = Path.cwd()
     values = cwd.joinpath("values")
@@ -62,6 +61,68 @@ def helm_values(c, chart):
             file.write(buf.read())
 
 
+@task(help={
+    "chart": "Helm chart to generate manifests of from templates",
+    "cluster": "Target cluster for the generated manifests",
+    "name": "Name of the installation",
+    "namespace": "Target namespace for the manifests"
+},
+      name="template")
+def helm_template(c, chart, cluster="common", name=None, namespace="default"):
+    """Generate a manifest from a fetch Helm chart and (if present) its
+    extracted and modified values.yaml file
+
+    Example:
+
+        hfi helm.fetch stable/traefik
+        hfi helm.values traefik
+        hfi helm.template traefik
+    """
+    cwd = Path.cwd()
+
+    try:
+        chart_archive = list(cwd.glob("{}-*.tgz".format(chart)))[-1]
+    except IndexError:
+        print("No such chart exists, try helm.fetch first")
+        exit(1)
+
+    cmd = ["helm", "template", chart_archive.name]
+
+    values = cwd.joinpath("values", "{}.yml".format(chart))
+    if values.is_file():
+        cmd += ["--values", str(values)]
+
+    if name is None:
+        name = chart
+
+    cmd += ["--name", name]
+    cmd += ["--namespace", namespace]
+
+    proc = c.run(" ".join(cmd), hide="out")
+    manifest = cwd.joinpath("k8s", cluster, namespace, "{}.yml".format(name))
+
+    with open(manifest, "w") as file:
+        for doc in yaml.safe_load_all(proc.stdout):
+            if doc is None:
+                continue
+
+            doc["metadata"].setdefault("namespace", namespace)
+
+            for key in ["app", "chart", "heritage", "release"]:
+                try:
+                    del doc["metadata"]["labels"][key]
+                except KeyError:
+                    pass
+
+            doc["metadata"].setdefault("labels", {})
+            doc["metadata"]["labels"].setdefault("app.kubernetes.io/name",
+                                                 chart)
+            doc["metadata"]["labels"].setdefault("app.kubernetes.io/instance",
+                                                 name)
+
+            yaml.dump(doc, file, explicit_start=True)
+
+
 @task(help={"chart": "Helm chart to fetch and extract values.yaml from"},
       name="default",
       default=True)
@@ -71,7 +132,7 @@ def helm_default(c, chart):
 
     Example:
 
-        inv helm stable/traefik
+        hfi helm stable/traefik
     """
     repo, chart_base = chart.split("/")
     helm_fetch(c, chart)
@@ -81,4 +142,5 @@ def helm_default(c, chart):
 helm = Collection("helm")
 helm.add_task(helm_default)
 helm.add_task(helm_fetch)
+helm.add_task(helm_template)
 helm.add_task(helm_values)
