@@ -34,6 +34,11 @@ rules:
       - get
       - list
       - watch
+  - apiGroups:
+      - extensions
+    resources:
+      - ingresses/status
+    verbs:
       - update
 ---
 kind: ClusterRoleBinding
@@ -285,21 +290,18 @@ spec:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  annotations:
-    helm.sh/hook: post-install,post-upgrade
-    helm.sh/hook-delete-policy: hook-succeeded,before-hook-creation
   labels:
     app.kubernetes.io/instance: traefik
     app.kubernetes.io/name: traefik
-  name: storeconfig-job-0
+  name: storeconfig-job-1
   namespace: kube-system
 spec:
   template:
     metadata:
       labels:
-        app: traefik
-        chart: traefik-1.72.1
-      name: storeconfig-job-0
+        app.kubernetes.io/instance: traefik
+        app.kubernetes.io/name: traefik
+      name: storeconfig-job-1
     spec:
       containers:
         - args:
