@@ -15,6 +15,5 @@ spec:
   storage:
     useAllNodes: true
     useAllDevices: false
-    # Important: Directories should only be used in pre-production environments
     directories:
       - path: /srv/rook-ceph
