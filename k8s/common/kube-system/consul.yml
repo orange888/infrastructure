@@ -6,7 +6,7 @@ metadata:
     app.kubernetes.io/instance: consul
     app.kubernetes.io/name: consul
   name: consul-pdb
-  namespace: default
+  namespace: kube-system
 spec:
   maxUnavailable: 1
   selector:
@@ -23,7 +23,7 @@ metadata:
     app.kubernetes.io/instance: consul
     app.kubernetes.io/name: consul
   name: consul-gossip-key
-  namespace: default
+  namespace: kube-system
 type: Opaque
 ---
 apiVersion: v1
@@ -35,7 +35,7 @@ metadata:
     app.kubernetes.io/instance: consul
     app.kubernetes.io/name: consul
   name: consul
-  namespace: default
+  namespace: kube-system
 spec:
   clusterIP: None
   ports:
@@ -73,7 +73,7 @@ metadata:
     app.kubernetes.io/instance: consul
     app.kubernetes.io/name: consul
   name: consul
-  namespace: default
+  namespace: kube-system
 spec:
   replicas: 3
   selector:

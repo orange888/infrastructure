@@ -152,7 +152,7 @@ spec:
             - name: CLUSTER_NAME
               valueFrom:
                 configMapKeyRef:
-                  name: cluster-name
+                  name: cluster-info
                   key: CLUSTER_NAME
           ports:
             - name: flux
@@ -168,7 +168,7 @@ spec:
             - name: git-keygen
               mountPath: /var/fluxd/keygen
           args:
-            - --memcached-service=
+            - --memcached-service=memcached.kube-system.svc:11211
             - --ssh-keygen-dir=/var/fluxd/keygen
             - --git-url=git@github.com:hannahs-family/infrastructure
             - --git-branch=master
