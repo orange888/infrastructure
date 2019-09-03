@@ -17,4 +17,4 @@ k3s_cluster_secret: !vault |
 k3s_command: agent
 k3s_command_args:
   - "--no-flannel"
-k3s_url: https://tapu-bulu.hannahs.family:6443
+k3s_url: https://tapu-koko.hannahs.family:6443
