@@ -16,6 +16,13 @@ ENV_ANSIBLE_REMOTE_USER = "ANSIBLE_REMOTE_USER"
 
 
 def playbook_task_factory(name):
+    @task(name=name,
+          default=(name == "all"),
+          help={
+              "limit": "Limit hosts to an Ansible inventory pattern",
+              "tags": "Limit tasks to an Ansible tag pattern",
+              "user": "Username for remote task execution",
+          })
     def _fn(c, limit=None, tags=None, user=None):
         cmd = BASE_CMD.copy()
 
@@ -43,13 +50,6 @@ def playbook_task_factory(name):
 
 playbooks = Collection("playbooks")
 
-for f in Path("ansible").glob("*.yml"):
-    t = task(
-        help={
-            "limit": "Limit hosts to an Ansible inventory pattern",
-            "tags": "Limit tasks to an Ansible tag pattern",
-            "user": "User to connect to the remote host as",
-        })(playbook_task_factory(f.stem))
-    playbooks.add_task(t, name=f.stem, default=(f.stem == "all"))
-
-ns = Collection(pb=playbooks)
+for f in Path.cwd().joinpath("ansible").glob("*.yml"):
+    t = playbook_task_factory(f.stem)
+    playbooks.add_task(t)
