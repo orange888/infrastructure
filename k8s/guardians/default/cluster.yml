@@ -1,0 +1,8 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cluster-name
+  namespace: default
+data:
+  CLUSTER_NAME: guardians

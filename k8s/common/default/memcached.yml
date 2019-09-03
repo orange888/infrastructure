@@ -28,12 +28,12 @@ metadata:
 spec:
   clusterIP: None
   ports:
-  - name: memcache
-    port: 11211
-    targetPort: memcache
-  - name: metrics
-    port: 9150
-    targetPort: metrics
+    - name: memcache
+      port: 11211
+      targetPort: memcache
+    - name: metrics
+      port: 9150
+      targetPort: metrics
   selector:
     app.kubernetes.io/name: memcached
 ---
@@ -63,36 +63,36 @@ spec:
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
-          - topologyKey: kubernetes.io/hostname
-            labelSelector:
-              matchLabels:
-                app.kubernetes.io/name: memcached
-                app.kubernetes.io/instance: memcached
+            - topologyKey: kubernetes.io/hostname
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: memcached
+                  app.kubernetes.io/instance: memcached
       containers:
-      - name: memcached
-        image: memcached:1.5.17-alpine
-        imagePullPolicy: Always
-        ports:
-        - name: memcache
-          containerPort: 11211
-        livenessProbe:
-          tcpSocket:
-            port: memcache
-          initialDelaySeconds: 30
-          timeoutSeconds: 5
-        readinessProbe:
-          tcpSocket:
-            port: memcache
-          initialDelaySeconds: 5
-          timeoutSeconds: 1
-        resources:
-          requests:
-            cpu: 50m
-            memory: 64Mi
-      - name: metrics
-        image: quay.io/prometheus/memcached-exporter:v0.6.0
-        securityContext:
-          runAsUser: 1001
-        ports:
+        - name: memcached
+          image: memcached:1.5.17-alpine
+          imagePullPolicy: Always
+          ports:
+            - name: memcache
+              containerPort: 11211
+          livenessProbe:
+            tcpSocket:
+              port: memcache
+            initialDelaySeconds: 30
+            timeoutSeconds: 5
+          readinessProbe:
+            tcpSocket:
+              port: memcache
+            initialDelaySeconds: 5
+            timeoutSeconds: 1
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
         - name: metrics
-          containerPort: 9150
+          image: quay.io/prometheus/memcached-exporter:v0.6.0
+          securityContext:
+            runAsUser: 1001
+          ports:
+            - name: metrics
+              containerPort: 9150
