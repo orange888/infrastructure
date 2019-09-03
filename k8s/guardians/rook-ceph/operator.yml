@@ -20,6 +20,8 @@ metadata:
   labels:
     operator: rook
     storage-backend: ceph
+  annotations:
+    flux.weave.works/tag.rook-ceph-operator: semver:~1
 spec:
   selector:
     matchLabels:

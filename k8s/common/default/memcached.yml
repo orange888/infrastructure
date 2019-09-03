@@ -1,0 +1,100 @@
+---
+# Source: memcached/templates/pdb.yaml
+apiVersion: policy/v1beta1
+kind: PodDisruptionBudget
+metadata:
+  name: memcached
+  labels:
+    app.kubernetes.io/name: memcached
+    app.kubernetes.io/instance: memcached
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: memcached
+      app.kubernetes.io/instance: memcached
+  minAvailable: 1
+
+---
+# Source: memcached/templates/svc.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: memcached
+  labels:
+    app.kubernetes.io/name: memcached
+    app.kubernetes.io/instance: memcached
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "9150"
+spec:
+  clusterIP: None
+  ports:
+    - name: memcache
+      port: 11211
+      targetPort: memcache
+    - name: metrics
+      port: 9150
+      targetPort: metrics
+  selector:
+    app.kubernetes.io/name: memcached
+
+---
+# Source: memcached/templates/statefulset.yaml
+apiVersion: apps/v1beta1
+kind: StatefulSet
+metadata:
+  name: memcached
+  labels:
+    app.kubernetes.io/name: memcached
+    app.kubernetes.io/instance: memcached
+  annotations:
+    flux.weave.works/tag.memcached: regexp:^1\.\d+\.\d+-alpine$
+    flux.weave.works/tag.metrics: semver:~0
+    flux.weave.works/automated: "true"
+spec:
+  serviceName: memcached
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: memcached
+        app.kubernetes.io/instance: memcached
+    spec:
+      securityContext:
+        fsGroup: 1001
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - topologyKey: kubernetes.io/hostname
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: memcached
+                  app.kubernetes.io/instance: memcached
+      containers:
+        - name: memcached
+          image: memcached:1.5.16-alpine
+          imagePullPolicy: Always
+          ports:
+            - name: memcache
+              containerPort: 11211
+          livenessProbe:
+            tcpSocket:
+              port: memcache
+            initialDelaySeconds: 30
+            timeoutSeconds: 5
+          readinessProbe:
+            tcpSocket:
+              port: memcache
+            initialDelaySeconds: 5
+            timeoutSeconds: 1
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+        - name: metrics
+          image: quay.io/prometheus/memcached-exporter:v0.5.0
+          securityContext:
+            runAsUser: 1001
+          ports:
+            - name: metrics
+              containerPort: 9150

@@ -1,0 +1,185 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: flux
+  namespace: default
+  labels:
+    app.kubernetes.io/name: flux
+    app.kubernetes.io/instance: flux
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: flux
+    app.kubernetes.io/instance: flux
+  name: flux
+rules:
+  - apiGroups: ["*"]
+    resources: ["*"]
+    verbs: ["*"]
+  - nonResourceURLs: ["*"]
+    verbs: ["*"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: flux
+  labels:
+    app.kubernetes.io/name: flux
+    app.kubernetes.io/instance: flux
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: flux
+subjects:
+  - kind: ServiceAccount
+    name: flux
+    namespace: default
+---
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: flux
+  labels:
+    app.kubernetes.io/name: flux
+    app.kubernetes.io/instance: flux
+  annotations:
+    seccomp.security.alpha.kubernetes.io/allowedProfileNames: "*"
+spec:
+  privileged: false
+  hostIPC: false
+  hostNetwork: false
+  hostPID: false
+  readOnlyRootFilesystem: false
+  allowPrivilegeEscalation: true
+  allowedCapabilities:
+    - "*"
+  fsGroup:
+    rule: RunAsAny
+  runAsUser:
+    rule: RunAsAny
+  seLinux:
+    rule: RunAsAny
+  supplementalGroups:
+    rule: RunAsAny
+  volumes:
+    - "*"
+
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: flux-psp
+  labels:
+    app.kubernetes.io/name: flux
+    app.kubernetes.io/instance: flux
+rules:
+  - apiGroups: ["policy"]
+    resources: ["podsecuritypolicies"]
+    verbs: ["use"]
+    resourceNames:
+      - flux
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: flux-psp
+  labels:
+    app.kubernetes.io/name: flux
+    app.kubernetes.io/instance: flux
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: flux-psp
+subjects:
+  - kind: ServiceAccount
+    name: flux
+    namespace: default
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flux
+  namespace: default
+  labels:
+    app: flux
+    name: flux
+    app.kubernetes.io/name: flux
+    app.kubernetes.io/instance: flux
+  annotations:
+    flux.weave.works/tag.flux: semver:~1
+    flux.weave.works/automated: "true"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: flux
+      app.kubernetes.io/instance: flux
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: flux
+        name: flux
+        app.kubernetes.io/name: flux
+        app.kubernetes.io/instance: flux
+      annotations:
+        prometheus.io/port: "3031"
+        prometheus.io/scrape: "true"
+    spec:
+      serviceAccountName: flux
+      volumes:
+        - name: git-key
+          secret:
+            secretName: flux-git-deploy
+            defaultMode: 0400
+        - name: git-keygen
+          emptyDir:
+            medium: Memory
+      containers:
+        - name: flux
+          image: fluxcd/flux:1.14.1
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+          env:
+            - name: CLUSTER_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: cluster-name
+                  key: CLUSTER_NAME
+          ports:
+            - name: flux
+              containerPort: 3030
+              protocol: TCP
+            - name: prometheus
+              containerPort: 3031
+              protocol: TCP
+          volumeMounts:
+            - name: git-key
+              mountPath: /etc/fluxd/ssh
+              readOnly: true
+            - name: git-keygen
+              mountPath: /var/fluxd/keygen
+          args:
+            - --memcached-service=
+            - --ssh-keygen-dir=/var/fluxd/keygen
+            - --git-url=git@github.com:hannahs-family/infrastructure
+            - --git-branch=master
+            - --git-path=k8s/common,k8s/$(CLUSTER_NAME)
+            - --git-label=flux-$(CLUSTER_NAME)
+            - --listen-metrics=:3031
+            - --log-format=json
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: flux-git-deploy
+  namespace: default
+type: Opaque
