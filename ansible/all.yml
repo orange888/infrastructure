@@ -1,13 +1,10 @@
 ---
-- hosts: localhost
-  gather_facts: false
-  roles:
-    - ssh_agent
-  tags:
-    - always
+- import_playbook: ssh.yml
 
 - hosts: all
   roles:
     - apt
     - sshd
     - service_user
+
+- import_playbook: k3s.yml
