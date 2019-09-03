@@ -130,6 +130,9 @@ metadata:
     app.kubernetes.io/name: traefik
   name: traefik
   namespace: default
+  annotations:
+    flux.weave.works/tag.traefik: semver:~1
+    flux.weave.works/automated: "true"
 spec:
   replicas: 2
   selector:
@@ -177,7 +180,7 @@ spec:
                 secretKeyRef:
                   name: cloudflare
                   key: CF_API_EMAIL
-          image: traefik:1.7.12
+          image: traefik:1.7.14
           livenessProbe:
             failureThreshold: 3
             httpGet:
