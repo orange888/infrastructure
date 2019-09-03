@@ -1,0 +1,6 @@
+---
+k3s_command: server
+k3s_command_args:
+  - "--no-deploy coredns"
+  - "--no-deploy traefik"
+  - "--no-flannel"

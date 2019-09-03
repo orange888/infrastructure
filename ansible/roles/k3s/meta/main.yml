@@ -1,0 +1,10 @@
+---
+dependencies:
+  - ufw
+  - role: ufw
+    vars:
+      ufw_rules:
+        - rule: allow
+          port: "6443"
+          proto: tcp
+    when: k3s_command == "server"
