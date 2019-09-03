@@ -1,6 +1,12 @@
 ---
 dependencies:
-  - ufw
+  - role: ufw
+    vars:
+      ufw_rules:
+        - default: allow
+          direction: routed
+        - rule: allow
+          src: 10.42.0.0/16
   - role: ufw
     vars:
       ufw_rules:
