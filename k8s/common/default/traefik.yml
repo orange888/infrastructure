@@ -15,7 +15,7 @@ spec:
       app.kubernetes.io/name: traefik
 ---
 apiVersion: v1
-data: null
+data:
 kind: Secret
 metadata:
   labels:
@@ -83,7 +83,7 @@ metadata:
 apiVersion: v1
 kind: Service
 metadata:
-  annotations: null
+  annotations:
   labels:
     app.kubernetes.io/instance: traefik
     app.kubernetes.io/name: traefik
@@ -91,9 +91,9 @@ metadata:
   namespace: default
 spec:
   ports:
-    - name: dashboard-http
-      port: 80
-      targetPort: 8080
+  - name: dashboard-http
+    port: 80
+    targetPort: 8080
   selector:
     app.kubernetes.io/instance: traefik
     app.kubernetes.io/name: traefik
@@ -102,7 +102,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  annotations: null
+  annotations:
   labels:
     app.kubernetes.io/instance: traefik
     app.kubernetes.io/name: traefik
@@ -111,12 +111,12 @@ metadata:
 spec:
   externalTrafficPolicy: Cluster
   ports:
-    - name: http
-      port: 80
-      targetPort: http
-    - name: https
-      port: 443
-      targetPort: https
+  - name: http
+    port: 80
+    targetPort: http
+  - name: https
+    port: 443
+    targetPort: https
   selector:
     app.kubernetes.io/instance: traefik
     app.kubernetes.io/name: traefik
@@ -153,81 +153,81 @@ spec:
       affinity:
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
-            - podAffinityTerm:
-                labelSelector:
-                  matchExpressions:
-                    - key: app.kubernetes.io/instance
-                      operator: In
-                      values:
-                        - traefik
-                    - key: app.kubernetes.io/name
-                      operator: In
-                      values:
-                        - traefik
-                topologyKey: kubernetes.io/hostname
-              weight: 1
+          - podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app.kubernetes.io/instance
+                  operator: In
+                  values:
+                  - traefik
+                - key: app.kubernetes.io/name
+                  operator: In
+                  values:
+                  - traefik
+              topologyKey: kubernetes.io/hostname
+            weight: 1
       containers:
-        - args:
-            - --configfile=/config/traefik.toml
-          env:
-            - name: CF_API_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: cloudflare
-                  key: CF_API_KEY
-            - name: CF_API_EMAIL
-              valueFrom:
-                secretKeyRef:
-                  name: cloudflare
-                  key: CF_API_EMAIL
-          image: traefik:1.7.14
-          livenessProbe:
-            failureThreshold: 3
-            httpGet:
-              path: /ping
-              port: 80
-            initialDelaySeconds: 10
-            periodSeconds: 10
-            successThreshold: 1
-            timeoutSeconds: 2
-          name: traefik
-          ports:
-            - containerPort: 80
-              name: http
-              protocol: TCP
-            - containerPort: 8880
-              name: httpn
-              protocol: TCP
-            - containerPort: 443
-              name: https
-              protocol: TCP
-            - containerPort: 8080
-              name: dash
-              protocol: TCP
-          readinessProbe:
-            failureThreshold: 1
-            httpGet:
-              path: /ping
-              port: 80
-            initialDelaySeconds: 10
-            periodSeconds: 10
-            successThreshold: 1
-            timeoutSeconds: 2
-          resources: {}
-          volumeMounts:
-            - mountPath: /config
-              name: config
-            - mountPath: /ssl
-              name: ssl
+      - args:
+        - --configfile=/config/traefik.toml
+        env:
+        - name: CF_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: cloudflare
+              key: CF_API_KEY
+        - name: CF_API_EMAIL
+          valueFrom:
+            secretKeyRef:
+              name: cloudflare
+              key: CF_API_EMAIL
+        image: traefik:v1.7.14
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /ping
+            port: 80
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 2
+        name: traefik
+        ports:
+        - containerPort: 80
+          name: http
+          protocol: TCP
+        - containerPort: 8880
+          name: httpn
+          protocol: TCP
+        - containerPort: 443
+          name: https
+          protocol: TCP
+        - containerPort: 8080
+          name: dash
+          protocol: TCP
+        readinessProbe:
+          failureThreshold: 1
+          httpGet:
+            path: /ping
+            port: 80
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 2
+        resources: {}
+        volumeMounts:
+        - mountPath: /config
+          name: config
+        - mountPath: /ssl
+          name: ssl
       serviceAccountName: default
       terminationGracePeriodSeconds: 60
       volumes:
-        - configMap:
-            name: traefik
-          name: config
-        - name: ssl
-          secret:
-            secretName: traefik-default-cert
+      - configMap:
+          name: traefik
+        name: config
+      - name: ssl
+        secret:
+          secretName: traefik-default-cert
 ---
 apiVersion: batch/v1
 kind: Job
@@ -249,28 +249,28 @@ spec:
       name: storeconfig-job-0
     spec:
       containers:
-        - args:
-            - storeconfig
-            - --configfile=/config/traefik.toml
-          image: traefik:1.7.12
-          name: storeconfig-job
-          volumeMounts:
-            - mountPath: /config
-              name: config
-            - mountPath: /acme
-              name: acme
+      - args:
+        - storeconfig
+        - --configfile=/config/traefik.toml
+        image: traefik:1.7.12
+        name: storeconfig-job
+        volumeMounts:
+        - mountPath: /config
+          name: config
+        - mountPath: /acme
+          name: acme
       restartPolicy: Never
       volumes:
-        - configMap:
-            name: traefik
-          name: config
-        - emptyDir: {}
-          name: acme
+      - configMap:
+          name: traefik
+        name: config
+      - emptyDir: {}
+        name: acme
 ---
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  annotations: null
+  annotations:
   labels:
     app.kubernetes.io/instance: traefik
     app.kubernetes.io/name: traefik
@@ -278,9 +278,9 @@ metadata:
   namespace: default
 spec:
   rules:
-    - host: traefik.hannahs.family
-      http:
-        paths:
-          - backend:
-              serviceName: traefik-dashboard
-              servicePort: dashboard-http
+  - host: traefik.hannahs.family
+    http:
+      paths:
+      - backend:
+          serviceName: traefik-dashboard
+          servicePort: dashboard-http
