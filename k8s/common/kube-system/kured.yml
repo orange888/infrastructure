@@ -1,0 +1,178 @@
+---
+apiVersion: extensions/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  labels:
+    app.kubernetes.io/instance: kured
+    app.kubernetes.io/name: kured
+  name: kured
+  namespace: kube-system
+spec:
+  allowedCapabilities:
+    - "*"
+  fsGroup:
+    rule: RunAsAny
+  hostPID: true
+  privileged: true
+  runAsUser:
+    rule: RunAsAny
+  seLinux:
+    rule: RunAsAny
+  supplementalGroups:
+    rule: RunAsAny
+  volumes:
+    - "*"
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/instance: kured
+    app.kubernetes.io/name: kured
+  name: kured
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/instance: kured
+    app.kubernetes.io/name: kured
+  name: kured
+  namespace: kube-system
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - nodes
+    verbs:
+      - get
+      - patch
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
+      - list
+      - delete
+      - get
+  - apiGroups:
+      - extensions
+    resources:
+      - daemonsets
+    verbs:
+      - get
+  - apiGroups:
+      - ""
+    resources:
+      - pods/eviction
+    verbs:
+      - create
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/instance: kured
+    app.kubernetes.io/name: kured
+  name: kured
+  namespace: kube-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kured
+subjects:
+  - kind: ServiceAccount
+    name: kured
+    namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels:
+    app.kubernetes.io/instance: kured
+    app.kubernetes.io/name: kured
+  name: kured
+  namespace: kube-system
+rules:
+  - apiGroups:
+      - extensions
+    resourceNames:
+      - kured
+    resources:
+      - daemonsets
+    verbs:
+      - update
+  - apiGroups:
+      - extensions
+    resourceNames:
+      - kured
+    resources:
+      - podsecuritypolicies
+    verbs:
+      - use
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/instance: kured
+    app.kubernetes.io/name: kured
+  name: kured
+  namespace: kube-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: kured
+subjects:
+  - kind: ServiceAccount
+    name: kured
+    namespace: kube-system
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  labels:
+    app.kubernetes.io/instance: kured
+    app.kubernetes.io/name: kured
+  name: kured
+  namespace: kube-system
+  annotations:
+    flux.weave.works/tag.kured: semver:~1
+    flux.weave.works/automated: "true"
+spec:
+  selector:
+    matchLabels:
+      app: kured
+      release: kured
+  template:
+    metadata:
+      labels:
+        app: kured
+        release: kured
+    spec:
+      containers:
+        - args:
+            - --ds-name=kured
+            - --ds-namespace=kube-system
+          command:
+            - /usr/bin/kured
+          env:
+            - name: KURED_NODE_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          image: weaveworks/kured:1.2.0
+          imagePullPolicy: IfNotPresent
+          name: kured
+          resources: null
+          securityContext:
+            privileged: true
+      hostPID: true
+      restartPolicy: Always
+      serviceAccountName: kured
+      tolerations:
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/master
+  updateStrategy:
+    type: OnDelete
