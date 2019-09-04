@@ -1,0 +1,8 @@
+---
+- name: Set DNS records
+  cloudflare_dns:
+    record: "{{ item.value.record | default(item.key) }}"
+    account_api_token: "{{ cloudflare.api_key }}"
+    account_email: "{{ cloudflare.api_email }}"
+  args: "{{ item.value }}"
+  loop: "{{ dns_records | dict2items }}"

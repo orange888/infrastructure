@@ -6,5 +6,6 @@
     - apt
     - sshd
     - service_user
+    - dns
 
 - import_playbook: k3s.yml
