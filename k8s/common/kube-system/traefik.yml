@@ -134,6 +134,7 @@ metadata:
   name: traefik
   namespace: kube-system
   annotations:
+    flux.weave.works/tag.storeconfig: semver:~1
     flux.weave.works/tag.traefik: semver:~1
     flux.weave.works/automated: "true"
 spec:
@@ -170,6 +171,17 @@ spec:
                         - traefik
                 topologyKey: kubernetes.io/hostname
               weight: 1
+      initContainers:
+        - name: storeconfig
+          image: traefik:v1.7.14
+          args:
+            - storeconfig
+            - --configfile=/config/traefik.toml
+          volumeMounts:
+            - mountPath: /config
+              name: config
+            - mountPath: /ssl
+              name: ssl
       containers:
         - args:
             - --configfile=/config/traefik.toml
