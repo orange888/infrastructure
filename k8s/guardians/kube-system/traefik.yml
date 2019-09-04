@@ -53,3 +53,39 @@ metadata:
     app.kubernetes.io/name: traefik
   name: traefik
   namespace: kube-system
+
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  labels:
+    app.kubernetes.io/instance: traefik
+    app.kubernetes.io/name: traefik
+  name: storeconfig-job-2
+  namespace: kube-system
+spec:
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: traefik
+        app.kubernetes.io/name: traefik
+      name: storeconfig-job-2
+    spec:
+      containers:
+        - args:
+            - storeconfig
+            - --configfile=/config/traefik.toml
+          image: traefik:1.7.12
+          name: storeconfig-job
+          volumeMounts:
+            - mountPath: /config
+              name: config
+            - mountPath: /acme
+              name: acme
+      restartPolicy: Never
+      volumes:
+        - configMap:
+            name: traefik
+          name: config
+        - emptyDir: {}
+          name: acme
