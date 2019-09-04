@@ -15,18 +15,6 @@ spec:
       app.kubernetes.io/name: consul
 ---
 apiVersion: v1
-data:
-  gossip-key: WUhTOGlHSk1uNWI2cTFtSTlDTkhKVlNJ
-kind: Secret
-metadata:
-  labels:
-    app.kubernetes.io/instance: consul
-    app.kubernetes.io/name: consul
-  name: consul-gossip-key
-  namespace: kube-system
-type: Opaque
----
-apiVersion: v1
 kind: Service
 metadata:
   annotations:
