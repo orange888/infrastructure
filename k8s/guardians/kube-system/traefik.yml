@@ -4,7 +4,7 @@ data:
   traefik.toml: |
     # traefik.toml
     logLevel = "info"
-    InsecureSkipVerify = true
+    insecureSkipVerify = true
     defaultEntryPoints = ["http","https"]
     [entryPoints]
       [entryPoints.http]
