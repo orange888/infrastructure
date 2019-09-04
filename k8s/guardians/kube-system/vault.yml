@@ -109,9 +109,9 @@ spec:
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: vault
+  name: vault-ui
   labels:
-    app.kubernetes.io/name: vault
+    app.kubernetes.io/name: vault-ui
     app.kubernetes.io/instance: vault
   namespace: kube-system
 spec:
@@ -120,7 +120,7 @@ spec:
       http:
         paths:
           - backend:
-              serviceName: vault
+              serviceName: vault-ui
               servicePort: http
 ---
 apiVersion: apps/v1
