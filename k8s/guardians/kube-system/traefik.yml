@@ -25,6 +25,8 @@ data:
       address = ":8080"
     [ping]
     entryPoint = "http"
+    [metrics]
+      [metrics.prometheus]
     [kubernetes]
       [kubernetes.ingressEndpoint]
       hostname = "guardians.hannahs.family"
@@ -61,7 +63,7 @@ metadata:
   labels:
     app.kubernetes.io/instance: traefik
     app.kubernetes.io/name: traefik
-  name: storeconfig-job-2
+  name: storeconfig-job-3
   namespace: kube-system
 spec:
   template:
@@ -69,7 +71,7 @@ spec:
       labels:
         app.kubernetes.io/instance: traefik
         app.kubernetes.io/name: traefik
-      name: storeconfig-job-2
+      name: storeconfig-job-3
     spec:
       containers:
         - args:
