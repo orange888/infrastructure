@@ -73,17 +73,6 @@ spec:
       app.kubernetes.io/name: traefik
 ---
 apiVersion: v1
-data:
-kind: Secret
-metadata:
-  labels:
-    app.kubernetes.io/instance: traefik
-    app.kubernetes.io/name: traefik
-  name: traefik-dnsprovider-config
-  namespace: kube-system
-type: Opaque
----
-apiVersion: v1
 kind: Service
 metadata:
   annotations:
