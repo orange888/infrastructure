@@ -1,0 +1,16 @@
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: rook-ceph-mgr-dashboard
+  namespace: rook-ceph
+  labels:
+    rook_cluster: rook-ceph
+spec:
+  rules:
+    - host: ceph.hannahs.family
+      http:
+        paths:
+          - backend:
+              serviceName: rook-ceph-mgr-dashboard
+              servicePort: https-dashboard
