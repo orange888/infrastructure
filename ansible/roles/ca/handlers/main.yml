@@ -1,0 +1,4 @@
+---
+- name: Update certificate store
+  become: true
+  command: "{{ ca_certs_update_command }}"

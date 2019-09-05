@@ -4,8 +4,9 @@
 - hosts: all
   roles:
     - apt
-    - sshd
-    - service_user
+    - ca
     - dns
+    - service_user
+    - sshd
 
 - import_playbook: k3s.yml

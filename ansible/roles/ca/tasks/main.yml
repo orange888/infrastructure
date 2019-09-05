@@ -1,0 +1,10 @@
+---
+- name: Copy root CA certificate
+  become: true
+  copy:
+    src: root.pem
+    dest: "{{ ca_certs_path }}/hannahs.family.ca.cert.pem"
+    owner: root
+    group: root
+    mode: 0644
+  notify: Update certificate store

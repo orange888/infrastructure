@@ -1,0 +1,3 @@
+---
+ca_certs_path: /etc/ssl/certs
+ca_certs_update_command: update-ca-certificates
