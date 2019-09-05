@@ -1,0 +1,14 @@
+{
+  "signing": {
+    "default": {
+      "expiry": "87600h",
+      "usages": [
+        "signing",
+        "key encipherment",
+        "cert sign",
+        "crl sign",
+        "ocsp signing"
+      ]
+    }
+  }
+}

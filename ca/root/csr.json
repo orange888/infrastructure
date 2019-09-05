@@ -1,0 +1,19 @@
+{
+  "CN": "Hannah Family Root CA",
+  "key": {
+    "algo": "ecdsa",
+    "size": 256
+  },
+  "names": [
+    {
+      "C": "US",
+      "ST": "AZ",
+      "L": "Chandler",
+      "O": "Hannah Family",
+      "OU": "CA"
+    }
+  ],
+  "ca": {
+    "expiry": "262980h"
+  }
+}
