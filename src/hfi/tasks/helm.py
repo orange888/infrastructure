@@ -49,7 +49,7 @@ def helm_values(c, chart):
         hfi helm.values traefik
     """
     cwd = Path.cwd()
-    values = cwd.joinpath("values")
+    values = cwd.joinpath("k8s", ".values")
     values.mkdir(exist_ok=True)
 
     chart_archive = tarfile.open(list(cwd.glob("{}-*.tgz".format(chart)))[-1])
@@ -88,7 +88,7 @@ def helm_template(c, chart, cluster="common", name=None, namespace="default"):
 
     cmd = ["helm", "template", chart_archive.name]
 
-    values = cwd.joinpath("values", "{}.yml".format(chart))
+    values = cwd.joinpath("k8s", ".values", "{}.yml".format(chart))
     if values.is_file():
         cmd += ["--values", str(values)]
 
