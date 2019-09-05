@@ -11,14 +11,30 @@
     name: openshift
     state: present
 
+- name: Set k3s base path
+  set_fact:
+    k3s_install_base: "{{ k3s_install_bin_dir }}/{{ k3s_install_name | default('k3s', true) }}"
+
 - name: Get k3s installation script
   become: true
   get_url:
     url: https://get.k3s.io
-    dest: "{{ k3s_install_bin_dir }}/{{ k3s_install_name | default('k3s', true) }}-install.sh"
+    dest: "{{ k3s_install_base }}-install.sh"
     mode: 0755
     owner: root
     group: root
+  register: k3s_install_script
+
+- name: Check for current k3s installation
+  stat:
+    path: "{{ k3s_install_base }}"
+  register: k3s_current_install
+
+- name: Get current k3s version
+  shell: "{{ k3s_install_base }} --version | awk -F' ' '{ print $3 }'"
+  register: k3s_current_version
+  when: k3s_current_install.stat.exists
+  changed_when: k3s_current_version.stdout != k3s_version
 
 - name: Run k3s installation script
   become: true
@@ -39,6 +55,7 @@
     INSTALL_K3S_TYPE: "{{ k3s_install_type | default('', true) }}"
     K3S_CLUSTER_SECRET: "{{ k3s_cluster_secret | default('', true) }}"
     K3S_URL: "{{ k3s_url }}"
+  when: k3s_install_script.changed or k3s_current_version.changed
 
 - include_tasks:
     file: ./manifests.yml
