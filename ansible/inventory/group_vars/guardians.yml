@@ -5,6 +5,7 @@ dns_records:
     value: "{{ ansible_facts.default_ipv4.address }}"
     solo: false
     zone: hannahs.family
+k3s_cluster_name: guardians
 k3s_cluster_secret: !vault |
   $ANSIBLE_VAULT;1.1;AES256
   32653236663261366633346332663466666162373661653635373465663938326263613135343537

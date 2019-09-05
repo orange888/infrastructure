@@ -1,0 +1,34 @@
+---
+- name: Get namespaces
+  k8s_facts:
+    kubeconfig: "{{ k3s_kubeconfig }}"
+    kind: Namespace
+  register: namespace_facts
+
+- name: Get namespace names
+  set_fact:
+    namespaces: "{{ namespace_facts.resources | map(attribute='metadata.name') | list }}"
+
+- name: Set cluster info ConfigMaps
+  k8s:
+    state: present
+    kubeconfig: "{{ k3s_kubeconfig }}"
+    resource_definition:
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: cluster-info
+        namespace: "{{ item }}"
+      data:
+        CLUSTER_NAME: "{{ k3s_cluster_name }}"
+  loop: "{{ namespaces }}"
+
+- name: Apply {{ k3s_cluster_name }} manifests
+  k8s:
+    state: present
+    kubeconfig: "{{ k3s_kubeconfig }}"
+    definition: |-
+      {{ lookup("template", item.src) }}
+  loop: |-
+    {{ query("filetree", "../../../templates/k8s/{{ k3s_cluster_name }}") }}
+  when: item.state == "file"

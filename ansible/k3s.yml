@@ -5,14 +5,3 @@
   roles:
     - wireguard
     - k3s
-  tasks:
-    - name: Apply templated manifests
-      become: true
-      k8s:
-        state: present
-        kubeconfig: /etc/rancher/k3s/k3s.yaml
-        definition: |-
-          {{ lookup("template", item.src) }}
-      loop: |-
-        {{ lookup("filetree", "../templates") }}
-      when: k3s_command == "server" and item.state == "file"

@@ -7,6 +7,7 @@ k3s_install_bin_dir: /usr/local/bin
 k3s_install_name: null
 k3s_install_systemd_dir: /etc/systemd/system
 k3s_install_type: null
+k3s_kubeconfig: /etc/rancher/k3s/k3s.yaml
 k3s_node_labels: {}
 k3s_node_taints: {}
 k3s_url: https://localhost:6443
