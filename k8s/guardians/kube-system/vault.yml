@@ -27,10 +27,13 @@ data:
     ui = true
 
     listener "tcp" {
-      tls_disable = 1
+      tls_disable = true
       address = "[::]:8200"
       cluster_address = "[::]:8201"
+      tls_cert_file = "/vault/tls/cert.pem"
+      tls_key_file = "/vault/tls/key.pem"
     }
+
     storage "consul" {
       path = "vault"
       address = "consul.kube-system.svc:8500"
@@ -166,9 +169,16 @@ spec:
       securityContext:
         fsGroup: null
       volumes:
+        - name: ca
+          hostPath:
+            path: /etc/ssl/certs/hannahs.family.ca.cert.pem
+            type: File
         - name: config
           configMap:
             name: vault-config
+        - name: tls
+          secret:
+            secretName: vault-tls
       containers:
         - name: vault
           resources:
@@ -199,15 +209,29 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: status.podIP
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
             - name: VAULT_ADDR
               value: http://127.0.0.1:8200
             - name: VAULT_API_ADDR
-              value: http://$(POD_IP):8200
+              value: http://$(POD_NAME).vault:8200
             - name: SKIP_CHOWN
               value: "true"
+            - name: VAULT_CAPATH
+              value: /vault/tls/ca.pem
           volumeMounts:
             - name: config
               mountPath: /vault/config
+            - name: tls
+              mountPath: /vault/tls/cert.pem
+              subPath: cert.pem
+            - name: tls
+              mountPath: /vault/tls/key.pem
+              subPath: key.pem
+            - name: ca
+              mountPath: /vault/tls/ca.pem
           ports:
             - containerPort: 8200
               name: http

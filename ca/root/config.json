@@ -8,7 +8,9 @@
         "key encipherment",
         "cert sign",
         "crl sign",
-        "ocsp signing"
+        "ocsp signing",
+        "server auth",
+        "client auth"
       ],
       "ca_constraint": {
         "is_ca": true
