@@ -3,12 +3,16 @@
     "default": {
       "expiry": "87600h",
       "usages": [
+        "digital signature",
         "signing",
         "key encipherment",
         "cert sign",
         "crl sign",
         "ocsp signing"
-      ]
+      ],
+      "ca_constraint": {
+        "is_ca": true
+      }
     }
   }
 }
