@@ -1,0 +1,6 @@
+---
+- name: Restart k3s
+  become: true
+  service:
+    name: k3s
+    state: restarted

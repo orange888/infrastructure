@@ -4,3 +4,4 @@ k3s_command_args:
   - "--no-deploy coredns"
   - "--no-deploy traefik"
   - "--no-flannel"
+  - "--kube-apiserver-arg service-node-port-range=25000-32767"

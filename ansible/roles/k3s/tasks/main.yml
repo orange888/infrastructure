@@ -56,6 +56,7 @@
     K3S_CLUSTER_SECRET: "{{ k3s_cluster_secret | default('', true) }}"
     K3S_URL: "{{ k3s_url }}"
   when: k3s_install_script.changed or k3s_current_version.changed
+  notify: Restart k3s
 
 - include_tasks:
     file: ./manifests.yml
