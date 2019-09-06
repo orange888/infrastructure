@@ -27,7 +27,6 @@ data:
     ui = true
 
     listener "tcp" {
-      tls_disable = true
       address = "[::]:8200"
       cluster_address = "[::]:8201"
       tls_cert_file = "/vault/tls/cert.pem"
@@ -79,7 +78,7 @@ spec:
   clusterIP: None
   publishNotReadyAddresses: true
   ports:
-    - name: http
+    - name: https
       port: 8200
       targetPort: 8200
     - name: internal
@@ -104,7 +103,7 @@ spec:
     app.kubernetes.io/instance: vault
     app.kubernetes.io/component: server
   ports:
-    - name: http
+    - name: https
       port: 8200
       targetPort: 8200
   type: ClusterIP
@@ -124,7 +123,7 @@ spec:
         paths:
           - backend:
               serviceName: vault-ui
-              servicePort: http
+              servicePort: https
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -214,9 +213,9 @@ spec:
                 fieldRef:
                   fieldPath: metadata.name
             - name: VAULT_ADDR
-              value: http://127.0.0.1:8200
+              value: https://127.0.0.1:8200
             - name: VAULT_API_ADDR
-              value: http://$(POD_NAME).vault:8200
+              value: https://$(POD_NAME).vault:8200
             - name: SKIP_CHOWN
               value: "true"
             - name: VAULT_CAPATH
@@ -234,7 +233,7 @@ spec:
               mountPath: /vault/tls/ca.pem
           ports:
             - containerPort: 8200
-              name: http
+              name: https
             - containerPort: 8201
               name: internal
             - containerPort: 8202
