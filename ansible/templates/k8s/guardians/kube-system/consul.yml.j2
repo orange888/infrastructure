@@ -1,7 +1,7 @@
 ---
 apiVersion: v1
 data:
-  gossip-key: "{{ consul.gossip_key }}"
+  gossip-key: "{{ consul.gossip_key | b64encode }}"
 kind: Secret
 metadata:
   labels:
