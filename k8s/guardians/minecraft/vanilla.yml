@@ -1,0 +1,75 @@
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: vanilla
+  namespace: minecraft
+  labels:
+    app.kubernetes.io/instance: vanilla
+    app.kubernetes.io/name: minecraft
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vanilla-init
+  namespace: minecraft
+  labels:
+    app.kubernetes.io/instance: vanilla
+    app.kubernetes.io/name: minecraft
+data:
+  init.sh: |
+    #!/bin/sh
+
+    apk add xz
+    tar xJvf /minecraft-vanilla.tar.xz -C /pvc
+    chown -R 1000:1000 /pvc/*
+
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: vanilla-init
+  namespace: minecraft
+  labels:
+    app.kubernetes.io/instance: vanilla
+    app.kubernetes.io/name: minecraft
+spec:
+  backoffLimit: 3
+  ttlSecondsAfterFinished: 600
+  template:
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: tapu-koko.hannahs.family
+      restartPolicy: Never
+      containers:
+        - name: init
+          image: alpine
+          command:
+            - sh
+            - /init.sh
+          volumeMounts:
+            - name: init
+              mountPath: /init.sh
+              subPath: init.sh
+            - name: pvc
+              mountPath: /pvc
+            - name: xz
+              mountPath: /minecraft-vanilla.tar.xz
+      volumes:
+        - name: init
+          configMap:
+            name: vanilla-init
+        - name: pvc
+          persistentVolumeClaim:
+            claimName: vanilla
+        - name: xz
+          hostPath:
+            path: /home/ansible/minecraft-vanilla-1567293508.tar.xz
+            type: File
