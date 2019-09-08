@@ -1,7 +1,0 @@
----
-dependencies:
-  - role: ufw
-    vars:
-      ufw_rules:
-        - rule: limit
-          port: ssh

@@ -1,6 +1,7 @@
 ---
-- name: Apply UFW rule
+- name: Rate-limit SSH connection attempts and enable UFW
   become: true
-  ufw: "{{ item }}"
-  loop: "{{ ufw_rules }}"
-  notify: Enable UFW
+  ufw:
+    rule: limit
+    port: ssh
+    state: enabled

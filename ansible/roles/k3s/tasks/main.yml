@@ -11,6 +11,20 @@
     name: openshift
     state: present
 
+- name: Allow k3s server connections
+  become: true
+  ufw:
+    rule: allow
+    port: "6443"
+    proto: tcp
+  when: k3s_command == "server"
+
+- name: Allow packet routing
+  become: true
+  ufw:
+    default: allow
+    direction: routed
+
 - name: Set k3s base path
   set_fact:
     k3s_install_base: "{{ k3s_install_bin_dir }}/{{ k3s_install_name | default('k3s', true) }}"

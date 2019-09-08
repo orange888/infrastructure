@@ -9,3 +9,9 @@
   package:
     name: wireguard
     state: present
+
+- name: Allow WireGuard connections
+  ufw:
+    rule: allow
+    port: "{{ wireguard_port }}"
+    proto: udp
