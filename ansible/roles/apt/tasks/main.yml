@@ -11,6 +11,7 @@
   apt:
     update_cache: true
     upgrade: full
+    install_recommends: false
 
 - name: Autoremove
   become: true
