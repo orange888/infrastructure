@@ -1,0 +1,2 @@
+---
+apt_reboot_sentinel: /var/run/reboot-required

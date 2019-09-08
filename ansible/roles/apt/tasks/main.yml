@@ -22,3 +22,10 @@
   become: true
   apt:
     autoclean: true
+
+- name: Check for reboot sentinel
+  stat:
+    path: "{{ apt_reboot_sentinel }}"
+  register: sentinel
+  changed_when: sentinel.stat.exists
+  notify: Reboot
