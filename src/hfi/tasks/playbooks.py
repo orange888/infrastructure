@@ -5,12 +5,7 @@ from invoke import Collection, task
 BASE_CMD = ["pipenv", "run", "ansible-playbook"]
 
 DEFAULT_ENV = {"OBJC_DISABLE_INITIALIZE_FORK_SAFETY": "YES"}
-TASK_DEFAULT_ENVS = {
-    "bootstrap": {
-        "ANSIBLE_ASK_PASS": "true",
-        "ANSIBLE_HOST_KEY_CHECKING": "false"
-    }
-}
+TASK_DEFAULT_ENVS = {"bootstrap": {"ANSIBLE_HOST_KEY_CHECKING": "false"}}
 
 ENV_ANSIBLE_REMOTE_USER = "ANSIBLE_REMOTE_USER"
 

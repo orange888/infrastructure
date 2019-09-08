@@ -1,8 +1,11 @@
 ---
 - hosts: all
+  gather_facts: false
+  tasks:
+    - local_action: set_fact ansible_ssh_pass={{ root_password }}
+
+- hosts: all
   vars:
     ansible_user: root
   roles:
-    - apt
     - service_user
-    - sshd
