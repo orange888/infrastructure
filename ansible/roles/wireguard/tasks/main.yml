@@ -10,10 +10,11 @@
     name: wireguard
     state: present
 
-- include_tasks:
-    file: group.yml
-    apply:
-      become: true
-  loop: "{{ wireguard | dict2items }}"
-  loop_control:
-    loop_var: group
+- name: Allow WireGuard connections from peers
+  become: true
+  ufw:
+    rule: allow
+    port: "{{ wireguard_port }}"
+    src: "{{ hostvars[item].ansible_facts.default_ipv4.address }}"
+    proto: udp
+  loop: "{{ groups[wireguard_group] }}"
