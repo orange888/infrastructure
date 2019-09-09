@@ -1,12 +1,12 @@
 ---
 k3s_command: server
 k3s_command_args:
-  - "--flannel-iface {{ wireguard['10.41.0.0'].interface }}"
-  - "--kube-apiserver-arg service-node-port-range=25000-32767"
-  - "--no-deploy coredns"
-  - "--no-deploy traefik"
-  - "--node-ip {{ wireguard['10.41.0.0'].address }}"
-  - "--node-name {{ inventory_hostname }}"
+  - --flannel-iface {{ wireguard['10.41.0.0'].interface }}
+  - --kube-apiserver-arg service-node-port-range=25000-32767
+  - --no-deploy coredns
+  - --no-deploy traefik
+  - --node-ip {{ wireguard['10.41.0.0'].address }}
+  - --node-name {{ inventory_hostname }}
 root_password: !vault |
   $ANSIBLE_VAULT;1.1;AES256
   61633830666532383134333561653838363337393836353663303561343764313566303264316237
@@ -15,7 +15,7 @@ root_password: !vault |
   6664343931393865360a656561376661313963626232303662386362613831633036376433356666
   3562
 wireguard:
-  "10.41.0.0":
+  10.41.0.0:
     interface: wg0
     address: 10.41.0.1
     mask: 24
