@@ -47,6 +47,8 @@ data:
         address: :80
       https:
         address: :443
+      api:
+        address: :8080
     metrics:
       prometheus: {}
     ping: {}
