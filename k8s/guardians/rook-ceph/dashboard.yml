@@ -38,3 +38,18 @@ spec:
           port: 8443
   tls:
     certResolver: default
+
+---
+apiVersion: externaldns.k8s.io/v1alpha1
+kind: DNSEndpoint
+metadata:
+  name: rook-ceph-mgr-dashboard
+  namespace: rook-ceph
+  labels:
+    rook_cluster: rook-ceph
+spec:
+  endpoints:
+    - dnsName: ceph.hannahs.family
+      recordType: CNAME
+      targets:
+        - guardians.hannahs.family
