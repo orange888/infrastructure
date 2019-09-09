@@ -13,7 +13,7 @@
   k8s:
     state: present
     kubeconfig: "{{ k3s_kubeconfig }}"
-    resource_definition:
+    resource_definition: |
       apiVersion: v1
       kind: ConfigMap
       metadata:
