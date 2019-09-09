@@ -71,6 +71,8 @@ data:
       kubernetesIngress:
         ingressEndpoint:
           hostname: "guardians.hannahs.family"
+    serversTransport:
+      insecureSkipVerify: true
     tls:
       stores:
         default:
