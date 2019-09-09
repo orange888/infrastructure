@@ -1,0 +1,19 @@
+[Interface]
+PrivateKey = {{ group.value.private_key }}
+Address = {{ group.value.address }}/{{ group.value.mask }}
+ListenPort = {{ group.value.port }}
+
+{% for host in groups.all %}
+{%- if host != inventory_hostname -%}
+{%- if hostvars[host].wireguard[group.key] is defined -%}
+{%- set peer = hostvars[host].wireguard[group.key] -%}
+[Peer]
+PublicKey = {{ peer.public_key }}
+AllowedIPs = {{ peer.address }}/32
+Endpoint = {{ hostvars[host].ansible_facts.fqdn }}:{{ peer.port }}
+{% if peer.keepalive is defined -%}
+PersistentKeepalive = {{ peer.keepalive }}
+{% endif %}
+{% endif -%}
+{%- endif -%}
+{% endfor %}

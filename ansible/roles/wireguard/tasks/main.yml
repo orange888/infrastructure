@@ -10,8 +10,10 @@
     name: wireguard
     state: present
 
-- name: Allow WireGuard connections
-  ufw:
-    rule: allow
-    port: "{{ wireguard_port }}"
-    proto: udp
+- include_tasks:
+    file: group.yml
+    apply:
+      become: true
+  loop: "{{ wireguard | dict2items }}"
+  loop_control:
+    loop_var: group
