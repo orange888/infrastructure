@@ -45,7 +45,7 @@ spec:
   template:
     spec:
       nodeSelector:
-        kubernetes.io/hostname: tapu-koko.hannahs.family
+        kubernetes.io/hostname: tapu-koko
       restartPolicy: Never
       containers:
         - name: init
