@@ -16,6 +16,20 @@ spec:
     - name: https
       port: 443
       targetPort: https
+  selector:
+    <<: *labels
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: traefik-api
+  namespace: kube-system
+  labels: &labels
+    app.kubernetes.io/name: traefik
+    app.kubernetes.io/instance: traefik
+spec:
+  ports:
     - name: api
       port: 8080
       targetPort: api
@@ -44,11 +58,11 @@ data:
           storage: /acme/acme.json
     entrypoints:
       http:
-        address: :80
+        address: :10080
       https:
-        address: :443
-      api:
-        address: :8080
+        address: :10443
+      traefik:
+        address: :10880
     metrics:
       prometheus: {}
     ping: {}
@@ -110,18 +124,18 @@ spec:
             - --configFile=/config/traefik.yml
           ports:
             - name: http
-              containerPort: 80
+              containerPort: 10080
             - name: https
-              containerPort: 443
+              containerPort: 10443
             - name: api
-              containerPort: 8080
+              containerPort: 10880
           envFrom:
             - secretRef:
                 name: cloudflare
           livenessProbe: &probe
             httpGet:
               path: /ping
-              port: 80
+              port: 10880
             initialDelaySeconds: 10
             periodSeconds: 10
             timeoutSeconds: 2
@@ -165,5 +179,5 @@ spec:
       http:
         paths:
           - backend:
-              serviceName: traefik
+              serviceName: traefik-api
               servicePort: api
