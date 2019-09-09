@@ -42,7 +42,6 @@ metadata:
     app.kubernetes.io/name: minecraft
 spec:
   backoffLimit: 3
-  ttlSecondsAfterFinished: 600
   template:
     spec:
       nodeSelector:
