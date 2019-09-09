@@ -7,9 +7,10 @@ root_password: !vault |
   6339656232313636360a363234616430653732613562306536333739653239316562346537343263
   3162
 wireguard:
-  "10.41.0.0/24":
+  "10.41.0.0":
     interface: wg0
-    address: 10.41.0.4/24
+    address: 10.41.0.4
+    mask: 24
     port: 51820
     keepalive: 25
     public_key: Snw/O15jnIWFyckP29DtIxWCrwdGcstwdSpy9jLuBik=
