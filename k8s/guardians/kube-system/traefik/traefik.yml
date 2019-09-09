@@ -1,0 +1,167 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: traefik
+  namespace: kube-system
+  labels: &labels
+    app.kubernetes.io/name: traefik
+    app.kubernetes.io/instance: traefik
+spec:
+  type: LoadBalancer
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+    - name: https
+      port: 443
+      targetPort: https
+    - name: api
+      port: 8080
+      targetPort: api
+  selector:
+    <<: *labels
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: traefik
+  namespace: kube-system
+  labels:
+    app.kubernetes.io/name: traefik
+    app.kubernetes.io/instance: traefik
+data:
+  traefik.yml: |
+    api:
+      dashboard: true
+    certificatesResolvers:
+      default:
+        acme:
+          dnsChallenge:
+            provider: cloudflare
+          email: admin@hannahs.family
+          storage: /acme/acme.json
+    entrypoints:
+      http:
+        address: :80
+      https:
+        address: :443
+    metrics:
+      prometheus: {}
+    ping: {}
+    providers:
+      kubernetesCRD: {}
+      kubernetesIngress:
+        ingressEndpoint:
+          hostname: "guardians.hannahs.family"
+    tls:
+      stores:
+        default:
+          defaultCertificate:
+            certFile: /tls/tls.crt
+            keyFile: /tls/tls.key
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: traefik-acme-store
+  namespace: kube-system
+  labels:
+    app.kubernetes.io/name: traefik
+    app.kubernetes.io/instance: traefik
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: traefik
+  namespace: kube-system
+  labels: &labels
+    app.kubernetes.io/name: traefik
+    app.kubernetes.io/instance: traefik
+  annotations:
+    flux.weave.works/tag.traefik: semver:~2
+    flux.weave.works/automated: "true"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      <<: *labels
+  template:
+    metadata:
+      labels:
+        <<: *labels
+    spec:
+      serviceAccountName: traefik
+      containers:
+        - name: traefik
+          image: traefik:v2.0
+          args:
+            - --configFile=/config/traefik.yml
+          ports:
+            - name: http
+              containerPort: 80
+            - name: https
+              containerPort: 443
+            - name: api
+              containerPort: 8080
+          envFrom:
+            - secretRef:
+                name: cloudflare
+          livenessProbe: &probe
+            httpGet:
+              path: /ping
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 2
+            successThreshold: 1
+            failureThreshold: 3
+          readinessProbe:
+            <<: *probe
+          volumeMounts:
+            - name: acme
+              mountPath: /acme
+            - name: tls
+              mountPath: /tls
+              readOnly: true
+            - name: config
+              mountPath: /config
+              readOnly: true
+      volumes:
+        - name: acme
+          persistentVolumeClaim:
+            claimName: traefik-acme-store
+        - name: tls
+          secret:
+            secretName: traefik-default-cert
+            defaultMode: 0400
+        - name: config
+          configMap:
+            name: traefik
+
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: traefik
+  namespace: kube-system
+  labels:
+    app.kubernetes.io/instance: traefik
+    app.kubernetes.io/name: traefik
+spec:
+  rules:
+    - host: traefik.hannahs.family
+      http:
+        paths:
+          - backend:
+              serviceName: traefik
+              servicePort: api
