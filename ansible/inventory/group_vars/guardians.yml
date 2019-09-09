@@ -23,6 +23,7 @@ k3s_cluster_secret: !vault |
   6161
 k3s_command: agent
 k3s_command_args:
+  - "--flannel-iface {{ wireguard['10.41.0.0'].interface }}"
   - "--node-ip {{ wireguard['10.41.0.0'].address }}"
   - "--node-name {{ inventory_hostname }}"
 k3s_url: https://10.41.0.1:6443

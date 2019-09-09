@@ -1,6 +1,7 @@
 ---
 k3s_command: server
 k3s_command_args:
+  - "--flannel-iface {{ wireguard['10.41.0.0'].interface }}"
   - "--kube-apiserver-arg service-node-port-range=25000-32767"
   - "--no-deploy coredns"
   - "--no-deploy traefik"
