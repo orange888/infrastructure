@@ -113,7 +113,8 @@ metadata:
   annotations:
     external-dns.alpha.kubernetes.io/hostname: vanilla.mc.hannahs.family
 spec:
-  type: NodePort
+  type: LoadBalancer
+  loadBalancerIP: 104.225.219.33
   ports:
     - name: minecraft
       port: 25565

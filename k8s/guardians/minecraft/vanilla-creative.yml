@@ -114,7 +114,8 @@ metadata:
   annotations:
     external-dns.alpha.kubernetes.io/hostname: creative.mc.hannahs.family
 spec:
-  type: NodePort
+  type: LoadBalancer
+  loadBalancerIP: 104.225.222.101
   ports:
     - name: minecraft
       port: 25565
