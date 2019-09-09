@@ -64,10 +64,15 @@ metadata:
 data:
   Corefile: |-
     .:53 {
+        reload
         cache 30
         errors
         health
         kubernetes cluster.local
+        hosts /etc/coredns/NodeHosts {
+            reload 1s
+            fallthrough
+        }
         loadbalance round_robin
         prometheus 0.0.0.0:9153
         forward . /etc/resolv.conf
@@ -225,8 +230,9 @@ spec:
           imagePullPolicy: IfNotPresent
           args: ["-conf", "/etc/coredns/Corefile"]
           volumeMounts:
-            - name: config-volume
+            - name: config
               mountPath: /etc/coredns
+              readOnly: true
           resources:
             limits:
               cpu: 100m
@@ -250,9 +256,11 @@ spec:
             successThreshold: 1
             failureThreshold: 5
       volumes:
-        - name: config-volume
+        - name: config
           configMap:
             name: coredns
             items:
               - key: Corefile
                 path: Corefile
+              - key: NodeHosts
+                path: NodeHosts
