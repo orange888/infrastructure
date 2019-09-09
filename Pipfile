@@ -10,8 +10,9 @@ importmagic = "*"
 
 [packages]
 ansible = "*"
+invoke = "*"
 passlib = "*"
-hfi = {editable = true,path = "."}
+pyyaml = "*"
 
 [requires]
 python_version = "3.7"
