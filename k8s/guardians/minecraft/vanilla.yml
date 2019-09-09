@@ -72,3 +72,124 @@ spec:
           hostPath:
             path: /home/ansible/minecraft-vanilla-1567293508.tar.xz
             type: File
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: vanilla
+  namespace: minecraft
+  labels:
+    app.kubernetes.io/instance: vanilla
+    app.kubernetes.io/name: minecraft
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vanilla
+  namespace: minecraft
+  labels:
+    app.kubernetes.io/instance: vanilla
+    app.kubernetes.io/name: minecraft
+data:
+  eula.txt: |
+    eula=true
+  server.properties: |
+    difficulty=normal
+    enforce-whitelist=true
+    motd=Hannah Family Minecraft - Vanilla (Survival)
+    enable-rcon=true
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vanilla
+  namespace: minecraft
+  labels: &labels
+    app.kubernetes.io/instance: vanilla
+    app.kubernetes.io/name: minecraft
+  annotations:
+    external-dns.kubernetes.io/hostname: vanilla.mc.hannahs.family
+spec:
+  type: NodePort
+  ports:
+    - name: minecraft
+      port: 25565
+      targetPort: minecraft
+    - name: rcon
+      port: 25575
+      targetPort: rcon
+  selector:
+    <<: *labels
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vanilla
+  namespace: minecraft
+  labels: &labels
+    app.kubernetes.io/instance: vanilla
+    app.kubernetes.io/name: minecraft
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      <<: *labels
+  template:
+    metadata:
+      labels:
+        <<: *labels
+    spec:
+      serviceAccount: vanilla
+      containers:
+        - name: minecraft
+          image: hannahsfamily/mc-server-vanilla:1.14.4
+          ports:
+            - name: minecraft
+              containerPort: 25565
+            - name: rcon
+              containerPort: 25575
+          env:
+            - name: JVM_MEM_INIT
+              value: 1024M
+            - name: JVM_MEM_MAX
+              value: 4096M
+            - name: RCON_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: vanilla
+                  key: rconPassword
+          livenessProbe:
+            tcpSocket:
+              port: 25565
+          readinessProbe:
+            tcpSocket:
+              port: 25565
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1024Mi
+            limits:
+              cpu: 2000m
+              memory: 4096Mi
+          volumeMounts:
+            - name: storage
+              mountPath: /opt/minecraft/config
+              subPath: config
+            - name: overrides
+              mountPath: /opt/minecraft/overrides
+            - name: storage
+              mountPath: /opt/minecraft/server
+              subPath: server
+      volumes:
+        - name: overrides
+          configMap:
+            name: vanilla
+        - name: storage
+          persistentVolumeClaim:
+            claimName: vanilla
