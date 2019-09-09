@@ -71,6 +71,14 @@
     K3S_URL: "{{ k3s_url }}"
   when: k3s_install_script.changed or k3s_current_version.changed or not k3s_current_install.stat.exists
 
+- name: Allow inbound CNI traffic
+  become: true
+  ufw:
+    rule: allow
+    direction: in
+    interface: cni0
+    src: 10.42.0.0/16
+
 - include_tasks:
     file: ./manifests.yml
     apply:

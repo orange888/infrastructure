@@ -26,5 +26,11 @@
 - name: Enable WireGuard on startup
   service:
     name: wg-quick@{{ group.value.interface }}
-    state: restarted
     enabled: true
+
+- name: Allow connections over WireGuard interface
+  ufw:
+    rule: allow
+    direction: in
+    interface: "{{ group.value.interface }}"
+    src: "{{ group.key }}/{{ group.value.mask }}"
