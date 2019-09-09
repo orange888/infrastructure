@@ -68,9 +68,6 @@ data:
     ping: {}
     providers:
       kubernetesCRD: {}
-      kubernetesIngress:
-        ingressEndpoint:
-          hostname: "guardians.hannahs.family"
     serversTransport:
       insecureSkipVerify: true
     tls:
@@ -167,8 +164,51 @@ spec:
             name: traefik
 
 ---
-apiVersion: extensions/v1beta1
-kind: Ingress
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: traefik-http
+  namespace: kube-system
+  labels:
+    app.kubernetes.io/instance: traefik
+    app.kubernetes.io/name: traefik
+spec:
+  entrypoints:
+    - http
+  routes:
+    - match: Host(`traefik.hannahs.family`)
+      kind: Rule
+      middlewares:
+        - name: https-redirect
+          namespace: default
+      services:
+        - name: traefik-api
+          port: 8080
+
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: traefik-https
+  namespace: kube-system
+  labels:
+    app.kubernetes.io/instance: traefik
+    app.kubernetes.io/name: traefik
+spec:
+  entrypoints:
+    - https
+  routes:
+    - match: Host(`traefik.hannahs.family`)
+      kind: Rule
+      services:
+        - name: traefik-api
+          port: 8080
+  tls:
+    certResolver: default
+
+---
+apiVersion: externaldns.k8s.io/v1alpha1
+kind: DNSEndpoint
 metadata:
   name: traefik
   namespace: kube-system
@@ -176,10 +216,8 @@ metadata:
     app.kubernetes.io/instance: traefik
     app.kubernetes.io/name: traefik
 spec:
-  rules:
-    - host: traefik.hannahs.family
-      http:
-        paths:
-          - backend:
-              serviceName: traefik-api
-              servicePort: api
+  endpoints:
+    - dnsName: traefik.hannahs.family
+      recordType: CNAME
+      targets:
+        - guardians.hannahs.family

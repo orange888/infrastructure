@@ -1,16 +1,40 @@
 ---
-apiVersion: extensions/v1beta1
-kind: Ingress
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
 metadata:
-  name: rook-ceph-mgr-dashboard
+  name: rook-ceph-mgr-dashboard-http
   namespace: rook-ceph
   labels:
     rook_cluster: rook-ceph
 spec:
-  rules:
-    - host: ceph.hannahs.family
-      http:
-        paths:
-          - backend:
-              serviceName: rook-ceph-mgr-dashboard
-              servicePort: https-dashboard
+  entrypoints:
+    - http
+  routes:
+    - match: Host(`ceph.hannahs.family`)
+      kind: Rule
+      middlewares:
+        - name: https-redirect
+          namespace: default
+      services:
+        - name: rook-ceph-mgr-dashboard
+          port: 8443
+
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: rook-ceph-mgr-dashboard-https
+  namespace: rook-ceph
+  labels:
+    rook_cluster: rook-ceph
+spec:
+  entrypoints:
+    - https
+  routes:
+    - match: Host(`ceph.hannahs.family`)
+      kind: Rule
+      services:
+        - name: rook-ceph-mgr-dashboard
+          port: 8443
+  tls:
+    certResolver: default
