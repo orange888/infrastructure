@@ -111,7 +111,7 @@ metadata:
     app.kubernetes.io/instance: vanilla
     app.kubernetes.io/name: minecraft
   annotations:
-    external-dns.kubernetes.io/hostname: vanilla.mc.hannahs.family
+    external-dns.alpha.kubernetes.io/hostname: vanilla.mc.hannahs.family
 spec:
   type: NodePort
   ports:
