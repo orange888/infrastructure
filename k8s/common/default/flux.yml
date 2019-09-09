@@ -168,14 +168,15 @@ spec:
             - name: git-keygen
               mountPath: /var/fluxd/keygen
           args:
-            - --memcached-service=memcached.kube-system.svc:11211
-            - --ssh-keygen-dir=/var/fluxd/keygen
             - --git-url=git@github.com:hannahs-family/infrastructure
             - --git-branch=master
             - --git-path=k8s/common,k8s/$(CLUSTER_NAME)
             - --git-label=flux-$(CLUSTER_NAME)
             - --listen-metrics=:3031
             - --log-format=json
+            - --memcached-service=memcached.kube-system.svc:11211
+            - --ssh-keygen-dir=/var/fluxd/keygen
+            - --sync-garbage-collection
 ---
 apiVersion: v1
 kind: Secret
