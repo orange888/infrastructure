@@ -1,8 +1,8 @@
 ---
 k3s_command: server
 k3s_command_args:
-  - --kube-apiserver-arg service-node-port-range=25000-32767
   - --no-deploy coredns
+  - --no-deploy servicelb
   - --no-deploy traefik
   - --no-flannel
   - --node-name {{ inventory_hostname }}

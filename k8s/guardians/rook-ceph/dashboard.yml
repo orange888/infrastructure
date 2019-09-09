@@ -52,4 +52,4 @@ spec:
     - dnsName: ceph.hannahs.family
       recordType: CNAME
       targets:
-        - guardians.hannahs.family
+        - traefik.hannahs.family

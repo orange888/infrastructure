@@ -1,0 +1,15 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: metallb-system
+  name: config
+data:
+  config: |
+    address-pools:
+      - name: default
+        protocol: layer2
+        addresses:
+          {% for host in groups['guardians'] %}
+          - {{ hostvars[host].ansible_facts.default_ipv4.address }}/32
+          {% endfor %}

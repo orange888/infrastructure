@@ -112,9 +112,10 @@ metadata:
     app.kubernetes.io/name: minecraft
   annotations:
     external-dns.alpha.kubernetes.io/hostname: vanilla.mc.hannahs.family
+    metallb.universe.tf/allow-shared-ip: guardians
 spec:
   type: LoadBalancer
-  loadBalancerIP: 104.225.219.33
+  externalTrafficPolicy: Cluster
   ports:
     - name: minecraft
       port: 25565

@@ -7,8 +7,12 @@ metadata:
   labels: &labels
     app.kubernetes.io/name: traefik
     app.kubernetes.io/instance: traefik
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: traefik.hannahs.family
+    metallb.universe.tf/allow-shared-ip: guardians
 spec:
   type: LoadBalancer
+  externalTrafficPolicy: Cluster
   ports:
     - name: http
       port: 80
@@ -212,19 +216,3 @@ spec:
           port: 8080
   tls:
     certResolver: default
-
----
-apiVersion: externaldns.k8s.io/v1alpha1
-kind: DNSEndpoint
-metadata:
-  name: traefik
-  namespace: kube-system
-  labels:
-    app.kubernetes.io/instance: traefik
-    app.kubernetes.io/name: traefik
-spec:
-  endpoints:
-    - dnsName: traefik.hannahs.family
-      recordType: CNAME
-      targets:
-        - guardians.hannahs.family
