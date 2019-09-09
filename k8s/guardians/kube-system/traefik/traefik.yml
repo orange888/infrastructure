@@ -47,6 +47,8 @@ metadata:
     app.kubernetes.io/instance: traefik
 data:
   traefik.yml: |
+    accessLog:
+      format: json
     api:
       dashboard: true
     certificatesResolvers:
@@ -63,6 +65,11 @@ data:
         address: :10443
       traefik:
         address: :10880
+    global:
+      sendAnonymousUsage: false
+    log:
+      format: json
+      level: WARN
     metrics:
       prometheus: {}
     ping: {}
