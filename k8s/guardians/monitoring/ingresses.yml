@@ -1,0 +1,185 @@
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: prometheus-alertmanager-http
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/instance: prometheus
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/component: alertmanager
+spec:
+  entrypoints:
+    - http
+  routes:
+    - match: Host(`alerts.metrics.hannahs.family`)
+      kind: Rule
+      middlewares:
+        - name: https-redirect
+          namespace: default
+      services:
+        - name: prometheus-alertmanager
+          port: 80
+
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: prometheus-alertmanager-https
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/instance: prometheus
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/component: alertmanager
+spec:
+  entrypoints:
+    - https
+  routes:
+    - match: Host(`alerts.metrics.hannahs.family`)
+      kind: Rule
+      services:
+        - name: prometheus-alertmanager
+          port: 80
+  tls:
+    certResolver: default
+
+---
+apiVersion: externaldns.k8s.io/v1alpha1
+kind: DNSEndpoint
+metadata:
+  name: prometheus-alertmanager
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/instance: prometheus
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/component: alertmanager
+spec:
+  endpoints:
+    - dnsName: alerts.metrics.hannahs.family
+      recordType: CNAME
+      targets:
+        - traefik.hannahs.family
+
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: prometheus-pushgateway-http
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/instance: prometheus
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/component: pushgateway
+spec:
+  entrypoints:
+    - http
+  routes:
+    - match: Host(`push.metrics.hannahs.family`)
+      kind: Rule
+      middlewares:
+        - name: https-redirect
+          namespace: default
+      services:
+        - name: prometheus-pushgateway
+          port: 9091
+
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: prometheus-pushgateway-https
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/instance: prometheus
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/component: pushgateway
+spec:
+  entrypoints:
+    - https
+  routes:
+    - match: Host(`push.metrics.hannahs.family`)
+      kind: Rule
+      services:
+        - name: prometheus-pushgateway
+          port: 9091
+  tls:
+    certResolver: default
+
+---
+apiVersion: externaldns.k8s.io/v1alpha1
+kind: DNSEndpoint
+metadata:
+  name: prometheus-pushgateway
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/instance: prometheus
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/component: pushgateway
+spec:
+  endpoints:
+    - dnsName: push.metrics.hannahs.family
+      recordType: CNAME
+      targets:
+        - traefik.hannahs.family
+
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: prometheus-server-http
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/instance: prometheus
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/component: server
+spec:
+  entrypoints:
+    - http
+  routes:
+    - match: Host(`prometheus.metrics.hannahs.family`)
+      kind: Rule
+      middlewares:
+        - name: https-redirect
+          namespace: default
+      services:
+        - name: prometheus-server
+          port: 80
+
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: prometheus-server-https
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/instance: prometheus
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/component: server
+spec:
+  entrypoints:
+    - https
+  routes:
+    - match: Host(`prometheus.metrics.hannahs.family`)
+      kind: Rule
+      services:
+        - name: prometheus-server
+          port: 80
+  tls:
+    certResolver: default
+
+---
+apiVersion: externaldns.k8s.io/v1alpha1
+kind: DNSEndpoint
+metadata:
+  name: prometheus-server
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/instance: prometheus
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/component: server
+spec:
+  endpoints:
+    - dnsName: prometheus.metrics.hannahs.family
+      recordType: CNAME
+      targets:
+        - traefik.hannahs.family
