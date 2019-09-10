@@ -1000,6 +1000,8 @@ metadata:
     app.kubernetes.io/component: pushgateway
   name: prometheus-pushgateway
   namespace: monitoring
+  annotations:
+    fluxcd.io/automated: 'true'
 spec:
   replicas: 1
   selector:
