@@ -1060,6 +1060,8 @@ metadata:
     app.kubernetes.io/component: server
   name: prometheus-server
   namespace: monitoring
+  annotations:
+    fluxcd.io/automated: 'true'
 spec:
   replicas: 1
   selector:
