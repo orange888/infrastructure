@@ -38,6 +38,7 @@ data:
     logs = /var/log/grafana
     plugins = /var/lib/grafana/plugins
     provisioning = /etc/grafana/provisioning
+  plugins: grafana-clock-panel
 
 ---
 apiVersion: v1
