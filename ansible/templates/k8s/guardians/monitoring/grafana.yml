@@ -1,13 +1,13 @@
 ---
 apiVersion: v1
-kind: ConfigMap
+kind: Secret
 metadata:
   name: grafana
   namespace: monitoring
   labels:
     app.kubernetes.io/name: grafana
     app.kubernetes.io/instance: grafana
-data:
+stringData:
   grafana.ini: |
     [analytics]
     check_for_updates = true
@@ -38,17 +38,5 @@ data:
     logs = /var/log/grafana
     plugins = /var/lib/grafana/plugins
     provisioning = /etc/grafana/provisioning
-  plugins: grafana-clock-panel
-
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: grafana
-  namespace: monitoring
-  labels:
-    app.kubernetes.io/name: grafana
-    app.kubernetes.io/instance: grafana
-data:
-  adminUser: "{{ "admin" | b64encode }}"
-  adminPassword: "{{ grafana.admin_password | b64encode }}"
+  adminUser: admin
+  adminPassword: "{{ grafana.admin_password }}"

@@ -69,10 +69,19 @@ data:
           path: /tmp/dashboards"
 ---
 apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/instance: grafana
+    app.kubernetes.io/name: grafana
+data:
+  plugins: grafana-clock-panel
+---
+apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  finalizers:
-    - kubernetes.io/pvc-protection
   labels:
     app.kubernetes.io/instance: grafana
     app.kubernetes.io/name: grafana
@@ -84,7 +93,6 @@ spec:
   resources:
     requests:
       storage: 10Gi
-  storageClassName: null
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -203,10 +211,6 @@ spec:
     type: RollingUpdate
   template:
     metadata:
-      annotations:
-        checksum/config: 3d9943bc3db8de1088fccffc79372086081df5ab18390d245aaec33da3308c65
-        checksum/dashboards-json-config: 01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
-        checksum/sc-dashboard-provider-config: d3a2513343df0520a8668bd018471c27ad5681ce16441434eaca6bf00fca1ae3
       labels:
         app: grafana
         release: grafana
@@ -274,13 +278,10 @@ spec:
               memory: 128Mi
           volumeMounts:
             - mountPath: /etc/grafana/grafana.ini
-              name: config
+              name: secret
               subPath: grafana.ini
             - mountPath: /var/lib/grafana
               name: storage
-            - mountPath: /etc/grafana/provisioning/datasources/datasources.yaml
-              name: config
-              subPath: datasources.yaml
             - mountPath: /tmp/dashboards
               name: sc-dashboard-volume
             - mountPath: /etc/grafana/provisioning/dashboards/sc-dashboardproviders.yaml
@@ -330,9 +331,9 @@ spec:
         runAsUser: 472
       serviceAccountName: grafana
       volumes:
-        - configMap:
-            name: grafana
-          name: config
+        - name: secret
+          secret:
+            secretName: grafana
         - name: storage
           persistentVolumeClaim:
             claimName: grafana
