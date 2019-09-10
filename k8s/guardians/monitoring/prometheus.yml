@@ -1303,3 +1303,4 @@ data:
         type: prometheus
         access: proxy
         url: http://prometheus-server
+        isDefault: true
