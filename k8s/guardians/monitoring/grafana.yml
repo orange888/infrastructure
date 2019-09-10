@@ -1,0 +1,415 @@
+---
+apiVersion: extensions/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  annotations:
+    apparmor.security.beta.kubernetes.io/allowedProfileNames: runtime/default
+    apparmor.security.beta.kubernetes.io/defaultProfileName: runtime/default
+    seccomp.security.alpha.kubernetes.io/allowedProfileNames: docker/default
+    seccomp.security.alpha.kubernetes.io/defaultProfileName: docker/default
+  labels:
+    app.kubernetes.io/instance: grafana
+    app.kubernetes.io/name: grafana
+  name: grafana
+  namespace: monitoring
+spec:
+  allowPrivilegeEscalation: false
+  fsGroup:
+    rule: RunAsAny
+  hostIPC: false
+  hostNetwork: false
+  hostPID: false
+  privileged: false
+  readOnlyRootFilesystem: false
+  requiredDropCapabilities:
+    - FOWNER
+    - FSETID
+    - KILL
+    - SETGID
+    - SETUID
+    - SETPCAP
+    - NET_BIND_SERVICE
+    - NET_RAW
+    - SYS_CHROOT
+    - MKNOD
+    - AUDIT_WRITE
+    - SETFCAP
+  runAsUser:
+    rule: RunAsAny
+  seLinux:
+    rule: RunAsAny
+  supplementalGroups:
+    rule: RunAsAny
+  volumes:
+    - configMap
+    - emptyDir
+    - projected
+    - secret
+    - downwardAPI
+    - persistentVolumeClaim
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-config-dashboards
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/instance: grafana
+    app.kubernetes.io/name: grafana
+data:
+  provider.yaml: |
+    apiVersion: 1
+    providers:
+      - name: 'sidecarProvider'
+        orgId: 1
+          folder: ''
+        type: file
+        disableDeletion: false
+        options:
+          path: /tmp/dashboards"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/instance: grafana
+    app.kubernetes.io/name: grafana
+data:
+  plugins: grafana-clock-panel
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  finalizers:
+    - kubernetes.io/pvc-protection
+  labels:
+    app.kubernetes.io/instance: grafana
+    app.kubernetes.io/name: grafana
+  name: grafana
+  namespace: monitoring
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: null
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/instance: grafana
+    app.kubernetes.io/name: grafana
+  name: grafana
+  namespace: monitoring
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/instance: grafana
+    app.kubernetes.io/name: grafana
+  name: grafana-clusterrole
+  namespace: monitoring
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+      - secrets
+    verbs:
+      - get
+      - watch
+      - list
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/instance: grafana
+    app.kubernetes.io/name: grafana
+  name: grafana-clusterrolebinding
+  namespace: monitoring
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: grafana-clusterrole
+subjects:
+  - kind: ServiceAccount
+    name: grafana
+    namespace: monitoring
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: Role
+metadata:
+  labels:
+    app.kubernetes.io/instance: grafana
+    app.kubernetes.io/name: grafana
+  name: grafana
+  namespace: monitoring
+rules:
+  - apiGroups:
+      - extensions
+    resourceNames:
+      - grafana
+    resources:
+      - podsecuritypolicies
+    verbs:
+      - use
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: RoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/instance: grafana
+    app.kubernetes.io/name: grafana
+  name: grafana
+  namespace: monitoring
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: grafana
+subjects:
+  - kind: ServiceAccount
+    name: grafana
+    namespace: monitoring
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/instance: grafana
+    app.kubernetes.io/name: grafana
+  name: grafana
+  namespace: monitoring
+spec:
+  ports:
+    - name: service
+      port: 80
+      protocol: TCP
+      targetPort: 3000
+  selector:
+    app: grafana
+    release: grafana
+  type: ClusterIP
+---
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/instance: grafana
+    app.kubernetes.io/name: grafana
+  name: grafana
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+      release: grafana
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        checksum/config: 3d9943bc3db8de1088fccffc79372086081df5ab18390d245aaec33da3308c65
+        checksum/dashboards-json-config: 01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b
+        checksum/sc-dashboard-provider-config: d3a2513343df0520a8668bd018471c27ad5681ce16441434eaca6bf00fca1ae3
+      labels:
+        app: grafana
+        release: grafana
+    spec:
+      containers:
+        - env:
+            - name: LABEL
+              value: grafana_dashboard
+            - name: FOLDER
+              value: /tmp/dashboards
+            - name: RESOURCE
+              value: both
+            - name: NAMESPACE
+              value: ALL
+          image: kiwigrid/k8s-sidecar:0.1.20
+          imagePullPolicy: IfNotPresent
+          name: grafana-sc-dashboard
+          resources: {}
+          volumeMounts:
+            - mountPath: /tmp/dashboards
+              name: sc-dashboard-volume
+        - env:
+            - name: GF_SECURITY_ADMIN_USER
+              valueFrom:
+                secretKeyRef:
+                  key: adminUser
+                  name: grafana
+            - name: GF_SECURITY_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: adminPassword
+                  name: grafana
+            - name: GF_INSTALL_PLUGINS
+              valueFrom:
+                configMapKeyRef:
+                  key: plugins
+                  name: grafana
+          image: grafana/grafana:6.3.5
+          imagePullPolicy: IfNotPresent
+          livenessProbe:
+            failureThreshold: 10
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 60
+            timeoutSeconds: 30
+          name: grafana
+          ports:
+            - containerPort: 80
+              name: service
+              protocol: TCP
+            - containerPort: 3000
+              name: grafana
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+          resources:
+            limits:
+              cpu: 100m
+              memory: 128Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          volumeMounts:
+            - mountPath: /etc/grafana/grafana.ini
+              name: config
+              subPath: grafana.ini
+            - mountPath: /var/lib/grafana
+              name: storage
+            - mountPath: /etc/grafana/provisioning/datasources/datasources.yaml
+              name: config
+              subPath: datasources.yaml
+            - mountPath: /tmp/dashboards
+              name: sc-dashboard-volume
+            - mountPath: /etc/grafana/provisioning/dashboards/sc-dashboardproviders.yaml
+              name: sc-dashboard-provider
+              subPath: provider.yaml
+            - mountPath: /etc/grafana/provisioning/datasources
+              name: sc-datasources-volume
+      initContainers:
+        - command:
+            - chown
+            - -R
+            - 472:472
+            - /var/lib/grafana
+          image: busybox:1.30
+          imagePullPolicy: IfNotPresent
+          name: init-chown-data
+          resources:
+            limits:
+              cpu: 100m
+              memory: 128Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          securityContext:
+            runAsUser: 0
+          volumeMounts:
+            - mountPath: /var/lib/grafana
+              name: storage
+        - env:
+            - name: METHOD
+              value: LIST
+            - name: LABEL
+              value: grafana_datasource
+            - name: FOLDER
+              value: /etc/grafana/provisioning/datasources
+            - name: RESOURCE
+              value: both
+          image: kiwigrid/k8s-sidecar:0.1.20
+          imagePullPolicy: IfNotPresent
+          name: grafana-sc-datasources
+          resources: {}
+          volumeMounts:
+            - mountPath: /etc/grafana/provisioning/datasources
+              name: sc-datasources-volume
+      securityContext:
+        fsGroup: 472
+        runAsUser: 472
+      serviceAccountName: grafana
+      volumes:
+        - configMap:
+            name: grafana
+          name: config
+        - name: storage
+          persistentVolumeClaim:
+            claimName: grafana
+        - emptyDir: {}
+          name: sc-dashboard-volume
+        - configMap:
+            name: grafana-config-dashboards
+          name: sc-dashboard-provider
+        - emptyDir: {}
+          name: sc-datasources-volume
+
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: grafana-http
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/instance: grafana
+    app.kubernetes.io/name: grafana
+spec:
+  entrypoints:
+    - http
+  routes:
+    - match: Host(`metrics.hannahs.family`)
+      kind: Rule
+      middlewares:
+        - name: https-redirect
+          namespace: default
+      services:
+        - name: grafana
+          port: 80
+
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: grafana-https
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/instance: grafana
+    app.kubernetes.io/name: grafana
+spec:
+  entrypoints:
+    - https
+  routes:
+    - match: Host(`metrics.hannahs.family`)
+      kind: Rule
+      services:
+        - name: grafana
+          port: 80
+  tls:
+    certResolver: default
+
+---
+apiVersion: externaldns.k8s.io/v1alpha1
+kind: DNSEndpoint
+metadata:
+  name: grafana
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/instance: grafana
+    app.kubernetes.io/name: grafana
+spec:
+  endpoints:
+    - dnsName: metrics.hannahs.family
+      recordType: CNAME
+      targets:
+        - traefik.hannahs.family
