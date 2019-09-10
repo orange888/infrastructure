@@ -60,13 +60,13 @@ data:
   provider.yaml: |
     apiVersion: 1
     providers:
-      - name: 'sidecarProvider'
+      - name: sidecarProvider
         orgId: 1
         folder: ''
         type: file
         disableDeletion: false
         options:
-          path: /tmp/dashboards"
+          path: /tmp/dashboards
 ---
 apiVersion: v1
 kind: ConfigMap
