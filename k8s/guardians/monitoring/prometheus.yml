@@ -954,6 +954,8 @@ metadata:
     app.kubernetes.io/component: kube-state-metrics
   name: prometheus-kube-state-metrics
   namespace: monitoring
+  annotations:
+    fluxcd.io/automated: 'true'
 spec:
   replicas: 1
   selector:
