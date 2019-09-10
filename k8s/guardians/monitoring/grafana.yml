@@ -62,7 +62,7 @@ data:
     providers:
       - name: 'sidecarProvider'
         orgId: 1
-          folder: ''
+        folder: ''
         type: file
         disableDeletion: false
         options:
