@@ -322,7 +322,7 @@ data:
           - role: endpoints
         relabel_configs:
           - action: keep
-            regex: true
+            regex: "true"
             source_labels:
               - __meta_kubernetes_service_annotation_prometheus_io_scrape
           - action: replace
