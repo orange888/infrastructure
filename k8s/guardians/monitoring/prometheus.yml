@@ -2,7 +2,7 @@
 apiVersion: policy/v1beta1
 kind: PodSecurityPolicy
 metadata:
-  annotations: null
+  annotations:
   labels:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/name: prometheus
@@ -12,13 +12,13 @@ metadata:
 spec:
   allowPrivilegeEscalation: false
   allowedHostPaths:
-    - pathPrefix: /etc
-      readOnly: true
-    - pathPrefix: /data
+  - pathPrefix: /etc
+    readOnly: true
+  - pathPrefix: /data
   fsGroup:
     ranges:
-      - max: 65535
-        min: 1
+    - max: 65535
+      min: 1
     rule: MustRunAs
   hostIPC: false
   hostNetwork: false
@@ -26,26 +26,26 @@ spec:
   privileged: false
   readOnlyRootFilesystem: true
   requiredDropCapabilities:
-    - ALL
+  - ALL
   runAsUser:
     rule: RunAsAny
   seLinux:
     rule: RunAsAny
   supplementalGroups:
     ranges:
-      - max: 65535
-        min: 1
+    - max: 65535
+      min: 1
     rule: MustRunAs
   volumes:
-    - configMap
-    - persistentVolumeClaim
-    - emptyDir
-    - secret
+  - configMap
+  - persistentVolumeClaim
+  - emptyDir
+  - secret
 ---
 apiVersion: policy/v1beta1
 kind: PodSecurityPolicy
 metadata:
-  annotations: null
+  annotations:
   labels:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/name: prometheus
@@ -57,8 +57,8 @@ spec:
   allowedHostPaths: []
   fsGroup:
     ranges:
-      - max: 65535
-        min: 1
+    - max: 65535
+      min: 1
     rule: MustRunAs
   hostIPC: false
   hostNetwork: false
@@ -66,23 +66,23 @@ spec:
   privileged: false
   readOnlyRootFilesystem: true
   requiredDropCapabilities:
-    - ALL
+  - ALL
   runAsUser:
     rule: RunAsAny
   seLinux:
     rule: RunAsAny
   supplementalGroups:
     ranges:
-      - max: 65535
-        min: 1
+    - max: 65535
+      min: 1
     rule: MustRunAs
   volumes:
-    - secret
+  - secret
 ---
 apiVersion: extensions/v1beta1
 kind: PodSecurityPolicy
 metadata:
-  annotations: null
+  annotations:
   labels:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/name: prometheus
@@ -92,43 +92,43 @@ metadata:
 spec:
   allowPrivilegeEscalation: false
   allowedHostPaths:
-    - pathPrefix: /proc
-      readOnly: true
-    - pathPrefix: /sys
-      readOnly: true
+  - pathPrefix: /proc
+    readOnly: true
+  - pathPrefix: /sys
+    readOnly: true
   fsGroup:
     ranges:
-      - max: 65535
-        min: 1
+    - max: 65535
+      min: 1
     rule: MustRunAs
   hostIPC: false
   hostNetwork: false
   hostPID: true
   hostPorts:
-    - max: 65535
-      min: 1
+  - max: 65535
+    min: 1
   privileged: false
   readOnlyRootFilesystem: false
   requiredDropCapabilities:
-    - ALL
+  - ALL
   runAsUser:
     rule: RunAsAny
   seLinux:
     rule: RunAsAny
   supplementalGroups:
     ranges:
-      - max: 65535
-        min: 1
+    - max: 65535
+      min: 1
     rule: MustRunAs
   volumes:
-    - configMap
-    - hostPath
-    - secret
+  - configMap
+  - hostPath
+  - secret
 ---
 apiVersion: policy/v1beta1
 kind: PodSecurityPolicy
 metadata:
-  annotations: null
+  annotations:
   labels:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/name: prometheus
@@ -138,11 +138,11 @@ metadata:
 spec:
   allowPrivilegeEscalation: false
   allowedHostPaths:
-    - pathPrefix: /data
+  - pathPrefix: /data
   fsGroup:
     ranges:
-      - max: 65535
-        min: 1
+    - max: 65535
+      min: 1
     rule: MustRunAs
   hostIPC: false
   hostNetwork: false
@@ -150,24 +150,24 @@ spec:
   privileged: false
   readOnlyRootFilesystem: true
   requiredDropCapabilities:
-    - ALL
+  - ALL
   runAsUser:
     rule: RunAsAny
   seLinux:
     rule: RunAsAny
   supplementalGroups:
     ranges:
-      - max: 65535
-        min: 1
+    - max: 65535
+      min: 1
     rule: MustRunAs
   volumes:
-    - persistentVolumeClaim
-    - secret
+  - persistentVolumeClaim
+  - secret
 ---
 apiVersion: policy/v1beta1
 kind: PodSecurityPolicy
 metadata:
-  annotations: null
+  annotations:
   labels:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/name: prometheus
@@ -177,15 +177,15 @@ metadata:
 spec:
   allowPrivilegeEscalation: false
   allowedCapabilities:
-    - CHOWN
+  - CHOWN
   allowedHostPaths:
-    - pathPrefix: /etc
-      readOnly: true
-    - pathPrefix: /data
+  - pathPrefix: /etc
+    readOnly: true
+  - pathPrefix: /data
   fsGroup:
     ranges:
-      - max: 65535
-        min: 1
+    - max: 65535
+      min: 1
     rule: MustRunAs
   hostIPC: false
   hostNetwork: false
@@ -198,20 +198,19 @@ spec:
     rule: RunAsAny
   supplementalGroups:
     ranges:
-      - max: 65535
-        min: 1
+    - max: 65535
+      min: 1
     rule: MustRunAs
   volumes:
-    - configMap
-    - persistentVolumeClaim
-    - emptyDir
-    - secret
-    - hostPath
+  - configMap
+  - persistentVolumeClaim
+  - emptyDir
+  - secret
+  - hostPath
 ---
 apiVersion: v1
 data:
-  alertmanager.yml:
-    "global: {}\nreceivers:\n- name: default-receiver\nroute:\n  group_interval:\
+  alertmanager.yml: "global: {}\nreceivers:\n- name: default-receiver\nroute:\n  group_interval:\
     \ 5m\n  group_wait: 10s\n  receiver: default-receiver\n  repeat_interval: 3h\n"
 kind: ConfigMap
 metadata:
@@ -224,16 +223,12 @@ metadata:
 ---
 apiVersion: v1
 data:
-  alerts: "{}
-
-    "
-  groups:
-    "- name: Instances\n  rules:\n  - alert: InstanceDown\n    annotations:\n\
+  alerts: "{}\n"
+  groups: "- name: Instances\n  rules:\n  - alert: InstanceDown\n    annotations:\n\
     \      description: '{{ $labels.instance }} of job {{ $labels.job }} has been\
     \ down\n        for more than 5 minutes.'\n      summary: Instance {{ $labels.instance\
     \ }} down\n    expr: up == 0\n    for: 5m\n    labels:\n      severity: page\n"
-  prometheus.yml:
-    "global:\n  evaluation_interval: 1m\n  scrape_interval: 1m\n  scrape_timeout:\
+  prometheus.yml: "global:\n  evaluation_interval: 1m\n  scrape_interval: 1m\n  scrape_timeout:\
     \ 10s\nrule_files:\n- /etc/config/rules\n- /etc/config/alerts\nscrape_configs:\n\
     - job_name: prometheus\n  static_configs:\n  - targets:\n    - localhost:9090\n\
     - bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token\n  job_name:\
@@ -298,9 +293,7 @@ data:
     \      regex: prometheus\n      action: keep\n    - source_labels: [__meta_kubernetes_pod_label_component]\n\
     \      regex: alertmanager\n      action: keep\n    - source_labels: [__meta_kubernetes_pod_container_port_number]\n\
     \      regex:\n      action: drop\n"
-  rules: "{}
-
-    "
+  rules: "{}\n"
 kind: ConfigMap
 metadata:
   labels:
@@ -321,7 +314,7 @@ metadata:
   namespace: monitoring
 spec:
   accessModes:
-    - ReadWriteOnce
+  - ReadWriteOnce
   resources:
     requests:
       storage: 2Gi
@@ -337,7 +330,7 @@ metadata:
   namespace: monitoring
 spec:
   accessModes:
-    - ReadWriteOnce
+  - ReadWriteOnce
   resources:
     requests:
       storage: 2Gi
@@ -353,7 +346,7 @@ metadata:
   namespace: monitoring
 spec:
   accessModes:
-    - ReadWriteOnce
+  - ReadWriteOnce
   resources:
     requests:
       storage: 8Gi
@@ -418,14 +411,14 @@ metadata:
   name: prometheus-alertmanager
   namespace: monitoring
 rules:
-  - apiGroups:
-      - extensions
-    resourceNames:
-      - prometheus-alertmanager
-    resources:
-      - podsecuritypolicies
-    verbs:
-      - use
+- apiGroups:
+  - extensions
+  resourceNames:
+  - prometheus-alertmanager
+  resources:
+  - podsecuritypolicies
+  verbs:
+  - use
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
@@ -437,82 +430,82 @@ metadata:
   name: prometheus-kube-state-metrics
   namespace: monitoring
 rules:
-  - apiGroups:
-      - extensions
-    resourceNames:
-      - prometheus-kube-state-metrics
-    resources:
-      - podsecuritypolicies
-    verbs:
-      - use
-  - apiGroups:
-      - ""
-    resources:
-      - namespaces
-      - nodes
-      - persistentvolumeclaims
-      - pods
-      - services
-      - resourcequotas
-      - replicationcontrollers
-      - limitranges
-      - persistentvolumeclaims
-      - persistentvolumes
-      - endpoints
-      - secrets
-      - configmaps
-    verbs:
-      - list
-      - watch
-  - apiGroups:
-      - extensions
-    resources:
-      - daemonsets
-      - deployments
-      - ingresses
-      - replicasets
-    verbs:
-      - list
-      - watch
-  - apiGroups:
-      - apps
-    resources:
-      - daemonsets
-      - deployments
-      - statefulsets
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - batch
-    resources:
-      - cronjobs
-      - jobs
-    verbs:
-      - list
-      - watch
-  - apiGroups:
-      - autoscaling
-    resources:
-      - horizontalpodautoscalers
-    verbs:
-      - list
-      - watch
-  - apiGroups:
-      - policy
-    resources:
-      - poddisruptionbudgets
-    verbs:
-      - list
-      - watch
-  - apiGroups:
-      - certificates.k8s.io
-    resources:
-      - certificatesigningrequests
-    verbs:
-      - list
-      - watch
+- apiGroups:
+  - extensions
+  resourceNames:
+  - prometheus-kube-state-metrics
+  resources:
+  - podsecuritypolicies
+  verbs:
+  - use
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  - nodes
+  - persistentvolumeclaims
+  - pods
+  - services
+  - resourcequotas
+  - replicationcontrollers
+  - limitranges
+  - persistentvolumeclaims
+  - persistentvolumes
+  - endpoints
+  - secrets
+  - configmaps
+  verbs:
+  - list
+  - watch
+- apiGroups:
+  - extensions
+  resources:
+  - daemonsets
+  - deployments
+  - ingresses
+  - replicasets
+  verbs:
+  - list
+  - watch
+- apiGroups:
+  - apps
+  resources:
+  - daemonsets
+  - deployments
+  - statefulsets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - batch
+  resources:
+  - cronjobs
+  - jobs
+  verbs:
+  - list
+  - watch
+- apiGroups:
+  - autoscaling
+  resources:
+  - horizontalpodautoscalers
+  verbs:
+  - list
+  - watch
+- apiGroups:
+  - policy
+  resources:
+  - poddisruptionbudgets
+  verbs:
+  - list
+  - watch
+- apiGroups:
+  - certificates.k8s.io
+  resources:
+  - certificatesigningrequests
+  verbs:
+  - list
+  - watch
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
@@ -524,14 +517,14 @@ metadata:
   name: prometheus-pushgateway
   namespace: monitoring
 rules:
-  - apiGroups:
-      - extensions
-    resourceNames:
-      - prometheus-pushgateway
-    resources:
-      - podsecuritypolicies
-    verbs:
-      - use
+- apiGroups:
+  - extensions
+  resourceNames:
+  - prometheus-pushgateway
+  resources:
+  - podsecuritypolicies
+  verbs:
+  - use
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
@@ -543,41 +536,41 @@ metadata:
   name: prometheus-server
   namespace: monitoring
 rules:
-  - apiGroups:
-      - extensions
-    resourceNames:
-      - prometheus-server
-    resources:
-      - podsecuritypolicies
-    verbs:
-      - use
-  - apiGroups:
-      - ""
-    resources:
-      - nodes
-      - nodes/proxy
-      - services
-      - endpoints
-      - pods
-      - ingresses
-      - configmaps
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - extensions
-    resources:
-      - ingresses/status
-      - ingresses
-    verbs:
-      - get
-      - list
-      - watch
-  - nonResourceURLs:
-      - /metrics
-    verbs:
-      - get
+- apiGroups:
+  - extensions
+  resourceNames:
+  - prometheus-server
+  resources:
+  - podsecuritypolicies
+  verbs:
+  - use
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  - nodes/proxy
+  - services
+  - endpoints
+  - pods
+  - ingresses
+  - configmaps
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - extensions
+  resources:
+  - ingresses/status
+  - ingresses
+  verbs:
+  - get
+  - list
+  - watch
+- nonResourceURLs:
+  - /metrics
+  verbs:
+  - get
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
@@ -593,9 +586,9 @@ roleRef:
   kind: ClusterRole
   name: prometheus-alertmanager
 subjects:
-  - kind: ServiceAccount
-    name: prometheus-alertmanager
-    namespace: monitoring
+- kind: ServiceAccount
+  name: prometheus-alertmanager
+  namespace: monitoring
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
@@ -611,9 +604,9 @@ roleRef:
   kind: ClusterRole
   name: prometheus-kube-state-metrics
 subjects:
-  - kind: ServiceAccount
-    name: prometheus-kube-state-metrics
-    namespace: monitoring
+- kind: ServiceAccount
+  name: prometheus-kube-state-metrics
+  namespace: monitoring
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
@@ -629,9 +622,9 @@ roleRef:
   kind: ClusterRole
   name: prometheus-pushgateway
 subjects:
-  - kind: ServiceAccount
-    name: prometheus-pushgateway
-    namespace: monitoring
+- kind: ServiceAccount
+  name: prometheus-pushgateway
+  namespace: monitoring
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
@@ -647,9 +640,9 @@ roleRef:
   kind: ClusterRole
   name: prometheus-server
 subjects:
-  - kind: ServiceAccount
-    name: prometheus-server
-    namespace: monitoring
+- kind: ServiceAccount
+  name: prometheus-server
+  namespace: monitoring
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: Role
@@ -661,14 +654,14 @@ metadata:
   name: prometheus-node-exporter
   namespace: monitoring
 rules:
-  - apiGroups:
-      - extensions
-    resourceNames:
-      - prometheus-node-exporter
-    resources:
-      - podsecuritypolicies
-    verbs:
-      - use
+- apiGroups:
+  - extensions
+  resourceNames:
+  - prometheus-node-exporter
+  resources:
+  - podsecuritypolicies
+  verbs:
+  - use
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -684,9 +677,9 @@ roleRef:
   kind: Role
   name: prometheus-node-exporter
 subjects:
-  - kind: ServiceAccount
-    name: prometheus-node-exporter
-    namespace: monitoring
+- kind: ServiceAccount
+  name: prometheus-node-exporter
+  namespace: monitoring
 ---
 apiVersion: v1
 kind: Service
@@ -699,10 +692,10 @@ metadata:
   namespace: monitoring
 spec:
   ports:
-    - name: http
-      port: 80
-      protocol: TCP
-      targetPort: 9093
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: 9093
   selector:
     app.kubernetes.io/name: prometheus
     app.kubernetes.io/component: alertmanager
@@ -723,10 +716,10 @@ metadata:
 spec:
   clusterIP: None
   ports:
-    - name: http
-      port: 80
-      protocol: TCP
-      targetPort: 8080
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: 8080
   selector:
     app.kubernetes.io/name: prometheus
     app.kubernetes.io/component: kube-state-metrics
@@ -747,10 +740,10 @@ metadata:
 spec:
   clusterIP: None
   ports:
-    - name: metrics
-      port: 9100
-      protocol: TCP
-      targetPort: 9100
+  - name: metrics
+    port: 9100
+    protocol: TCP
+    targetPort: 9100
   selector:
     app.kubernetes.io/name: prometheus
     app.kubernetes.io/component: node-exporter
@@ -770,10 +763,10 @@ metadata:
   namespace: monitoring
 spec:
   ports:
-    - name: http
-      port: 9091
-      protocol: TCP
-      targetPort: 9091
+  - name: http
+    port: 9091
+    protocol: TCP
+    targetPort: 9091
   selector:
     app.kubernetes.io/name: prometheus
     app.kubernetes.io/component: pushgateway
@@ -791,10 +784,10 @@ metadata:
   namespace: monitoring
 spec:
   ports:
-    - name: http
-      port: 80
-      protocol: TCP
-      targetPort: 9090
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: 9090
   selector:
     app.kubernetes.io/name: prometheus
     app.kubernetes.io/component: server
@@ -810,6 +803,8 @@ metadata:
     app.kubernetes.io/component: node-exporter
   name: prometheus-node-exporter
   namespace: monitoring
+  annotations:
+    fluxcd.io/automated: 'true'
 spec:
   selector:
     matchLabels:
@@ -826,39 +821,39 @@ spec:
         app.kubernetes.io/instance: prometheus
     spec:
       containers:
-        - args:
-            - --path.procfs=/host/proc
-            - --path.sysfs=/host/sys
-          image: prom/node-exporter:v0.18.0
-          imagePullPolicy: IfNotPresent
-          name: prometheus-node-exporter
-          ports:
-            - containerPort: 9100
-              hostPort: 9100
-              name: metrics
-          resources:
-            limits:
-              cpu: 200m
-              memory: 50Mi
-            requests:
-              cpu: 100m
-              memory: 30Mi
-          volumeMounts:
-            - mountPath: /host/proc
-              name: proc
-              readOnly: true
-            - mountPath: /host/sys
-              name: sys
-              readOnly: true
+      - args:
+        - --path.procfs=/host/proc
+        - --path.sysfs=/host/sys
+        image: prom/node-exporter:v0.18.0
+        imagePullPolicy: IfNotPresent
+        name: prometheus-node-exporter
+        ports:
+        - containerPort: 9100
+          hostPort: 9100
+          name: metrics
+        resources:
+          limits:
+            cpu: 200m
+            memory: 50Mi
+          requests:
+            cpu: 100m
+            memory: 30Mi
+        volumeMounts:
+        - mountPath: /host/proc
+          name: proc
+          readOnly: true
+        - mountPath: /host/sys
+          name: sys
+          readOnly: true
       hostPID: true
       serviceAccountName: prometheus-node-exporter
       volumes:
-        - hostPath:
-            path: /proc
-          name: proc
-        - hostPath:
-            path: /sys
-          name: sys
+      - hostPath:
+          path: /proc
+        name: proc
+      - hostPath:
+          path: /sys
+        name: sys
   updateStrategy:
     type: RollingUpdate
 ---
@@ -888,52 +883,52 @@ spec:
         app.kubernetes.io/instance: prometheus
     spec:
       containers:
-        - args:
-            - --config.file=/etc/config/alertmanager.yml
-            - --storage.path=/data
-            - --cluster.advertise-address=$(POD_IP):6783
-            - --web.external-url=/
-          env:
-            - name: POD_IP
-              valueFrom:
-                fieldRef:
-                  apiVersion: v1
-                  fieldPath: status.podIP
-          image: prom/alertmanager:v0.18.0
-          imagePullPolicy: IfNotPresent
-          name: prometheus-alertmanager
-          ports:
-            - containerPort: 9093
-          readinessProbe:
-            httpGet:
-              path: /#/status
-              port: 9093
-            initialDelaySeconds: 30
-            timeoutSeconds: 30
-          resources:
-            limits:
-              cpu: 10m
-              memory: 32Mi
-            requests:
-              cpu: 10m
-              memory: 32Mi
-          volumeMounts:
-            - mountPath: /etc/config
-              name: config-volume
-            - mountPath: /data
-              name: storage-volume
-              subPath: ""
-        - args:
-            - --volume-dir=/etc/config
-            - --webhook-url=http://127.0.0.1:9093/-/reload
-          image: jimmidyson/configmap-reload:v0.2.2
-          imagePullPolicy: IfNotPresent
-          name: prometheus-alertmanager-configmap-reload
-          resources: {}
-          volumeMounts:
-            - mountPath: /etc/config
-              name: config-volume
-              readOnly: true
+      - args:
+        - --config.file=/etc/config/alertmanager.yml
+        - --storage.path=/data
+        - --cluster.advertise-address=$(POD_IP):6783
+        - --web.external-url=/
+        env:
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: status.podIP
+        image: prom/alertmanager:v0.18.0
+        imagePullPolicy: IfNotPresent
+        name: prometheus-alertmanager
+        ports:
+        - containerPort: 9093
+        readinessProbe:
+          httpGet:
+            path: /#/status
+            port: 9093
+          initialDelaySeconds: 30
+          timeoutSeconds: 30
+        resources:
+          limits:
+            cpu: 10m
+            memory: 32Mi
+          requests:
+            cpu: 10m
+            memory: 32Mi
+        volumeMounts:
+        - mountPath: /etc/config
+          name: config-volume
+        - mountPath: /data
+          name: storage-volume
+          subPath: ""
+      - args:
+        - --volume-dir=/etc/config
+        - --webhook-url=http://127.0.0.1:9093/-/reload
+        image: jimmidyson/configmap-reload:v0.2.2
+        imagePullPolicy: IfNotPresent
+        name: prometheus-alertmanager-configmap-reload
+        resources: {}
+        volumeMounts:
+        - mountPath: /etc/config
+          name: config-volume
+          readOnly: true
       securityContext:
         fsGroup: 65534
         runAsGroup: 65534
@@ -941,12 +936,12 @@ spec:
         runAsUser: 65534
       serviceAccountName: prometheus-alertmanager
       volumes:
-        - configMap:
-            name: prometheus-alertmanager
-          name: config-volume
-        - name: storage-volume
-          persistentVolumeClaim:
-            claimName: prometheus-alertmanager
+      - configMap:
+          name: prometheus-alertmanager
+        name: config-volume
+      - name: storage-volume
+        persistentVolumeClaim:
+          claimName: prometheus-alertmanager
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -974,19 +969,19 @@ spec:
         app.kubernetes.io/instance: prometheus
     spec:
       containers:
-        - image: quay.io/coreos/kube-state-metrics:v1.6.0
-          imagePullPolicy: IfNotPresent
-          name: prometheus-kube-state-metrics
-          ports:
-            - containerPort: 8080
-              name: metrics
-          resources:
-            limits:
-              cpu: 10m
-              memory: 16Mi
-            requests:
-              cpu: 10m
-              memory: 16Mi
+      - image: quay.io/coreos/kube-state-metrics:v1.6.0
+        imagePullPolicy: IfNotPresent
+        name: prometheus-kube-state-metrics
+        ports:
+        - containerPort: 8080
+          name: metrics
+        resources:
+          limits:
+            cpu: 10m
+            memory: 16Mi
+          requests:
+            cpu: 10m
+            memory: 16Mi
       securityContext:
         runAsNonRoot: true
         runAsUser: 65534
@@ -1018,37 +1013,37 @@ spec:
         app.kubernetes.io/instance: prometheus
     spec:
       containers:
-        - args: null
-          image: prom/pushgateway:v0.8.0
-          imagePullPolicy: IfNotPresent
-          name: prometheus-pushgateway
-          ports:
-            - containerPort: 9091
-          readinessProbe:
-            httpGet:
-              path: /#/status
-              port: 9091
-            initialDelaySeconds: 10
-            timeoutSeconds: 10
-          resources:
-            limits:
-              cpu: 10m
-              memory: 32Mi
-            requests:
-              cpu: 10m
-              memory: 32Mi
-          volumeMounts:
-            - mountPath: /data
-              name: storage-volume
-              subPath: ""
+      - args:
+        image: prom/pushgateway:v0.8.0
+        imagePullPolicy: IfNotPresent
+        name: prometheus-pushgateway
+        ports:
+        - containerPort: 9091
+        readinessProbe:
+          httpGet:
+            path: /#/status
+            port: 9091
+          initialDelaySeconds: 10
+          timeoutSeconds: 10
+        resources:
+          limits:
+            cpu: 10m
+            memory: 32Mi
+          requests:
+            cpu: 10m
+            memory: 32Mi
+        volumeMounts:
+        - mountPath: /data
+          name: storage-volume
+          subPath: ""
       securityContext:
         runAsNonRoot: true
         runAsUser: 65534
       serviceAccountName: prometheus-pushgateway
       volumes:
-        - name: storage-volume
-          persistentVolumeClaim:
-            claimName: prometheus-pushgateway
+      - name: storage-volume
+        persistentVolumeClaim:
+          claimName: prometheus-pushgateway
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -1076,54 +1071,54 @@ spec:
         app.kubernetes.io/instance: prometheus
     spec:
       containers:
-        - args:
-            - --volume-dir=/etc/config
-            - --webhook-url=http://127.0.0.1:9090/-/reload
-          image: jimmidyson/configmap-reload:v0.2.2
-          imagePullPolicy: IfNotPresent
-          name: prometheus-server-configmap-reload
-          resources: {}
-          volumeMounts:
-            - mountPath: /etc/config
-              name: config-volume
-              readOnly: true
-        - args:
-            - --storage.tsdb.retention.time=15d
-            - --config.file=/etc/config/prometheus.yml
-            - --storage.tsdb.path=/data
-            - --web.console.libraries=/etc/prometheus/console_libraries
-            - --web.console.templates=/etc/prometheus/consoles
-            - --web.enable-lifecycle
-          image: prom/prometheus:v2.11.1
-          imagePullPolicy: IfNotPresent
-          livenessProbe:
-            httpGet:
-              path: /-/healthy
-              port: 9090
-            initialDelaySeconds: 30
-            timeoutSeconds: 30
-          name: prometheus-server
-          ports:
-            - containerPort: 9090
-          readinessProbe:
-            httpGet:
-              path: /-/ready
-              port: 9090
-            initialDelaySeconds: 30
-            timeoutSeconds: 30
-          resources:
-            limits:
-              cpu: 500m
-              memory: 512Mi
-            requests:
-              cpu: 500m
-              memory: 512Mi
-          volumeMounts:
-            - mountPath: /etc/config
-              name: config-volume
-            - mountPath: /data
-              name: storage-volume
-              subPath: ""
+      - args:
+        - --volume-dir=/etc/config
+        - --webhook-url=http://127.0.0.1:9090/-/reload
+        image: jimmidyson/configmap-reload:v0.2.2
+        imagePullPolicy: IfNotPresent
+        name: prometheus-server-configmap-reload
+        resources: {}
+        volumeMounts:
+        - mountPath: /etc/config
+          name: config-volume
+          readOnly: true
+      - args:
+        - --storage.tsdb.retention.time=15d
+        - --config.file=/etc/config/prometheus.yml
+        - --storage.tsdb.path=/data
+        - --web.console.libraries=/etc/prometheus/console_libraries
+        - --web.console.templates=/etc/prometheus/consoles
+        - --web.enable-lifecycle
+        image: prom/prometheus:v2.11.1
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          httpGet:
+            path: /-/healthy
+            port: 9090
+          initialDelaySeconds: 30
+          timeoutSeconds: 30
+        name: prometheus-server
+        ports:
+        - containerPort: 9090
+        readinessProbe:
+          httpGet:
+            path: /-/ready
+            port: 9090
+          initialDelaySeconds: 30
+          timeoutSeconds: 30
+        resources:
+          limits:
+            cpu: 500m
+            memory: 512Mi
+          requests:
+            cpu: 500m
+            memory: 512Mi
+        volumeMounts:
+        - mountPath: /etc/config
+          name: config-volume
+        - mountPath: /data
+          name: storage-volume
+          subPath: ""
       securityContext:
         fsGroup: 65534
         runAsGroup: 65534
@@ -1132,9 +1127,9 @@ spec:
       serviceAccountName: prometheus-server
       terminationGracePeriodSeconds: 300
       volumes:
-        - configMap:
-            name: prometheus-server
-          name: config-volume
-        - name: storage-volume
-          persistentVolumeClaim:
-            claimName: prometheus-server
+      - configMap:
+          name: prometheus-server
+        name: config-volume
+      - name: storage-volume
+        persistentVolumeClaim:
+          claimName: prometheus-server
