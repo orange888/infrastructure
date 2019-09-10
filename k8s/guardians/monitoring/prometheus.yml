@@ -866,6 +866,8 @@ metadata:
     app.kubernetes.io/component: alertmanager
   name: prometheus-alertmanager
   namespace: monitoring
+  annotations:
+    fluxcd.io/automated: 'true'
 spec:
   replicas: 1
   selector:
