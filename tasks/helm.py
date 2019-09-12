@@ -38,8 +38,12 @@ def helm_fetch(c, chart, repo=None, username=None, password=None):
     c.run(" ".join(cmd))
 
 
-@task(help={"chart": "Helm chart to extract values.yaml from"}, name="values")
-def helm_values(c, chart):
+@task(help={
+    "chart": "Helm chart to extract values.yaml from",
+    "cluster": "Target cluster for the generated manifests"
+},
+      name="values")
+def helm_values(c, chart, cluster="common"):
     """Extract the values.yaml file from a fetched Helm chart to
     values/chartname.yml
 
@@ -49,8 +53,8 @@ def helm_values(c, chart):
         hfi helm.values traefik
     """
     cwd = Path.cwd()
-    values = cwd.joinpath("k8s", ".values")
-    values.mkdir(exist_ok=True)
+    values = cwd.joinpath("k8s", ".values", cluster)
+    values.mkdir(exist_ok=True, parents=True)
 
     chart_archive = tarfile.open(list(cwd.glob("{}-*.tgz".format(chart)))[-1])
 
@@ -64,11 +68,17 @@ def helm_values(c, chart):
 @task(help={
     "chart": "Helm chart to generate manifests of from templates",
     "cluster": "Target cluster for the generated manifests",
+    "dir": "Generate templates into directory instead of single file",
     "name": "Name of the installation",
     "namespace": "Target namespace for the manifests"
 },
       name="template")
-def helm_template(c, chart, cluster="common", name=None, namespace="default"):
+def helm_template(c,
+                  chart,
+                  cluster="common",
+                  dir=False,
+                  name=None,
+                  namespace="default"):
     """Generate a manifest from a fetch Helm chart and (if present) its
     extracted and modified values.yaml file
 
@@ -88,7 +98,7 @@ def helm_template(c, chart, cluster="common", name=None, namespace="default"):
 
     cmd = ["helm", "template", chart_archive.name]
 
-    values = cwd.joinpath("k8s", ".values", "{}.yml".format(chart))
+    values = cwd.joinpath("k8s", ".values", cluster, "{}.yml".format(chart))
     if values.is_file():
         cmd += ["--values", str(values)]
 
@@ -97,6 +107,14 @@ def helm_template(c, chart, cluster="common", name=None, namespace="default"):
 
     cmd += ["--name", name]
     cmd += ["--namespace", namespace]
+
+    base_dir = cwd.joinpath("k8s", cluster, namespace)
+
+    if dir:
+        output_dir = cwd.joinpath("k8s", cluster, namespace, name)
+        cmd += [
+            "--output-dir",
+        ]
 
     proc = c.run(" ".join(cmd), hide="out")
     manifest = cwd.joinpath("k8s", cluster, namespace, "{}.yml".format(name))
