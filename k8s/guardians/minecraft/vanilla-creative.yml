@@ -175,10 +175,10 @@ spec:
               port: 25565
           resources:
             requests:
-              cpu: 500m
-              memory: 1024Mi
+              cpu: 3000m
+              memory: 4096Mi
             limits:
-              cpu: 2000m
+              cpu: 3000m
               memory: 4096Mi
           volumeMounts:
             - name: storage
