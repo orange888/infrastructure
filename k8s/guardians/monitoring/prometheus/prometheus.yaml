@@ -24,6 +24,8 @@ spec:
         port: web
         pathPrefix: /
   baseImage: quay.io/prometheus/prometheus
+  configMaps:
+    - prometheus-influxdb
   version: v2.12.0
   externalUrl: http://prometheus-operator-prometheus.monitoring:9090
   paused: false
