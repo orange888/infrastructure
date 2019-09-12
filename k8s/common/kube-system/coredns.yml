@@ -218,10 +218,10 @@ spec:
           requiredDuringSchedulingIgnoredDuringExecution:
             - labelSelector:
                 matchExpressions:
-                  - key: app
+                  - key: k8s-app
                     operator: In
                     values:
-                      - web-store
+                      - coredns
               topologyKey: kubernetes.io/hostname
 
       containers:
