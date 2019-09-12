@@ -112,33 +112,33 @@ def helm_template(c,
 
     if dir:
         output_dir = cwd.joinpath("k8s", cluster, namespace, name)
-        cmd += [
-            "--output-dir",
-        ]
+        output_dir.mkdir(exist_ok=True, parents=True)
+        cmd += ["--output-dir", "{}".format(output_dir)]
 
     proc = c.run(" ".join(cmd), hide="out")
     manifest = cwd.joinpath("k8s", cluster, namespace, "{}.yml".format(name))
 
-    with open(manifest, "w") as file:
-        for doc in yaml.safe_load_all(proc.stdout):
-            if doc is None:
-                continue
+    if not dir:
+        with open(manifest, "w") as file:
+            for doc in yaml.safe_load_all(proc.stdout):
+                if doc is None:
+                    continue
 
-            doc["metadata"].setdefault("namespace", namespace)
+                doc["metadata"].setdefault("namespace", namespace)
 
-            for key in ["app", "chart", "heritage", "release"]:
-                try:
-                    del doc["metadata"]["labels"][key]
-                except KeyError:
-                    pass
+                for key in ["app", "chart", "heritage", "release"]:
+                    try:
+                        del doc["metadata"]["labels"][key]
+                    except KeyError:
+                        pass
 
-            doc["metadata"].setdefault("labels", {})
-            doc["metadata"]["labels"].setdefault("app.kubernetes.io/name",
-                                                 chart)
-            doc["metadata"]["labels"].setdefault("app.kubernetes.io/instance",
-                                                 name)
+                doc["metadata"].setdefault("labels", {})
+                doc["metadata"]["labels"].setdefault("app.kubernetes.io/name",
+                                                     chart)
+                doc["metadata"]["labels"].setdefault(
+                    "app.kubernetes.io/instance", name)
 
-            yaml.dump(doc, file, explicit_start=True)
+                yaml.dump(doc, file, explicit_start=True)
 
 
 @task(help={"chart": "Helm chart to fetch and extract values.yaml from"},
