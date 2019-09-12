@@ -7,5 +7,7 @@
 - hosts: all
   vars:
     ansible_user: root
+    apt_do_upgrade: true
   roles:
+    - apt
     - service_user

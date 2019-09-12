@@ -1,4 +1,5 @@
 ---
+apt_unattended_upgrades: true
 dns_records:
   guardians:
     type: A

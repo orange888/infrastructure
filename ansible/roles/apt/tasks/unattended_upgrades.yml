@@ -1,0 +1,16 @@
+---
+- name: Install unattended-upgrades
+  become: true
+  package:
+    name: unattended-upgrades
+    state: present
+    install_recommends: false
+
+- name: Enable unattended upgrades
+  become: true
+  copy:
+    src: etc/apt/apt.conf.d/20auto-upgrades
+    dest: /etc/apt/apt.conf.d/
+    owner: root
+    group: root
+    mode: 0644

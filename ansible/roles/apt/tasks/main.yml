@@ -6,27 +6,8 @@
     state: present
     install_recommends: false
 
-- name: Upgrade packages
-  become: true
-  apt:
-    update_cache: true
-    upgrade: full
-    install_recommends: false
+- include_tasks: upgrade.yml
+  when: apt_do_upgrade
 
-- name: Autoremove
-  become: true
-  apt:
-    autoremove: true
-    purge: true
-
-- name: Autoclean
-  become: true
-  apt:
-    autoclean: true
-
-- name: Check for reboot sentinel
-  stat:
-    path: "{{ apt_reboot_sentinel }}"
-  register: sentinel
-  changed_when: sentinel.stat.exists
-  notify: Reboot
+- include_tasks: unattended_upgrades.yml
+  when: apt_unattended_upgrades
