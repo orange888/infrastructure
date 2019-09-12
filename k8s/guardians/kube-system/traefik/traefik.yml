@@ -64,11 +64,11 @@ data:
           storage: /acme/acme.json
     entrypoints:
       http:
-        address: :10080
+        address: :80
       https:
-        address: :10443
+        address: :443
       traefik:
-        address: :10880
+        address: :8080
     global:
       sendAnonymousUsage: false
     log:
@@ -134,18 +134,18 @@ spec:
             - --configFile=/config/traefik.yml
           ports:
             - name: http
-              containerPort: 10080
+              containerPort: 80
             - name: https
-              containerPort: 10443
+              containerPort: 443
             - name: api
-              containerPort: 10880
+              containerPort: 8080
           envFrom:
             - secretRef:
                 name: cloudflare
           livenessProbe: &probe
             httpGet:
               path: /ping
-              port: 10880
+              port: 8080
             initialDelaySeconds: 10
             periodSeconds: 10
             timeoutSeconds: 2
