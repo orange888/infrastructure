@@ -1,0 +1,16 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: prometheus-operator-node-exporter
+  labels:
+    app.kubernetes.io/name: prometheus-operator-node-exporter
+    app.kubernetes.io/instance: prometheus-operator
+  namespace: monitoring
+spec:
+  jobLabel: jobLabel
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: prometheus-node-exporter
+      app.kubernetes.io/instance: prometheus-operator
+  endpoints:
+    - port: metrics

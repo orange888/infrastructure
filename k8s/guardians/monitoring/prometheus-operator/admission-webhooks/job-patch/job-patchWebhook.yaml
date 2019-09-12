@@ -1,0 +1,33 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: prometheus-operator-admission-patch
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+  labels: &labels
+    app.kubernetes.io/name: prometheus-operator-admission-patch
+    app.kubernetes.io/instance: prometheus-operator
+  namespace: monitoring
+spec:
+  ttlSecondsAfterFinished: 0
+  template:
+    metadata:
+      name: prometheus-operator-admission-patch
+      labels:
+        <<: *labels
+    spec:
+      containers:
+        - name: patch
+          image: jettech/kube-webhook-certgen:v1.0.0
+          args:
+            - patch
+            - --webhook-name=prometheus-operator-admission
+            - --namespace=monitoring
+            - --secret-name=prometheus-operator-admission
+            - --patch-failure-policy=Fail
+      restartPolicy: OnFailure
+      serviceAccountName: prometheus-operator-admission
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 2000

@@ -1,0 +1,21 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: prometheus-operator-node-time
+  labels:
+    app.kubernetes.io/name: prometheus-operator
+    app.kubernetes.io/instance: prometheus-operator
+  namespace: monitoring
+spec:
+  groups:
+    - name: node-time
+      rules:
+        - alert: ClockSkewDetected
+          annotations:
+            message:
+              Clock skew detected on node-exporter {{ $labels.namespace }}/{{ $labels.pod
+              }}. Ensure NTP is configured correctly on this host.
+          expr: abs(node_timex_offset_seconds{job="node-exporter"}) > 0.05
+          for: 2m
+          labels:
+            severity: warning

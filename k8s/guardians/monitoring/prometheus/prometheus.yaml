@@ -1,0 +1,50 @@
+apiVersion: monitoring.coreos.com/v1
+kind: Prometheus
+metadata:
+  name: prometheus-operator-prometheus
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: prometheus-operator-prometheus
+    app.kubernetes.io/instance: prometheus-operator
+spec:
+  affinity:
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - prometheus
+          topologyKey: kubernetes.io/hostname
+  alerting:
+    alertmanagers:
+      - namespace: monitoring
+        name: prometheus-operator-alertmanager
+        port: web
+        pathPrefix: /
+  baseImage: quay.io/prometheus/prometheus
+  version: v2.12.0
+  externalUrl: http://prometheus-operator-prometheus.monitoring:9090
+  paused: false
+  replicas: 2
+  logLevel: info
+  logFormat: logfmt
+  listenLocal: false
+  enableAdminAPI: false
+  retention: 10d
+  routePrefix: /
+  serviceAccountName: prometheus-operator-prometheus
+  serviceMonitorSelector:
+    matchLabels:
+      app.kubernetes.io/instance: prometheus-operator
+  serviceMonitorNamespaceSelector: {}
+  securityContext:
+    fsGroup: 2000
+    runAsNonRoot: true
+    runAsUser: 1000
+  ruleNamespaceSelector: {}
+  ruleSelector:
+    matchLabels:
+      app.kubernetes.io/name: prometheus-operator
+      app.kubernetes.io/instance: prometheus-operator

@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: prometheus-operator-kube-controller-manager
+  labels:
+    k8s-app: kube-controller-manager
+    app.kubernetes.io/name: prometheus-operator-kube-controller-manager
+    app.kubernetes.io/instance: prometheus-operator
+  namespace: kube-system
+subsets:
+  - addresses:
+      - ip: 104.225.223.46
+    ports:
+      - name: http-metrics
+        port: 10252
+        protocol: TCP

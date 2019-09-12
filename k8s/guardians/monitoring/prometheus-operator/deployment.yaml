@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus-operator-operator
+  labels: &labels
+    app.kubernetes.io/name: prometheus-operator-operator
+    app.kubernetes.io/instance: prometheus-operator
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      <<: *labels
+  template:
+    metadata:
+      labels:
+        <<: *labels
+    spec:
+      containers:
+        - name: prometheus-operator
+          image: quay.io/coreos/prometheus-operator:v0.32.0
+          imagePullPolicy: IfNotPresent
+          args:
+            - --kubelet-service=kube-system/prometheus-operator-kubelet
+            - --logtostderr=true
+            - --crd-apigroup=monitoring.coreos.com
+            - --localhost=127.0.0.1
+            - --prometheus-config-reloader=quay.io/coreos/prometheus-config-reloader:v0.32.0
+            - --config-reloader-image=quay.io/coreos/configmap-reload:v0.0.1
+          ports:
+            - containerPort: 8080
+              name: http
+          resources:
+            limits:
+              cpu: 200m
+              memory: 200Mi
+            requests:
+              cpu: 100m
+              memory: 100Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+        - name: tls-proxy
+          image: squareup/ghostunnel:v1.4.1
+          imagePullPolicy: IfNotPresent
+          args:
+            - server
+            - --listen=:8443
+            - --target=127.0.0.1:8080
+            - --key=cert/key
+            - --cert=cert/cert
+            - --disable-authentication
+          volumeMounts:
+            - name: tls-proxy-secret
+              mountPath: /cert
+              readOnly: true
+          ports:
+            - containerPort: 8443
+              name: https
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+          resources:
+            limits:
+              cpu: 200m
+              memory: 200Mi
+            requests:
+              cpu: 10m
+              memory: 10Mi
+      volumes:
+        - name: tls-proxy-secret
+          secret:
+            defaultMode: 420
+            secretName: prometheus-operator-admission
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+      serviceAccountName: prometheus-operator-operator

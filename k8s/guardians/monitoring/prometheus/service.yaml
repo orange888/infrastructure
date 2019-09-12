@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus-operator-prometheus
+  labels:
+    app.kubernetes.io/name: prometheus-operator-prometheus
+    app.kubernetes.io/instance: prometheus-operator
+  namespace: monitoring
+spec:
+  ports:
+    - name: web
+      port: 9090
+  selector:
+    app: prometheus
+    prometheus: prometheus-operator-prometheus
+  type: ClusterIP
