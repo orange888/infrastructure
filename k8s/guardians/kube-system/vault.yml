@@ -17,7 +17,7 @@ spec:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: vault-config
+  name: vault
   labels:
     app.kubernetes.io/name: vault
     app.kubernetes.io/instance: vault
@@ -34,6 +34,7 @@ data:
     storage "consul" {
       path = "vault"
       address = "consul.kube-system.svc:8500"
+      token = "CONSUL_TOKEN"
     }
 
 ---
@@ -206,10 +207,10 @@ spec:
             type: File
         - name: config
           configMap:
-            name: vault-config
-        - name: tls
+            name: vault
+        - name: secret
           secret:
-            secretName: vault-tls
+            secretName: vault
       containers:
         - name: vault
           resources:
@@ -229,6 +230,7 @@ spec:
             - |
               sed -E "s/HOST_IP/${HOST_IP?}/g" /vault/config/extraconfig-from-values.hcl > /tmp/storageconfig.hcl;
               sed -Ei "s/POD_IP/${POD_IP?}/g" /tmp/storageconfig.hcl;
+              sed -Ei "s/CONSUL_TOKEN/${CONSUL_TOKEN?}/g" /tmp/storageconfig.hcl;
               chown vault:vault /tmp/storageconfig.hcl;
               /usr/local/bin/docker-entrypoint.sh vault server -config=/tmp/storageconfig.hcl
           env:
@@ -244,6 +246,11 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
+            - name: CONSUL_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: vault
+                  key: CONSUL_TOKEN
             - name: VAULT_ADDR
               value: https://127.0.0.1:8200
             - name: VAULT_API_ADDR
@@ -255,10 +262,10 @@ spec:
           volumeMounts:
             - name: config
               mountPath: /vault/config
-            - name: tls
+            - name: secret
               mountPath: /vault/tls/cert.pem
               subPath: cert.pem
-            - name: tls
+            - name: secret
               mountPath: /vault/tls/key.pem
               subPath: key.pem
             - name: ca
