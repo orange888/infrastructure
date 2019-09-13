@@ -118,6 +118,8 @@ metadata:
     fluxcd.io/automated: "true"
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       <<: *labels
@@ -129,7 +131,7 @@ spec:
       serviceAccountName: traefik
       containers:
         - name: traefik
-          image: traefik:v2.0
+          image: traefik:v2.0.0-rc3
           args:
             - --configFile=/config/traefik.yml
           ports:
