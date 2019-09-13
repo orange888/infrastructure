@@ -12,6 +12,26 @@ spec:
   selector:
     matchLabels:
       <<: *labels
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: consul
+  namespace: kube-system
+  labels:
+    app.kubernetes.io/instance: consul
+    app.kubernetes.io/name: consul
+data:
+  acl.json: |
+    {
+        "acl": {
+            "enabled": true,
+            "default_policy": "allow",
+            "enable_token_persistence": true
+        }
+    }
+
 ---
 apiVersion: v1
 kind: Service
@@ -115,6 +135,7 @@ spec:
                 fi
               done
               exec /bin/consul agent \
+                -config-dir=/etc/consul/config \
                 -domain=consul \
                 -data-dir=/var/lib/consul \
                 -server \
@@ -181,12 +202,18 @@ spec:
           volumeMounts:
             - mountPath: /var/lib/consul
               name: datadir
+            - mountPath: /etc/consul/config
+              name: config
+              readOnly: true
             - mountPath: /etc/consul/secrets
               name: secrets
               readOnly: true
       securityContext:
         fsGroup: 1000
       volumes:
+        - name: config
+          configMap:
+            name: consul
         - name: secrets
           secret:
             secretName: consul
