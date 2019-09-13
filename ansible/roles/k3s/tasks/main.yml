@@ -92,10 +92,11 @@
   become: true
   ufw:
     rule: allow
-    port: "10250"
-    src: "{{ hostvars[item].ansible_facts.default_ipv4.address }}"
+    port: "{{ item[1] }}"
+    src: "{{ hostvars[item[0]].ansible_facts.default_ipv4.address }}"
     proto: tcp
-  loop: "{{ groups[k3s_cluster_name] }}"
+  loop: |
+    {{ groups[k3s_cluster_name] | product(["9100", "10250", "10251", "10252"]) | list }}
 
 - name: Allow MetalLB speaker metrics scraping
   become: true
