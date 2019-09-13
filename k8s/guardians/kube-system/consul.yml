@@ -142,7 +142,7 @@ spec:
                   fieldPath: metadata.namespace
             - name: DNSPORT
               value: "8600"
-          image: consul:1.5.2
+          image: consul:1.6.1
           imagePullPolicy: Always
           livenessProbe:
             exec:
