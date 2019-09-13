@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: prometheus-operator-kube-proxy
+  labels:
+    k8s-app: kube-proxy
+    app.kubernetes.io/name: prometheus-operator-kube-proxy
+    app.kubernetes.io/instance: prometheus-operator
+  namespace: kube-system
+subsets:
+  - addresses:
+      - ip: 104.225.219.33
+      - ip: 104.225.223.197
+      - ip: 104.225.223.46
+      - ip: 104.225.222.101
+    ports:
+      - name: http-metrics
+        port: 10249
+        protocol: TCP
