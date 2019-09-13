@@ -254,3 +254,23 @@ spec:
         resources:
           requests:
             storage: 8Gi
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasource-influxdb
+  namespace: monitoring
+  labels:
+    grafana.com/datasource: "1"
+data:
+  influxdb.yaml: |-
+    apiVersion: 1
+    datasources:
+      - name: InfluxDB Prometheus
+        type: influxdb
+        access: proxy
+        url: http://influxdb.monitoring.svc:8086
+        database: prometheus
+        jsonData:
+          httpMode: POST
