@@ -45,9 +45,9 @@ metadata:
     app.kubernetes.io/name: memcached
     app.kubernetes.io/instance: memcached
   annotations:
-    flux.weave.works/tag.memcached: regexp:^1\.\d+\.\d+-alpine$
-    flux.weave.works/tag.metrics: semver:~0
-    flux.weave.works/automated: "true"
+    fluxcd.io/tag.memcached: regexp:^1\.\d+\.\d+-alpine$
+    fluxcd.io/tag.metrics: semver:~0
+    fluxcd.io/automated: "true"
   namespace: kube-system
 spec:
   serviceName: memcached

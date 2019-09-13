@@ -155,8 +155,8 @@ metadata:
     app.kubernetes.io/instance: external-dns
     app.kubernetes.io/name: external-dns
   annotations:
-    flux.weave.works/tag.external-dns: semver:~0
-    flux.weave.works/automated: "true"
+    fluxcd.io/tag.external-dns: semver:~0
+    fluxcd.io/automated: "true"
 spec:
   template:
     metadata:

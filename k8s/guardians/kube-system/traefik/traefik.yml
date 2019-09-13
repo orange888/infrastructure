@@ -114,8 +114,8 @@ metadata:
     app.kubernetes.io/name: traefik
     app.kubernetes.io/instance: traefik
   annotations:
-    flux.weave.works/tag.traefik: semver:~2
-    flux.weave.works/automated: "true"
+    fluxcd.io/tag.traefik: semver:~2
+    fluxcd.io/automated: "true"
 spec:
   replicas: 1
   selector:

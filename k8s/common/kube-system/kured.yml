@@ -138,8 +138,8 @@ metadata:
   name: kured
   namespace: kube-system
   annotations:
-    flux.weave.works/tag.kured: semver:~1
-    flux.weave.works/automated: "true"
+    fluxcd.io/tag.kured: semver:~1
+    fluxcd.io/automated: "true"
 spec:
   selector:
     matchLabels:

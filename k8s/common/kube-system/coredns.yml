@@ -191,8 +191,8 @@ metadata:
     kubernetes.io/name: "CoreDNS"
     app.kubernetes.io/name: coredns
   annotations:
-    flux.weave.works/tag.coredns: semver:~1
-    flux.weave.works/automated: "true"
+    fluxcd.io/tag.coredns: semver:~1
+    fluxcd.io/automated: "true"
 spec:
   replicas: 2
   selector:

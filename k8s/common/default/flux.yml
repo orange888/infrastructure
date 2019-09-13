@@ -110,8 +110,8 @@ metadata:
     app.kubernetes.io/name: flux
     app.kubernetes.io/instance: flux
   annotations:
-    flux.weave.works/tag.flux: semver:~1
-    flux.weave.works/automated: "true"
+    fluxcd.io/tag.flux: semver:~1
+    fluxcd.io/automated: "true"
 spec:
   replicas: 1
   selector:
