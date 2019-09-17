@@ -27,7 +27,7 @@ data:
     {
         "acl": {
             "enabled": true,
-            "default_policy": "allow",
+            "default_policy": "deny",
             "enable_token_persistence": true
         }
     }
@@ -85,6 +85,8 @@ metadata:
     fluxcd.io/automated: "true"
 spec:
   replicas: 3
+  updateStrategy:
+    type: OnDelete
   selector:
     matchLabels:
       <<: *labels
@@ -221,8 +223,6 @@ spec:
         - name: secrets
           secret:
             secretName: consul
-  updateStrategy:
-    type: RollingUpdate
   volumeClaimTemplates:
     - metadata:
         name: datadir
