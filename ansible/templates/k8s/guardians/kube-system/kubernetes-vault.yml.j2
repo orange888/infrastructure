@@ -8,12 +8,12 @@ metadata:
     app.kubernetes.io/name: kubernetes-vault
     app.kubernetes.io/instance: kubernetes-vault
 stringData:
-  kubernetes-vault.yml: |-
+  kubernetes-vault.yml: |
     vault:
       addr: https://vault:8200
       token: {{ kubernetes_vault.token }}
       tls:
-        caCert: /vault/tls/ca.pem
+        caCert: /etc/ssl/certs/hannahs.family.ca.cert.pem
 
     kubernetes:
       watchNamespace: ${KUBERNETES_NAMESPACE}

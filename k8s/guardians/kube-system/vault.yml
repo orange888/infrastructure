@@ -258,7 +258,7 @@ spec:
             - name: SKIP_CHOWN
               value: "true"
             - name: VAULT_CAPATH
-              value: /vault/tls/ca.pem
+              value: /etc/ssl/certs/hannahs.family.ca.cert.pem
           volumeMounts:
             - name: config
               mountPath: /vault/config
@@ -269,7 +269,7 @@ spec:
               mountPath: /vault/tls/key.pem
               subPath: key.pem
             - name: ca
-              mountPath: /vault/tls/ca.pem
+              mountPath: /etc/ssl/certs/hannahs.family.ca.cert.pem
           ports:
             - containerPort: 8200
               name: https

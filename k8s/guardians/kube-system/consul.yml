@@ -211,6 +211,10 @@ spec:
       securityContext:
         fsGroup: 1000
       volumes:
+        - name: ca
+          hostPath:
+            path: /etc/ssl/certs/hannahs.family.ca.cert.pem
+            type: File
         - name: config
           configMap:
             name: consul

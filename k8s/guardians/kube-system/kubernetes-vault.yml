@@ -86,7 +86,7 @@ spec:
             - name: config-volume
               mountPath: /kubernetes-vault
             - name: ca
-              mountPath: /vault/tls/ca.pem
+              mountPath: /etc/ssl/certs/hannahs.family.ca.cert.pem
       volumes:
         - name: config-volume
           secret:
