@@ -111,4 +111,8 @@
     file: ./manifests.yml
     apply:
       become: true
+      tags:
+        - manifests
   when: k3s_command == "server"
+  tags:
+    - manifests
