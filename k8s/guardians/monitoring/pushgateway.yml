@@ -1,0 +1,149 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/app: prometheus
+    app.kubernetes.io/instance: prometheus
+    app.kubernetes.io/component: pushgateway
+  name: pushgateway
+  namespace: monitoring
+rules:
+  - apiGroups:
+      - extensions
+    resources:
+      - podsecuritypolicies
+    verbs:
+      - use
+    resourceNames:
+      - pushgateway
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/app: prometheus
+    app.kubernetes.io/instance: prometheus
+    app.kubernetes.io/component: pushgateway
+  name: pushgateway
+  namespace: monitoring
+subjects:
+  - kind: ServiceAccount
+    name: pushgateway
+    namespace: monitoring
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: pushgateway
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels: &labels
+    app.kubernetes.io/app: prometheus
+    app.kubernetes.io/instance: prometheus
+    app.kubernetes.io/component: pushgateway
+  name: pushgateway
+  namespace: monitoring
+spec:
+  selector:
+    matchLabels:
+      <<: *labels
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        <<: *labels
+    spec:
+      serviceAccountName: pushgateway
+      containers:
+        - name: pushgateway
+          image: prom/pushgateway:v0.8.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 9091
+          readinessProbe:
+            httpGet:
+              path: /#/status
+              port: 9091
+            initialDelaySeconds: 10
+            timeoutSeconds: 10
+          resources:
+            limits:
+              cpu: 10m
+              memory: 32Mi
+            requests:
+              cpu: 10m
+              memory: 32Mi
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+---
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: pushgateway
+  labels:
+    app.kubernetes.io/app: prometheus
+    app.kubernetes.io/instance: prometheus
+    app.kubernetes.io/component: pushgateway
+  namespace: monitoring
+spec:
+  privileged: false
+  allowPrivilegeEscalation: false
+  requiredDropCapabilities:
+    - ALL
+  volumes:
+    - persistentVolumeClaim
+    - secret
+  allowedHostPaths:
+    - pathPrefix: /data
+  hostNetwork: false
+  hostPID: false
+  hostIPC: false
+  runAsUser:
+    rule: RunAsAny
+  seLinux:
+    rule: RunAsAny
+  supplementalGroups:
+    rule: MustRunAs
+    ranges:
+      - min: 1
+        max: 65535
+  fsGroup:
+    rule: MustRunAs
+    ranges:
+      - min: 1
+        max: 65535
+  readOnlyRootFilesystem: true
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    prometheus.io/probe: pushgateway
+  labels: &labels
+    app.kubernetes.io/app: prometheus
+    app.kubernetes.io/instance: prometheus
+    app.kubernetes.io/component: pushgateway
+  name: pushgateway
+  namespace: monitoring
+spec:
+  ports:
+    - name: http
+      port: 9091
+      protocol: TCP
+      targetPort: 9091
+  selector:
+    <<: *labels
+  type: ClusterIP
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/app: prometheus
+    app.kubernetes.io/instance: prometheus
+    app.kubernetes.io/component: pushgateway
+  name: pushgateway
+  namespace: monitoring

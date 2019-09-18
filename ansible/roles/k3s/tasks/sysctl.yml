@@ -1,0 +1,28 @@
+---
+- name: Set vm.max_map_count
+  sysctl:
+    name: vm.max_map_count
+    value: "3000000"
+    sysctl_set: true
+    reload: true
+
+- name: Set vm.swappiness
+  sysctl:
+    name: vm.swappiness
+    value: "1"
+    sysctl_set: true
+    reload: true
+
+- name: Set fs.file-max
+  sysctl:
+    name: fs.file-max
+    value: "3000000"
+    sysctl_set: true
+    reload: true
+
+- name: Set fs.nr_open
+  sysctl:
+    name: fs.nr_open
+    value: "3000000"
+    sysctl_set: true
+    reload: true

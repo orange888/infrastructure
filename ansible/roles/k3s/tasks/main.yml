@@ -1,4 +1,9 @@
 ---
+- include_tasks:
+    file: sysctl.yml
+    apply:
+      become: true
+
 - name: Install pip
   become: true
   package:

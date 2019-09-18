@@ -4,16 +4,14 @@
 apiVersion: v1
 kind: Secret
 metadata:
-  name: alertmanager-prometheus-operator-alertmanager
+  name: alertmanager
   namespace: monitoring
   labels:
-    app: prometheus-operator-alertmanager
-
-    chart: prometheus-operator-6.8.2
-    release: "prometheus-operator"
-    heritage: "Tiller"
+    app.kubernetes.io/app: prometheus
+    app.kubernetes.io/component: alertmanager
+    app.kubernetes.io/instance: prometheus
 stringData:
-  alertmanager.yaml: |
+  alertmanager.yml: |
     global:
       resolve_timeout: 5m
     receivers:

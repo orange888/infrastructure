@@ -1,0 +1,257 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/app: prometheus
+    app.kubernetes.io/instance: prometheus
+    app.kubernetes.io/component: alertmanager
+  name: alertmanager
+  namespace: monitoring
+rules:
+  - apiGroups:
+      - extensions
+    resources:
+      - podsecuritypolicies
+    verbs:
+      - use
+    resourceNames:
+      - alertmanager
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/app: prometheus
+    app.kubernetes.io/instance: prometheus
+    app.kubernetes.io/component: alertmanager
+  name: alertmanager
+  namespace: monitoring
+subjects:
+  - kind: ServiceAccount
+    name: alertmanager
+    namespace: monitoring
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: alertmanager
+---
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: alertmanager
+  labels:
+    app.kubernetes.io/app: prometheus
+    app.kubernetes.io/instance: prometheus
+    app.kubernetes.io/component: alertmanager
+  namespace: monitoring
+spec:
+  privileged: false
+  allowPrivilegeEscalation: false
+  requiredDropCapabilities:
+    - ALL
+  volumes:
+    - configMap
+    - persistentVolumeClaim
+    - emptyDir
+    - secret
+  allowedHostPaths:
+    - pathPrefix: /etc
+      readOnly: true
+    - pathPrefix: /data
+  hostNetwork: false
+  hostPID: false
+  hostIPC: false
+  runAsUser:
+    rule: RunAsAny
+  seLinux:
+    rule: RunAsAny
+  supplementalGroups:
+    rule: MustRunAs
+    ranges:
+      - min: 1
+        max: 65535
+  fsGroup:
+    rule: MustRunAs
+    ranges:
+      - min: 1
+        max: 65535
+  readOnlyRootFilesystem: true
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels: &labels
+    app.kubernetes.io/app: prometheus
+    app.kubernetes.io/instance: prometheus
+    app.kubernetes.io/component: alertmanager
+  name: alertmanager
+  namespace: monitoring
+spec:
+  clusterIP: None
+  ports:
+    - name: http
+      port: 9093
+  selector:
+    <<: *labels
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/app: prometheus
+    app.kubernetes.io/instance: prometheus
+    app.kubernetes.io/component: alertmanager
+  name: alertmanager
+  namespace: monitoring
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels: &labels
+    app.kubernetes.io/app: prometheus
+    app.kubernetes.io/instance: prometheus
+    app.kubernetes.io/component: alertmanager
+  name: alertmanager
+  namespace: monitoring
+  annotations:
+    fluxcd.io/tag.alertmanager: semver:~0
+    fluxcd.io/automated: "true"
+spec:
+  serviceName: alertmanager
+  selector:
+    matchLabels:
+      <<: *labels
+  replicas: 2
+  podManagementPolicy: Parallel
+  template:
+    metadata:
+      labels:
+        <<: *labels
+    spec:
+      serviceAccountName: alertmanager
+      containers:
+        - name: alertmanager
+          image: prom/alertmanager:v0.19.0
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: status.podIP
+          args:
+            - --config.file=/etc/config/alertmanager.yml
+            - --storage.path=/data
+            - --cluster.advertise-address=$(POD_IP):6783
+            - --web.external-url=https://alerts.metrics.hannahs.family
+          ports:
+            - containerPort: 9093
+          readinessProbe:
+            httpGet:
+              path: /#/status
+              port: 9093
+            initialDelaySeconds: 30
+            timeoutSeconds: 30
+          resources:
+            limits:
+              cpu: 10m
+              memory: 32Mi
+            requests:
+              cpu: 10m
+              memory: 32Mi
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/config
+            - name: storage-volume
+              mountPath: /data
+              subPath: ""
+        - name: alertmanager-configmap-reload
+          image: jimmidyson/configmap-reload:v0.3.0
+          imagePullPolicy: IfNotPresent
+          args:
+            - --volume-dir=/etc/config
+            - --webhook-url=http://localhost:9093/-/reload
+          resources:
+            limits:
+              cpu: 10m
+              memory: 32Mi
+            requests:
+              cpu: 10m
+              memory: 32Mi
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/config
+              readOnly: true
+      securityContext:
+        fsGroup: 65534
+        runAsGroup: 65534
+        runAsNonRoot: true
+        runAsUser: 65534
+      volumes:
+        - name: config-volume
+          secret:
+            secretName: alertmanager
+        - name: storage-volume
+          emptyDir: {}
+
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: alertmanager-http
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/app: prometheus
+    app.kubernetes.io/instance: prometheus
+    app.kubernetes.io/component: alertmanager
+spec:
+  entrypoints:
+    - http
+  routes:
+    - match: Host(`alerts.metrics.hannahs.family`)
+      kind: Rule
+      middlewares:
+        - name: https-redirect
+          namespace: default
+      services:
+        - name: alertmanager
+          port: 9093
+
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: alertmanager-https
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/app: prometheus
+    app.kubernetes.io/instance: prometheus
+    app.kubernetes.io/component: alertmanager
+spec:
+  entrypoints:
+    - https
+  routes:
+    - match: Host(`alerts.metrics.hannahs.family`)
+      kind: Rule
+      services:
+        - name: alertmanager
+          port: 9093
+  tls:
+    certResolver: default
+
+---
+apiVersion: externaldns.k8s.io/v1alpha1
+kind: DNSEndpoint
+metadata:
+  name: alertmanager
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/app: prometheus
+    app.kubernetes.io/instance: prometheus
+    app.kubernetes.io/component: alertmanager
+spec:
+  endpoints:
+    - dnsName: alerts.metrics.hannahs.family
+      recordType: CNAME
+      targets:
+        - traefik.hannahs.family

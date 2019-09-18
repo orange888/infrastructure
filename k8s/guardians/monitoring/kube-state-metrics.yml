@@ -1,0 +1,213 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/app: prometheus
+    app.kubernetes.io/instance: prometheus
+    app.kubernetes.io/component: kube-state-metrics
+  name: kube-state-metrics
+  namespace: monitoring
+rules:
+  - apiGroups:
+      - extensions
+    resources:
+      - podsecuritypolicies
+    verbs:
+      - use
+    resourceNames:
+      - kube-state-metrics
+  - apiGroups:
+      - ""
+    resources:
+      - namespaces
+      - nodes
+      - persistentvolumeclaims
+      - pods
+      - services
+      - resourcequotas
+      - replicationcontrollers
+      - limitranges
+      - persistentvolumeclaims
+      - persistentvolumes
+      - endpoints
+      - secrets
+      - configmaps
+    verbs:
+      - list
+      - watch
+  - apiGroups:
+      - extensions
+    resources:
+      - daemonsets
+      - deployments
+      - ingresses
+      - replicasets
+    verbs:
+      - list
+      - watch
+  - apiGroups:
+      - apps
+    resources:
+      - daemonsets
+      - deployments
+      - statefulsets
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - batch
+    resources:
+      - cronjobs
+      - jobs
+    verbs:
+      - list
+      - watch
+  - apiGroups:
+      - autoscaling
+    resources:
+      - horizontalpodautoscalers
+    verbs:
+      - list
+      - watch
+  - apiGroups:
+      - policy
+    resources:
+      - poddisruptionbudgets
+    verbs:
+      - list
+      - watch
+  - apiGroups:
+      - certificates.k8s.io
+    resources:
+      - certificatesigningrequests
+    verbs:
+      - list
+      - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    app.kubernetes.io/app: prometheus
+    app.kubernetes.io/instance: prometheus
+    app.kubernetes.io/component: kube-state-metrics
+  name: kube-state-metrics
+  namespace: monitoring
+subjects:
+  - kind: ServiceAccount
+    name: kube-state-metrics
+    namespace: monitoring
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kube-state-metrics
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels: &labels
+    app.kubernetes.io/app: prometheus
+    app.kubernetes.io/instance: prometheus
+    app.kubernetes.io/component: kube-state-metrics
+  name: kube-state-metrics
+  namespace: monitoring
+  annotations:
+    fluxcd.io/tag.kube-state-metrics: semver:~1
+    fluxcd.io/automated: "true"
+spec:
+  selector:
+    matchLabels:
+      <<: *labels
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        <<: *labels
+    spec:
+      serviceAccountName: kube-state-metrics
+      containers:
+        - name: kube-state-metrics
+          image: quay.io/coreos/kube-state-metrics:v1.7.2
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: metrics
+              containerPort: 8080
+          resources:
+            limits:
+              cpu: 10m
+              memory: 16Mi
+            requests:
+              cpu: 10m
+              memory: 16Mi
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+---
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: kube-state-metrics
+  labels:
+    app.kubernetes.io/app: prometheus
+    app.kubernetes.io/instance: prometheus
+    app.kubernetes.io/component: kube-state-metrics
+  namespace: monitoring
+spec:
+  privileged: false
+  allowPrivilegeEscalation: false
+  requiredDropCapabilities:
+    - ALL
+  volumes:
+    - secret
+  allowedHostPaths: []
+  hostNetwork: false
+  hostPID: false
+  hostIPC: false
+  runAsUser:
+    rule: RunAsAny
+  seLinux:
+    rule: RunAsAny
+  supplementalGroups:
+    rule: MustRunAs
+    ranges:
+      - min: 1
+        max: 65535
+  fsGroup:
+    rule: MustRunAs
+    ranges:
+      - min: 1
+        max: 65535
+  readOnlyRootFilesystem: true
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app.kubernetes.io/app: prometheus
+    app.kubernetes.io/instance: prometheus
+    app.kubernetes.io/component: kube-state-metrics
+  name: kube-state-metrics
+  namespace: monitoring
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    prometheus.io/scrape: "true"
+  labels: &labels
+    app.kubernetes.io/app: prometheus
+    app.kubernetes.io/instance: prometheus
+    app.kubernetes.io/component: kube-state-metrics
+  name: kube-state-metrics
+  namespace: monitoring
+spec:
+  ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: 8080
+  selector:
+    <<: *labels
+  type: ClusterIP
