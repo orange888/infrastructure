@@ -73,8 +73,9 @@ data:
             reload 1s
             fallthrough
         }
-        loadbalance round_robin
+        loadbalance
         prometheus 0.0.0.0:9153
+        loop
         forward . /etc/resolv.conf
     }
 
