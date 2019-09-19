@@ -371,7 +371,7 @@ spec:
     matchLabels:
       <<: *labels
   replicas: 2
-  podManagementPolicy: OrderedReady
+  podManagementPolicy: Parallel
   template:
     metadata:
       labels:
@@ -431,10 +431,10 @@ spec:
           resources:
             limits:
               cpu: 500m
-              memory: 512Mi
+              memory: 2Gi
             requests:
               cpu: 500m
-              memory: 512Mi
+              memory: 2Gi
           volumeMounts:
             - name: config
               mountPath: /etc/config
