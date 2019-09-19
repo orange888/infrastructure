@@ -8,7 +8,7 @@ metadata:
     app.kubernetes.io/instance: vault
   namespace: kube-system
 spec:
-  maxUnavailable: 0
+  maxUnavailable: 1
   selector:
     matchLabels:
       <<: *labels
