@@ -3,22 +3,21 @@ apiVersion: policy/v1beta1
 kind: PodDisruptionBudget
 metadata:
   name: memcached
-  labels:
+  labels: &labels
     app.kubernetes.io/name: memcached
     app.kubernetes.io/instance: memcached
   namespace: kube-system
 spec:
   selector:
     matchLabels:
-      app.kubernetes.io/name: memcached
-      app.kubernetes.io/instance: memcached
+      <<: *labels
   maxUnavailable: 1
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: memcached
-  labels:
+  labels: &labels
     app.kubernetes.io/name: memcached
     app.kubernetes.io/instance: memcached
   annotations:
@@ -35,13 +34,13 @@ spec:
       port: 9150
       targetPort: metrics
   selector:
-    app.kubernetes.io/name: memcached
+    <<: *labels
 ---
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: memcached
-  labels:
+  labels: &labels
     app.kubernetes.io/name: memcached
     app.kubernetes.io/instance: memcached
   annotations:
@@ -51,12 +50,15 @@ metadata:
   namespace: kube-system
 spec:
   serviceName: memcached
+  selector:
+    matchLabels:
+      <<: *labels
+  podManagementPolicy: Parallel
   replicas: 2
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: memcached
-        app.kubernetes.io/instance: memcached
+        <<: *labels
     spec:
       securityContext:
         fsGroup: 1001
@@ -66,8 +68,7 @@ spec:
             - topologyKey: kubernetes.io/hostname
               labelSelector:
                 matchLabels:
-                  app.kubernetes.io/name: memcached
-                  app.kubernetes.io/instance: memcached
+                  <<: *labels
       containers:
         - name: memcached
           image: memcached:1.5.17-alpine
@@ -86,9 +87,9 @@ spec:
             initialDelaySeconds: 5
             timeoutSeconds: 1
           resources:
-            requests:
-              cpu: 50m
-              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 1Gi
         - name: metrics
           image: quay.io/prometheus/memcached-exporter:v0.6.0
           securityContext:
