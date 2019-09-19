@@ -72,7 +72,7 @@ spec:
   selector:
     <<: *labels
 ---
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   labels: &labels
@@ -101,15 +101,8 @@ spec:
           preferredDuringSchedulingIgnoredDuringExecution:
             - podAffinityTerm:
                 labelSelector:
-                  matchExpressions:
-                    - key: app.kubernetes.io/instance
-                      operator: In
-                      values:
-                        - consul
-                    - key: app.kubernetes.io/name
-                      operator: In
-                      values:
-                        - consul
+                  matchLabels:
+                    <<: *labels
                 topologyKey: kubernetes.io/hostname
               weight: 1
       containers:
