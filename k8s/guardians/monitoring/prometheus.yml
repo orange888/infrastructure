@@ -536,7 +536,7 @@ metadata:
 data:
   prometheus.yml: |
     apiVersion: 1
-    dataSources:
+    datasources:
       - name: Prometheus
         type: prometheus
         url: http://prometheus:9090
