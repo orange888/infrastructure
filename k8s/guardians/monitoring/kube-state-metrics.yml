@@ -113,7 +113,7 @@ roleRef:
   name: kube-state-metrics
 ---
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   labels: &labels
     app.kubernetes.io/app: prometheus
@@ -122,9 +122,11 @@ metadata:
   name: kube-state-metrics
   namespace: monitoring
   annotations:
-    fluxcd.io/tag.kube-state-metrics: semver:~1
+    fluxcd.io/tag.kube-state-metrics: glob:v1.8.*
     fluxcd.io/automated: "true"
 spec:
+  serviceName: kube-state-metrics
+  podManagementPolicy: Parallel
   selector:
     matchLabels:
       <<: *labels
@@ -134,7 +136,7 @@ spec:
       labels:
         <<: *labels
     spec:
-      serviceAccountName: kube-state-metrics
+      serviceAccount: kube-state-metrics
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -144,8 +146,22 @@ spec:
               topologyKey: kubernetes.io/hostname
       containers:
         - name: kube-state-metrics
-          image: quay.io/coreos/kube-state-metrics:v1.7.2
+          image: quay.io/coreos/kube-state-metrics:v1.8.0-rc.0
           imagePullPolicy: IfNotPresent
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          args:
+            - --pod
+            - $(POD_NAME)
+            - --pod-namespace
+            - $(POD_NAMESPACE)
           ports:
             - name: metrics
               containerPort: 8080
@@ -220,9 +236,7 @@ metadata:
 spec:
   ports:
     - name: http
-      port: 80
-      protocol: TCP
-      targetPort: 8080
+      port: 8080
   selector:
     <<: *labels
-  type: ClusterIP
+  clusterIP: None
