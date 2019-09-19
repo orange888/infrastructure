@@ -135,6 +135,13 @@ spec:
         <<: *labels
     spec:
       serviceAccountName: kube-state-metrics
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  <<: *labels
+              topologyKey: kubernetes.io/hostname
       containers:
         - name: kube-state-metrics
           image: quay.io/coreos/kube-state-metrics:v1.7.2

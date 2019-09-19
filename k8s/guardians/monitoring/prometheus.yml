@@ -378,6 +378,13 @@ spec:
         <<: *labels
     spec:
       serviceAccountName: prometheus
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  <<: *labels
+              topologyKey: kubernetes.io/hostname
       containers:
         - name: configmap-reload
           image: jimmidyson/configmap-reload:v0.3.0
