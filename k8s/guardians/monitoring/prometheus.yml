@@ -522,3 +522,23 @@ spec:
       recordType: CNAME
       targets:
         - traefik.hannahs.family
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasource-prometheus
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/app: grafana
+    app.kubernetes.io/instance: grafana
+    grafana.com/datasource: prometheus
+data:
+  prometheus.yml: |
+    apiVersion: 1
+    dataSources:
+      - name: Prometheus
+        type: prometheus
+        url: http://prometheus:9090
+        access: proxy
+        isDefault: true
