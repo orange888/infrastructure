@@ -174,7 +174,7 @@ spec:
             - --git-label=flux-$(CLUSTER_NAME)
             - --listen-metrics=:3031
             - --log-format=json
-            - --memcached-service=memcached.kube-system.svc:11211
+            - --memcached-hostname=memcached.kube-system.svc:11211
             - --ssh-keygen-dir=/var/fluxd/keygen
             - --sync-garbage-collection
 ---
