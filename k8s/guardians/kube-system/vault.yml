@@ -46,7 +46,6 @@ metadata:
   labels:
     app.kubernetes.io/name: vault
     app.kubernetes.io/instance: vault
-
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
@@ -61,10 +60,9 @@ roleRef:
   kind: ClusterRole
   name: system:auth-delegator
 subjects:
-  - kind: ServiceAccount
-    name: vault
-    namespace: kube-system
-
+- kind: ServiceAccount
+  name: vault
+  namespace: kube-system
 ---
 apiVersion: v1
 kind: Service
@@ -80,12 +78,12 @@ spec:
   clusterIP: None
   publishNotReadyAddresses: true
   ports:
-    - name: https
-      port: 8200
-      targetPort: 8200
-    - name: internal
-      port: 8201
-      targetPort: 8201
+  - name: https
+    port: 8200
+    targetPort: 8200
+  - name: internal
+    port: 8201
+    targetPort: 8201
   selector:
     <<: *labels
 
@@ -102,10 +100,9 @@ spec:
   selector:
     <<: *labels
   ports:
-    - name: https
-      port: 8200
+  - name: https
+    port: 8200
   type: ClusterIP
-
 ---
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
@@ -117,17 +114,16 @@ metadata:
     app.kubernetes.io/instance: vault
 spec:
   entrypoints:
-    - http
+  - http
   routes:
-    - match: Host(`vault.hannahs.family`)
-      kind: Rule
-      middlewares:
-        - name: https-redirect
-          namespace: default
-      services:
-        - name: vault-ui
-          port: 8200
-
+  - match: Host(`vault.hannahs.family`)
+    kind: Rule
+    middlewares:
+    - name: https-redirect
+      namespace: default
+    services:
+    - name: vault-ui
+      port: 8200
 ---
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
@@ -139,16 +135,15 @@ metadata:
     app.kubernetes.io/instance: vault
 spec:
   entrypoints:
-    - https
+  - https
   routes:
-    - match: Host(`vault.hannahs.family`)
-      kind: Rule
-      services:
-        - name: vault-ui
-          port: 8200
+  - match: Host(`vault.hannahs.family`)
+    kind: Rule
+    services:
+    - name: vault-ui
+      port: 8200
   tls:
     certResolver: default
-
 ---
 apiVersion: externaldns.k8s.io/v1alpha1
 kind: DNSEndpoint
@@ -160,11 +155,10 @@ metadata:
     app.kubernetes.io/instance: vault
 spec:
   endpoints:
-    - dnsName: vault.hannahs.family
-      recordType: CNAME
-      targets:
-        - traefik.hannahs.family
-
+  - dnsName: vault.hannahs.family
+    recordType: CNAME
+    targets:
+    - traefik.hannahs.family
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -194,97 +188,97 @@ spec:
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
-            - labelSelector:
-                matchLabels:
-                  <<: *labels
-              topologyKey: kubernetes.io/hostname
+          - labelSelector:
+              matchLabels:
+                <<: *labels
+            topologyKey: kubernetes.io/hostname
       terminationGracePeriodSeconds: 10
       serviceAccountName: vault
       volumes:
-        - name: ca
-          hostPath:
-            path: /etc/ssl/certs/hannahs.family.ca.cert.pem
-            type: File
-        - name: config
-          configMap:
-            name: vault
-        - name: secret
-          secret:
-            secretName: vault
+      - name: ca
+        hostPath:
+          path: /etc/ssl/certs/hannahs.family.ca.cert.pem
+          type: File
+      - name: config
+        configMap:
+          name: vault
+      - name: secret
+        secret:
+          secretName: vault
       containers:
-        - name: vault
-          resources:
-            limits:
-              cpu: 250m
-              memory: 256Mi
-            requests:
-              cpu: 250m
-              memory: 256Mi
-          securityContext:
-            privileged: true
-          image: vault:1.2.2
-          command:
+      - name: vault
+        resources:
+          limits:
+            cpu: 250m
+            memory: 256Mi
+          requests:
+            cpu: 250m
+            memory: 256Mi
+        securityContext:
+          privileged: true
+        image: vault:1.2.3
+        command:
+        - /bin/sh
+        - -ec
+        args:
+        - |
+          sed -E "s/HOST_IP/${HOST_IP?}/g" /vault/config/extraconfig-from-values.hcl > /tmp/storageconfig.hcl;
+          sed -Ei "s/POD_IP/${POD_IP?}/g" /tmp/storageconfig.hcl;
+          sed -Ei "s/CONSUL_TOKEN/${CONSUL_TOKEN?}/g" /tmp/storageconfig.hcl;
+          chown vault:vault /tmp/storageconfig.hcl;
+          /usr/local/bin/docker-entrypoint.sh vault server -config=/tmp/storageconfig.hcl
+        env:
+        - name: HOST_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.hostIP
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: CONSUL_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: vault
+              key: CONSUL_TOKEN
+        - name: VAULT_ADDR
+          value: https://127.0.0.1:8200
+        - name: VAULT_API_ADDR
+          value: https://$(POD_NAME).vault:8200
+        - name: SKIP_CHOWN
+          value: "true"
+        - name: VAULT_CAPATH
+          value: /etc/ssl/certs/hannahs.family.ca.cert.pem
+        volumeMounts:
+        - name: config
+          mountPath: /vault/config
+        - name: secret
+          mountPath: /vault/tls/cert.pem
+          subPath: cert.pem
+        - name: secret
+          mountPath: /vault/tls/key.pem
+          subPath: key.pem
+        - name: ca
+          mountPath: /etc/ssl/certs/hannahs.family.ca.cert.pem
+        ports:
+        - containerPort: 8200
+          name: https
+        - containerPort: 8201
+          name: internal
+        - containerPort: 8202
+          name: replication
+        readinessProbe:
+          exec:
+            command:
             - /bin/sh
             - -ec
-          args:
-            - |
-              sed -E "s/HOST_IP/${HOST_IP?}/g" /vault/config/extraconfig-from-values.hcl > /tmp/storageconfig.hcl;
-              sed -Ei "s/POD_IP/${POD_IP?}/g" /tmp/storageconfig.hcl;
-              sed -Ei "s/CONSUL_TOKEN/${CONSUL_TOKEN?}/g" /tmp/storageconfig.hcl;
-              chown vault:vault /tmp/storageconfig.hcl;
-              /usr/local/bin/docker-entrypoint.sh vault server -config=/tmp/storageconfig.hcl
-          env:
-            - name: HOST_IP
-              valueFrom:
-                fieldRef:
-                  fieldPath: status.hostIP
-            - name: POD_IP
-              valueFrom:
-                fieldRef:
-                  fieldPath: status.podIP
-            - name: POD_NAME
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.name
-            - name: CONSUL_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: vault
-                  key: CONSUL_TOKEN
-            - name: VAULT_ADDR
-              value: https://127.0.0.1:8200
-            - name: VAULT_API_ADDR
-              value: https://$(POD_NAME).vault:8200
-            - name: SKIP_CHOWN
-              value: "true"
-            - name: VAULT_CAPATH
-              value: /etc/ssl/certs/hannahs.family.ca.cert.pem
-          volumeMounts:
-            - name: config
-              mountPath: /vault/config
-            - name: secret
-              mountPath: /vault/tls/cert.pem
-              subPath: cert.pem
-            - name: secret
-              mountPath: /vault/tls/key.pem
-              subPath: key.pem
-            - name: ca
-              mountPath: /etc/ssl/certs/hannahs.family.ca.cert.pem
-          ports:
-            - containerPort: 8200
-              name: https
-            - containerPort: 8201
-              name: internal
-            - containerPort: 8202
-              name: replication
-          readinessProbe:
-            exec:
-              command:
-                - /bin/sh
-                - -ec
-                - vault status -tls-skip-verify
-            failureThreshold: 2
-            initialDelaySeconds: 5
-            periodSeconds: 3
-            successThreshold: 1
-            timeoutSeconds: 5
+            - vault status -tls-skip-verify
+          failureThreshold: 2
+          initialDelaySeconds: 5
+          periodSeconds: 3
+          successThreshold: 1
+          timeoutSeconds: 5
