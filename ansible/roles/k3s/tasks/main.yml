@@ -112,6 +112,17 @@
     src: "{{ hostvars[item].ansible_facts.default_ipv4.address }}"
   loop: "{{ groups[k3s_cluster_name] }}"
 
+- name: Allow Kilo traffic
+  become: true
+  ufw:
+    rule: allow
+    direction: in
+    interface: kilo0
+    src: "{{ item }}"
+  loop:
+    - 10.42.0.0/16
+    - 10.4.0.0/24
+
 - include_tasks:
     file: ./manifests.yml
     apply:
