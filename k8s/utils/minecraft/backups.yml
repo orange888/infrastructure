@@ -1,0 +1,30 @@
+---
+apiVersion: apps/v1
+kind: Pod
+metadata:
+  name: backups
+  namespace: minecraft
+spec:
+  containers:
+    - name: backups
+      image: ubuntu:latest
+      tty: true
+      stdin: true
+      resources:
+        limits: &res
+          memory: 2Gi
+          cpu: 2
+        requests:
+          <<: *res
+      volumeMounts:
+        - name: vanilla
+          mountPath: /vanilla
+        - name: creative
+          mountPath: /creative
+  volumes:
+    - name: vanilla
+      persistentVolumeClaim:
+        claimName: vanilla
+    - name: creative
+      persistentVolumeClaim:
+        claimName: vanilla-creative
