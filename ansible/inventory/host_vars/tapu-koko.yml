@@ -2,7 +2,6 @@
 k3s_command: server
 k3s_command_args:
   - --no-deploy coredns
-  - --no-deploy servicelb
   - --no-deploy traefik
   - --no-flannel
   - --node-name {{ inventory_hostname }}
