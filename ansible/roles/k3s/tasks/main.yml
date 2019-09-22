@@ -9,6 +9,7 @@
   package:
     name: python3-pip
     state: present
+  when: k3s_command == "server"
 
 - name: Install Python OpenShift package
   become: true
