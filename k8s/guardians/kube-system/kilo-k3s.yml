@@ -82,16 +82,17 @@ kind: DaemonSet
 metadata:
   name: kilo
   namespace: kube-system
-  labels:
+  labels: &labels
     app.kubernetes.io/name: kilo
+    app.kubernetes.io/instance: kilo
 spec:
   selector:
     matchLabels:
-      app.kubernetes.io/name: kilo
+      <<: *labels
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: kilo
+        <<: *labels
     spec:
       serviceAccountName: kilo
       hostNetwork: true
