@@ -14,7 +14,13 @@
   become: true
   ufw:
     rule: allow
-    port: "{{ wireguard_port }}"
+    direction: in
     src: "{{ hostvars[item].ansible_facts.default_ipv4.address }}"
-    proto: udp
   loop: "{{ groups[wireguard_group] }}"
+
+- name: Allow connections over WireGuard network
+  become: true
+  ufw:
+    rule: allow
+    direction: in
+    src: 10.4.0.0/24
