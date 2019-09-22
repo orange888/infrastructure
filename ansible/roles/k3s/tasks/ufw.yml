@@ -1,0 +1,25 @@
+---
+- name: Allow k3s server connections
+  ufw:
+    rule: allow
+    port: "6443"
+    proto: tcp
+  when: k3s_command == "server"
+
+- name: Allow packet routing
+  ufw:
+    default: allow
+    direction: routed
+
+- name: Allow inbound cluster node traffic
+  ufw:
+    rule: allow
+    direction: in
+    src: "{{ hostvars[item[0]].ansible_facts.default_ipv4.address }}"
+  loop: "{{ groups[k3s_cluster_name] }}"
+
+- name: Allow inbound cluster pod traffic
+  ufw:
+    rule: allow
+    direction: in
+    src: 10.42.0.0/16
