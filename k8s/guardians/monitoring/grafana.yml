@@ -385,6 +385,8 @@ spec:
           name: sc-dashboard-provider
         - emptyDir: {}
           name: sc-datasources-volume
+        - emptyDir: {}
+          name: storage
 
 ---
 apiVersion: traefik.containo.us/v1alpha1

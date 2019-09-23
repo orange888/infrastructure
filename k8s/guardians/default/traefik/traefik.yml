@@ -161,17 +161,17 @@ spec:
         - name: config
           configMap:
             name: traefik
-  volumeClaimTemplate:
-    metadata:
-      name: traefik-acme-store
-      labels:
-        <<: *labels
-    spec:
-      accessModes:
-        - ReadWriteOnce
-      resources:
-        requests:
-          storage: 100Mi
+  volumeClaimTemplates:
+    - metadata:
+        name: traefik-acme-store
+        labels:
+          <<: *labels
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 100Mi
 
 ---
 apiVersion: traefik.containo.us/v1alpha1

@@ -123,6 +123,7 @@ metadata:
     fluxcd.io/automated: "true"
 spec:
   replicas: 1
+  serviceName: influxdb
   selector:
     matchLabels:
       <<: *labels

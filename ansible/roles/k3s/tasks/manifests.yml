@@ -1,9 +1,10 @@
 ---
 - name: Create missing namespaces
-  k8s_facts:
+  k8s:
     kubeconfig: "{{ k3s_kubeconfig }}"
     kind: Namespace
     name: "{{ item.path }}"
+    state: present
   loop: |-
     {{ query("filetree", "../../../templates/k8s/{{ k3s_cluster_name }}") }}
   when: item.state == "directory"
