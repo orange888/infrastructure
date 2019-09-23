@@ -600,9 +600,6 @@ spec:
   serviceName: loki
   template:
     metadata:
-      annotations:
-        prometheus.io/port: http-metrics
-        prometheus.io/scrape: "true"
       labels:
         <<: *labels
     spec:
