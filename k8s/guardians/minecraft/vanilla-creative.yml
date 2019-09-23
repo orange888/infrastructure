@@ -118,9 +118,11 @@ spec:
   ports:
     - name: minecraft
       port: 25565
+      nodePort: 30110
       targetPort: minecraft
     - name: rcon
       port: 25575
+      nodePort: 30111
       targetPort: rcon
   selector:
     <<: *labels
