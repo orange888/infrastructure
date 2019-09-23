@@ -169,7 +169,7 @@ spec:
           image: registry.opensource.zalan.do/teapot/external-dns:v0.5.17
           imagePullPolicy: IfNotPresent
           args:
-            - --log-level=info
+            - --log-level=debug
             - --domain-filter=hannahs.family
             - --policy=sync
             - --provider=cloudflare
