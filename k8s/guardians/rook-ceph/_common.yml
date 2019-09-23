@@ -1,21 +1,10 @@
 ---
-###################################################################################################################
-# Create the common resources that are necessary to start the operator and the ceph cluster.
-# These resources *must* be created before the operator.yaml and cluster.yaml or their variants.
-# The samples all assume that a single operator will manage a single cluster crd in the same "rook-ceph" namespace.
-#
-# If the operator needs to manage multiple clusters (in different namespaces), see the section below
-# for "cluster-specific resources". The resources below that section will need to be created for each namespace
-# where the operator needs to manage the cluster. The resources above that section do not be created again.
-###################################################################################################################
-
-# Namespace where the operator and other rook resources are created
 apiVersion: v1
 kind: Namespace
 metadata:
   name: rook-ceph
+
 ---
-# The CRD declarations
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
@@ -102,6 +91,7 @@ spec:
       type: string
       description: Ceph Health
       JSONPath: .status.ceph.health
+
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
@@ -124,6 +114,7 @@ spec:
     - name: Age
       type: date
       JSONPath: .metadata.creationTimestamp
+
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
@@ -140,6 +131,7 @@ spec:
       - nfs
   scope: Namespaced
   version: v1
+
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
@@ -154,6 +146,7 @@ spec:
     singular: cephobjectstore
   scope: Namespaced
   version: v1
+
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
@@ -168,6 +161,7 @@ spec:
     singular: cephobjectstoreuser
   scope: Namespaced
   version: v1
+
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
@@ -182,6 +176,7 @@ spec:
     singular: cephblockpool
   scope: Namespaced
   version: v1
+
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
@@ -198,8 +193,8 @@ spec:
       - rv
   scope: Namespaced
   version: v1alpha2
+
 ---
-# The cluster role for managing all the cluster-specific resources in a namespace
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
 metadata:
@@ -212,6 +207,7 @@ aggregationRule:
     - matchLabels:
         rbac.ceph.rook.io/aggregate-to-rook-ceph-cluster-mgmt: "true"
 rules: []
+
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
@@ -250,8 +246,8 @@ rules:
       - create
       - update
       - delete
+
 ---
-# The role for the operator to manage resources in its own namespace
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: Role
 metadata:
@@ -287,8 +283,8 @@ rules:
       - create
       - update
       - delete
+
 ---
-# The cluster role for managing the Rook CRDs
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
 metadata:
@@ -301,6 +297,7 @@ aggregationRule:
     - matchLabels:
         rbac.ceph.rook.io/aggregate-to-rook-ceph-global: "true"
 rules: []
+
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
@@ -314,9 +311,7 @@ rules:
   - apiGroups:
       - ""
     resources:
-      # Pod access is needed for fencing
       - pods
-      # Node access is needed for determining nodes where mons should run
       - nodes
       - nodes/proxy
     verbs:
@@ -327,7 +322,6 @@ rules:
       - ""
     resources:
       - events
-      # PVs and PVCs are managed by the Rook provisioner
       - persistentvolumes
       - persistentvolumeclaims
       - endpoints
@@ -370,8 +364,8 @@ rules:
       - "*"
     verbs:
       - "*"
+
 ---
-# Aspects of ceph-mgr that require cluster-wide access
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
@@ -384,6 +378,7 @@ aggregationRule:
     - matchLabels:
         rbac.ceph.rook.io/aggregate-to-rook-ceph-mgr-cluster: "true"
 rules: []
+
 ---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1beta1
@@ -404,8 +399,8 @@ rules:
       - get
       - list
       - watch
+
 ---
-# The rook system service account used by the operator, agent, and discovery pods
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -414,8 +409,8 @@ metadata:
   labels:
     operator: rook
     storage-backend: ceph
+
 ---
-# Grant the operator, agent, and discovery agents access to resources in the namespace
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
@@ -432,8 +427,8 @@ subjects:
   - kind: ServiceAccount
     name: rook-ceph-system
     namespace: rook-ceph
+
 ---
-# Grant the rook system daemons cluster-wide access to manage the Rook CRDs, PVCs, and storage classes
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
@@ -450,25 +445,21 @@ subjects:
   - kind: ServiceAccount
     name: rook-ceph-system
     namespace: rook-ceph
+
 ---
-#################################################################################################################
-# Beginning of cluster-specific resources. The example will assume the cluster will be created in the "rook-ceph"
-# namespace. If you want to create the cluster in a different namespace, you will need to modify these roles
-# and bindings accordingly.
-#################################################################################################################
-# Service account for the Ceph OSDs. Must exist and cannot be renamed.
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: rook-ceph-osd
   namespace: rook-ceph
+
 ---
-# Service account for the Ceph Mgr. Must exist and cannot be renamed.
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: rook-ceph-mgr
   namespace: rook-ceph
+
 ---
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1beta1
@@ -479,8 +470,8 @@ rules:
   - apiGroups: [""]
     resources: ["configmaps"]
     verbs: ["get", "list", "watch", "create", "update", "delete"]
+
 ---
-# Aspects of ceph-mgr that require access to the system namespace
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
@@ -491,6 +482,7 @@ aggregationRule:
     - matchLabels:
         rbac.ceph.rook.io/aggregate-to-rook-ceph-mgr-system: "true"
 rules: []
+
 ---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1beta1
@@ -508,8 +500,8 @@ rules:
       - get
       - list
       - watch
+
 ---
-# Aspects of ceph-mgr that operate within the cluster's namespace
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
@@ -542,8 +534,8 @@ rules:
       - "*"
     verbs:
       - "*"
+
 ---
-# Allow the operator to create resources in this cluster's namespace
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
@@ -557,8 +549,8 @@ subjects:
   - kind: ServiceAccount
     name: rook-ceph-system
     namespace: rook-ceph
+
 ---
-# Allow the osd pods in this namespace to work with configmaps
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
@@ -572,8 +564,8 @@ subjects:
   - kind: ServiceAccount
     name: rook-ceph-osd
     namespace: rook-ceph
+
 ---
-# Allow the ceph mgr to access the cluster-specific resources necessary for the mgr modules
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
@@ -587,8 +579,8 @@ subjects:
   - kind: ServiceAccount
     name: rook-ceph-mgr
     namespace: rook-ceph
+
 ---
-# Allow the ceph mgr to access the rook system resources necessary for the mgr modules
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
@@ -602,8 +594,8 @@ subjects:
   - kind: ServiceAccount
     name: rook-ceph-mgr
     namespace: rook-ceph
+
 ---
-# Allow the ceph mgr to access cluster-wide resources necessary for the mgr modules
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
@@ -616,4 +608,3 @@ subjects:
   - kind: ServiceAccount
     name: rook-ceph-mgr
     namespace: rook-ceph
----

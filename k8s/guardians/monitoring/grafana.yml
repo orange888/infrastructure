@@ -84,40 +84,12 @@ data:
 
 ---
 apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  finalizers:
-    - kubernetes.io/pvc-protection
-  labels:
-    app.kubernetes.io/instance: grafana
-    app.kubernetes.io/name: grafana
-  name: grafana
-  namespace: monitoring
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 10Gi
-
----
-apiVersion: v1
 kind: ServiceAccount
 metadata:
   labels:
     app.kubernetes.io/instance: grafana
     app.kubernetes.io/name: grafana
   name: grafana
-  namespace: monitoring
-
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  labels:
-    app.kubernetes.io/instance: grafana
-    app.kubernetes.io/name: grafana
-  name: grafana-test
   namespace: monitoring
 
 ---
@@ -263,7 +235,7 @@ metadata:
     fluxcd.io/tag.grafana: semver:~6
     fluxcd.io/automate: "true"
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       <<: *labels
@@ -274,6 +246,13 @@ spec:
       labels:
         <<: *labels
     spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  <<: *labels
+              topologyKey: kubernetes.io/hostname
       containers:
         - env:
             - name: LABEL
@@ -399,9 +378,6 @@ spec:
         - secret:
             secretName: grafana
           name: config
-        - name: storage
-          persistentVolumeClaim:
-            claimName: grafana
         - emptyDir: {}
           name: sc-dashboard-volume
         - configMap:

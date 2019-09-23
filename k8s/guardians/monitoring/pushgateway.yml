@@ -17,6 +17,7 @@ rules:
       - use
     resourceNames:
       - pushgateway
+
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
@@ -35,6 +36,7 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: pushgateway
+
 ---
 apiVersion: extensions/v1beta1
 kind: Deployment
@@ -56,6 +58,13 @@ spec:
         <<: *labels
     spec:
       serviceAccountName: pushgateway
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  <<: *labels
+              topologyKey: kubernetes.io/hostname
       containers:
         - name: pushgateway
           image: prom/pushgateway:v0.8.0
@@ -78,6 +87,7 @@ spec:
       securityContext:
         runAsNonRoot: true
         runAsUser: 65534
+
 ---
 apiVersion: policy/v1beta1
 kind: PodSecurityPolicy
@@ -116,6 +126,7 @@ spec:
       - min: 1
         max: 65535
   readOnlyRootFilesystem: true
+
 ---
 apiVersion: v1
 kind: Service
@@ -136,7 +147,7 @@ spec:
       targetPort: 9091
   selector:
     <<: *labels
-  type: ClusterIP
+
 ---
 apiVersion: v1
 kind: ServiceAccount

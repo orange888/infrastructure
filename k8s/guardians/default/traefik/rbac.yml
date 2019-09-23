@@ -16,7 +16,6 @@ metadata:
   labels:
     app.kubernetes.io/name: traefik
     app.kubernetes.io/instance: traefik
-
 rules:
   - apiGroups:
       - ""
@@ -83,7 +82,6 @@ metadata:
   labels:
     app.kubernetes.io/name: traefik
     app.kubernetes.io/instance: traefik
-
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole

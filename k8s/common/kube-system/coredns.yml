@@ -1,16 +1,14 @@
 ---
-# Source: coredns/templates/podsecuritypolicy.yaml
-
 apiVersion: extensions/v1beta1
 kind: PodSecurityPolicy
 metadata:
   name: coredns
   namespace: kube-system
   labels:
-    app.kubernetes.io/instance: "coredns"
-    k8s-app: "coredns"
+    app.kubernetes.io/instance: coredns
+    k8s-app: coredns
     kubernetes.io/cluster-service: "true"
-    kubernetes.io/name: "CoreDNS"
+    kubernetes.io/name: CoreDNS
 spec:
   privileged: false
   # Required to prevent escalations to root.
@@ -20,28 +18,28 @@ spec:
     - CAP_NET_BIND_SERVICE
       # Allow core volume types.
   volumes:
-    - "configMap"
-    - "emptyDir"
-    - "projected"
-    - "secret"
-    - "downwardAPI"
+    - configMap
+    - emptyDir
+    - projected
+    - secret
+    - downwardAPI
   hostNetwork: false
   hostIPC: false
   hostPID: false
   runAsUser:
     # Require the container to run without root privileges.
-    rule: "RunAsAny"
+    rule: RunAsAny
   seLinux:
     # This policy assumes the nodes are using AppArmor rather than SELinux.
-    rule: "RunAsAny"
+    rule: RunAsAny
   supplementalGroups:
-    rule: "MustRunAs"
+    rule: MustRunAs
     ranges:
       # Forbid adding the root group.
       - min: 1
         max: 65535
   fsGroup:
-    rule: "MustRunAs"
+    rule: MustRunAs
     ranges:
       # Forbid adding the root group.
       - min: 1
@@ -49,17 +47,16 @@ spec:
   readOnlyRootFilesystem: false
 
 ---
-# Source: coredns/templates/configmap.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
   name: coredns
   namespace: kube-system
   labels:
-    app.kubernetes.io/instance: "coredns"
-    k8s-app: "coredns"
+    app.kubernetes.io/instance: coredns
+    k8s-app: coredns
     kubernetes.io/cluster-service: "true"
-    kubernetes.io/name: "CoreDNS"
+    kubernetes.io/name: CoreDNS
     app.kubernetes.io/name: coredns
 data:
   Corefile: |-
@@ -80,32 +77,28 @@ data:
     }
 
 ---
-# Source: coredns/templates/serviceaccount.yaml
-
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: coredns
   namespace: kube-system
   labels:
-    app.kubernetes.io/instance: "coredns"
-    k8s-app: "coredns"
+    app.kubernetes.io/instance: coredns
+    k8s-app: coredns
     kubernetes.io/cluster-service: "true"
-    kubernetes.io/name: "CoreDNS"
+    kubernetes.io/name: CoreDNS
     app.kubernetes.io/name: coredns
 
 ---
-# Source: coredns/templates/clusterrole.yaml
-
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: coredns
   labels:
-    app.kubernetes.io/instance: "coredns"
-    k8s-app: "coredns"
+    app.kubernetes.io/instance: coredns
+    k8s-app: coredns
     kubernetes.io/cluster-service: "true"
-    kubernetes.io/name: "CoreDNS"
+    kubernetes.io/name: CoreDNS
     app.kubernetes.io/name: coredns
 rules:
   - apiGroups:
@@ -129,17 +122,15 @@ rules:
       - coredns
 
 ---
-# Source: coredns/templates/clusterrolebinding.yaml
-
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: coredns
   labels:
-    app.kubernetes.io/instance: "coredns"
-    k8s-app: "coredns"
+    app.kubernetes.io/instance: coredns
+    k8s-app: coredns
     kubernetes.io/cluster-service: "true"
-    kubernetes.io/name: "CoreDNS"
+    kubernetes.io/name: CoreDNS
     app.kubernetes.io/name: coredns
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -151,45 +142,42 @@ subjects:
     namespace: kube-system
 
 ---
-# Source: coredns/templates/service.yaml
 apiVersion: v1
 kind: Service
 metadata:
   name: coredns
   namespace: kube-system
   labels:
-    app.kubernetes.io/instance: "coredns"
-    k8s-app: "coredns"
+    app.kubernetes.io/instance: coredns
+    k8s-app: coredns
     kubernetes.io/cluster-service: "true"
-    kubernetes.io/name: "CoreDNS"
+    kubernetes.io/name: CoreDNS
     app.kubernetes.io/name: coredns
   annotations:
     prometheus.io/port: "9153"
     prometheus.io/scrape: "true"
 spec:
   selector:
-    app.kubernetes.io/instance: "coredns"
-    k8s-app: "coredns"
+    app.kubernetes.io/instance: coredns
+    k8s-app: coredns
     app.kubernetes.io/name: coredns
   ports:
     - { port: 53, protocol: UDP, name: udp-53 }
     - { port: 53, protocol: TCP, name: tcp-53 }
     - { port: 9153, protocol: TCP, name: metrics }
-  type: ClusterIP
   clusterIP: 10.43.0.10
 
 ---
-# Source: coredns/templates/deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: coredns
   namespace: kube-system
-  labels:
-    app.kubernetes.io/instance: "coredns"
-    k8s-app: "coredns"
+  labels: &labels
+    app.kubernetes.io/instance: coredns
+    k8s-app: coredns
     kubernetes.io/cluster-service: "true"
-    kubernetes.io/name: "CoreDNS"
+    kubernetes.io/name: CoreDNS
     app.kubernetes.io/name: coredns
   annotations:
     fluxcd.io/tag.coredns: semver:~1
@@ -198,19 +186,14 @@ spec:
   replicas: 2
   selector:
     matchLabels:
-      app.kubernetes.io/instance: "coredns"
-      k8s-app: "coredns"
-      app.kubernetes.io/name: coredns
+      <<: *labels
   template:
     metadata:
       labels:
-        k8s-app: "coredns"
-        app.kubernetes.io/name: coredns
-        app.kubernetes.io/instance: "coredns"
+        <<: *labels
       annotations:
-        checksum/config: 780a050f363626effb302665847b42e9148cb53590877dfdf3ae96596799cf14
         scheduler.alpha.kubernetes.io/critical-pod: ""
-        scheduler.alpha.kubernetes.io/tolerations: '[{"key":"CriticalAddonsOnly", "operator":"Exists"}]'
+        scheduler.alpha.kubernetes.io/tolerations: "[{key:CriticalAddonsOnly, operator:Exists}]"
     spec:
       serviceAccountName: coredns
       dnsPolicy: Default
@@ -218,13 +201,9 @@ spec:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             - labelSelector:
-                matchExpressions:
-                  - key: k8s-app
-                    operator: In
-                    values:
-                      - coredns
+                matchLabels:
+                  <<: *labels
               topologyKey: kubernetes.io/hostname
-
       containers:
         - name: coredns
           image: coredns/coredns:1.6.3
@@ -241,12 +220,10 @@ spec:
             requests:
               cpu: 100m
               memory: 128Mi
-
           ports:
             - { containerPort: 53, protocol: UDP, name: udp-53 }
             - { containerPort: 53, protocol: TCP, name: tcp-53 }
             - { containerPort: 9153, protocol: TCP, name: metrics }
-
           livenessProbe:
             httpGet:
               path: /health

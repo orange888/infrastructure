@@ -135,7 +135,7 @@ metadata:
     app.kubernetes.io/instance: vanilla-creative
     app.kubernetes.io/name: minecraft
 spec:
-  replicas: 1
+  replicas: 0
   strategy:
     type: Recreate
   selector:
@@ -146,7 +146,7 @@ spec:
       labels:
         <<: *labels
     spec:
-      serviceAccount: vanilla-creative
+      serviceAccountName: vanilla-creative
       containers:
         - name: minecraft
           image: hannahsfamily/mc-server-vanilla:1.14.4

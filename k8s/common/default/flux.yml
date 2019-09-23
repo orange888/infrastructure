@@ -7,6 +7,7 @@ metadata:
   labels:
     app.kubernetes.io/name: flux
     app.kubernetes.io/instance: flux
+
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRole
@@ -38,6 +39,7 @@ subjects:
   - kind: ServiceAccount
     name: flux
     namespace: default
+
 ---
 apiVersion: policy/v1beta1
 kind: PodSecurityPolicy
@@ -82,6 +84,7 @@ rules:
     verbs: ["use"]
     resourceNames:
       - flux
+
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -98,13 +101,14 @@ subjects:
   - kind: ServiceAccount
     name: flux
     namespace: default
+
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: flux
   namespace: default
-  labels:
+  labels: &labels
     app: flux
     name: flux
     app.kubernetes.io/name: flux
@@ -116,17 +120,13 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: flux
-      app.kubernetes.io/instance: flux
+      <<: *labels
   strategy:
     type: Recreate
   template:
     metadata:
       labels:
-        app: flux
-        name: flux
-        app.kubernetes.io/name: flux
-        app.kubernetes.io/instance: flux
+        <<: *labels
       annotations:
         prometheus.io/port: "3031"
         prometheus.io/scrape: "true"
@@ -178,6 +178,7 @@ spec:
             - --memcached-service=
             - --ssh-keygen-dir=/var/fluxd/keygen
             - --sync-garbage-collection
+
 ---
 apiVersion: v1
 kind: Secret

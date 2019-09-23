@@ -46,6 +46,7 @@ metadata:
   labels:
     app.kubernetes.io/name: vault
     app.kubernetes.io/instance: vault
+
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
@@ -63,6 +64,7 @@ subjects:
   - kind: ServiceAccount
     name: vault
     namespace: kube-system
+
 ---
 apiVersion: v1
 kind: Service
@@ -108,6 +110,7 @@ spec:
       services:
         - name: vault
           port: 8200
+
 ---
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
@@ -128,6 +131,7 @@ spec:
           port: 8200
   tls:
     certResolver: default
+
 ---
 apiVersion: externaldns.k8s.io/v1alpha1
 kind: DNSEndpoint
@@ -143,6 +147,7 @@ spec:
       recordType: CNAME
       targets:
         - traefik.hannahs.family
+
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -158,7 +163,7 @@ metadata:
 spec:
   serviceName: vault
   podManagementPolicy: Parallel
-  replicas: 2
+  replicas: 3
   updateStrategy:
     type: OnDelete
   selector:

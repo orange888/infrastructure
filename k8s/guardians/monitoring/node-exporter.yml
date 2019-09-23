@@ -56,6 +56,7 @@ spec:
         - name: sys
           hostPath:
             path: /sys
+
 ---
 apiVersion: extensions/v1beta1
 kind: PodSecurityPolicy
@@ -101,6 +102,7 @@ spec:
   hostPorts:
     - min: 1
       max: 65535
+
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: Role
@@ -120,6 +122,7 @@ rules:
       - use
     resourceNames:
       - node-exporter
+
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -138,6 +141,7 @@ subjects:
   - kind: ServiceAccount
     name: node-exporter
     namespace: monitoring
+
 ---
 apiVersion: v1
 kind: Service
@@ -159,7 +163,7 @@ spec:
       targetPort: 9100
   selector:
     <<: *labels
-  type: ClusterIP
+
 ---
 apiVersion: v1
 kind: ServiceAccount

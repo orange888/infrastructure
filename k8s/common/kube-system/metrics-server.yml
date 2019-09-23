@@ -27,6 +27,7 @@ spec:
     rule: RunAsAny
   volumes:
     - "*"
+
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -36,6 +37,7 @@ metadata:
     app.kubernetes.io/name: metrics-server
   name: metrics-server
   namespace: kube-system
+
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -57,6 +59,7 @@ rules:
       - get
       - list
       - watch
+
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -85,6 +88,7 @@ rules:
       - podsecuritypolicies
     verbs:
       - use
+
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -101,6 +105,7 @@ subjects:
   - kind: ServiceAccount
     name: metrics-server
     namespace: kube-system
+
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -117,6 +122,7 @@ subjects:
   - kind: ServiceAccount
     name: metrics-server
     namespace: kube-system
+
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: RoleBinding
@@ -134,12 +140,12 @@ subjects:
   - kind: ServiceAccount
     name: metrics-server
     namespace: kube-system
+
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  annotations: {}
-  labels:
+  labels: &labels
     app.kubernetes.io/instance: metrics-server
     app.kubernetes.io/name: metrics-server
   name: metrics-server
@@ -150,14 +156,13 @@ spec:
       protocol: TCP
       targetPort: https
   selector:
-    app: metrics-server
-    release: metrics-server
-  type: ClusterIP
+    <<: *labels
+
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  labels:
+  labels: &labels
     app.kubernetes.io/instance: metrics-server
     app.kubernetes.io/name: metrics-server
   name: metrics-server
@@ -169,15 +174,12 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app: metrics-server
-      release: metrics-server
+      <<: *labels
   template:
     metadata:
       labels:
-        app: metrics-server
-        release: metrics-server
+        <<: *labels
     spec:
-      affinity: {}
       containers:
         - command:
             - /metrics-server
@@ -221,6 +223,7 @@ spec:
       volumes:
         - emptyDir: {}
           name: tmp
+
 ---
 apiVersion: apiregistration.k8s.io/v1beta1
 kind: APIService

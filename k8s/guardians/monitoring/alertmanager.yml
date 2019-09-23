@@ -17,6 +17,7 @@ rules:
       - use
     resourceNames:
       - alertmanager
+
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
@@ -35,6 +36,7 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: alertmanager
+
 ---
 apiVersion: policy/v1beta1
 kind: PodSecurityPolicy
@@ -77,6 +79,7 @@ spec:
       - min: 1
         max: 65535
   readOnlyRootFilesystem: true
+
 ---
 apiVersion: v1
 kind: Service
@@ -94,6 +97,7 @@ spec:
       port: 9093
   selector:
     <<: *labels
+
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -104,6 +108,7 @@ metadata:
     app.kubernetes.io/component: alertmanager
   name: alertmanager
   namespace: monitoring
+
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -131,6 +136,13 @@ spec:
         <<: *labels
     spec:
       serviceAccountName: alertmanager
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  <<: *labels
+              topologyKey: kubernetes.io/hostname
       containers:
         - name: alertmanager
           image: prom/alertmanager:v0.19.0
@@ -217,6 +229,7 @@ spec:
       services:
         - name: alertmanager
           port: 9093
+
 ---
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
@@ -238,6 +251,7 @@ spec:
           port: 9093
   tls:
     certResolver: default
+
 ---
 apiVersion: externaldns.k8s.io/v1alpha1
 kind: DNSEndpoint

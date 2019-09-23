@@ -22,6 +22,7 @@ spec:
     rule: RunAsAny
   volumes:
     - "*"
+
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -31,6 +32,7 @@ metadata:
     app.kubernetes.io/name: kured
   name: kured
   namespace: kube-system
+
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -68,6 +70,7 @@ rules:
       - pods/eviction
     verbs:
       - create
+
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -85,6 +88,7 @@ subjects:
   - kind: ServiceAccount
     name: kured
     namespace: kube-system
+
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -111,6 +115,7 @@ rules:
       - podsecuritypolicies
     verbs:
       - use
+
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -128,28 +133,27 @@ subjects:
   - kind: ServiceAccount
     name: kured
     namespace: kube-system
+
 ---
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  labels:
-    app.kubernetes.io/instance: kured
-    app.kubernetes.io/name: kured
   name: kured
   namespace: kube-system
+  labels: &labels
+    app.kubernetes.io/instance: kured
+    app.kubernetes.io/name: kured
   annotations:
     fluxcd.io/tag.kured: semver:~1
     fluxcd.io/automated: "true"
 spec:
   selector:
     matchLabels:
-      app: kured
-      release: kured
+      <<: *labels
   template:
     metadata:
       labels:
-        app: kured
-        release: kured
+        <<: *labels
     spec:
       containers:
         - args:
@@ -175,4 +179,4 @@ spec:
         - effect: NoSchedule
           key: node-role.kubernetes.io/master
   updateStrategy:
-    type: OnDelete
+    type: Recreate
