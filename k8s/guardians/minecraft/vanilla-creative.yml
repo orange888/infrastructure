@@ -135,7 +135,7 @@ metadata:
     app.kubernetes.io/instance: vanilla-creative
     app.kubernetes.io/name: minecraft
 spec:
-  replicas: 0
+  replicas: 1
   strategy:
     type: Recreate
   selector:
