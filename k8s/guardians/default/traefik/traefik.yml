@@ -3,13 +3,12 @@ apiVersion: v1
 kind: Service
 metadata:
   name: traefik
-  namespace: kube-system
+  namespace: default
   labels: &labels
     app.kubernetes.io/name: traefik
     app.kubernetes.io/instance: traefik
   annotations:
     external-dns.alpha.kubernetes.io/hostname: traefik.hannahs.family
-    metallb.universe.tf/allow-shared-ip: guardians
 spec:
   type: LoadBalancer
   externalTrafficPolicy: Cluster
@@ -28,7 +27,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: traefik-api
-  namespace: kube-system
+  namespace: default
   labels: &labels
     app.kubernetes.io/name: traefik
     app.kubernetes.io/instance: traefik
@@ -36,6 +35,7 @@ metadata:
     prometheus.io/port: "8080"
     prometheus.io/scrape: "true"
 spec:
+  clusterIP: None
   ports:
     - name: api
       port: 8080
@@ -48,7 +48,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: traefik
-  namespace: kube-system
+  namespace: default
   labels:
     app.kubernetes.io/name: traefik
     app.kubernetes.io/instance: traefik
@@ -92,26 +92,11 @@ data:
             keyFile: /tls/tls.key
 
 ---
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: traefik-acme-store
-  namespace: kube-system
-  labels:
-    app.kubernetes.io/name: traefik
-    app.kubernetes.io/instance: traefik
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 100Mi
----
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: traefik
-  namespace: kube-system
+  namespace: default
   labels: &labels
     app.kubernetes.io/name: traefik
     app.kubernetes.io/instance: traefik
@@ -119,9 +104,8 @@ metadata:
     fluxcd.io/tag.traefik: semver:~2
     fluxcd.io/automated: "true"
 spec:
+  serviceName: traefik
   replicas: 1
-  strategy:
-    type: Recreate
   selector:
     matchLabels:
       <<: *labels
@@ -177,12 +161,35 @@ spec:
         - name: config
           configMap:
             name: traefik
+  volumeClaimTemplate:
+    metadata:
+      name: traefik-acme-store
+      labels:
+        <<: *labels
+    spec:
+      accessModes:
+        - ReadWriteOnce
+      resources:
+        requests:
+          storage: 100Mi
+
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: https-redirect
+  namespace: default
+spec:
+  redirectScheme:
+    scheme: https
+    permanent: true
+
 ---
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
   name: traefik-http
-  namespace: kube-system
+  namespace: default
   labels:
     app.kubernetes.io/instance: traefik
     app.kubernetes.io/name: traefik
@@ -198,12 +205,13 @@ spec:
       services:
         - name: traefik-api
           port: 8080
+
 ---
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
   name: traefik-https
-  namespace: kube-system
+  namespace: default
   labels:
     app.kubernetes.io/instance: traefik
     app.kubernetes.io/name: traefik
@@ -218,3 +226,19 @@ spec:
           port: 8080
   tls:
     certResolver: default
+
+---
+apiVersion: externaldns.k8s.io/v1alpha1
+kind: DNSEndpoint
+metadata:
+  name: traefik
+  namespace: default
+  labels:
+    app.kubernetes.io/app: traefik
+    app.kubernetes.io/instance: traefik
+spec:
+  endpoints:
+    - dnsName: traefik.hannahs.family
+      recordType: CNAME
+      targets:
+        - guardians.hannahs.family

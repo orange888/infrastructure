@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  namespace: kube-system
+  namespace: default
   name: traefik
   labels:
     app.kubernetes.io/name: traefik
@@ -91,41 +91,4 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: traefik
-    namespace: kube-system
-
----
-kind: Role
-apiVersion: rbac.authorization.k8s.io/v1beta1
-metadata:
-  name: traefik
-  namespace: kube-system
-  labels:
-    app.kubernetes.io/name: traefik
-    app.kubernetes.io/instance: traefik
-rules:
-  - apiGroups:
-      - ""
-    resources:
-      - secrets
-    resourceNames:
-      - traefik-acme-store
-    verbs:
-      - "*"
-
----
-kind: RoleBinding
-apiVersion: rbac.authorization.k8s.io/v1beta1
-metadata:
-  name: traefik
-  namespace: kube-system
-  labels:
-    app.kubernetes.io/name: traefik
-    app.kubernetes.io/instance: traefik
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: traefik
-subjects:
-  - kind: ServiceAccount
-    name: traefik
-    namespace: kube-system
+    namespace: default
