@@ -197,6 +197,7 @@ metadata:
     fluxcd.io/tag.grafana-sc-datasources: semver:~0
     fluxcd.io/tag.grafana: semver:~6
     fluxcd.io/automate: "true"
+    vault.security.banzaicloud.io/vault-role: grafana
 spec:
   replicas: 2
   selector:
@@ -225,7 +226,6 @@ spec:
             - name: NAMESPACE
               value: ALL
           image: kiwigrid/k8s-sidecar:0.1.20
-          imagePullPolicy: IfNotPresent
           name: grafana-sc-dashboard
           resources:
             limits:
@@ -238,6 +238,10 @@ spec:
             - mountPath: /tmp/dashboards
               name: sc-dashboard-volume
         - env:
+            - name: GF_DATABASE_USERNAME
+              value: vault:database/creds/grafana#username
+            - name: GF_DATABASE_PASSWORD
+              value: vault:database/creds/grafana#password
             - name: GF_SECURITY_ADMIN_USER
               valueFrom:
                 secretKeyRef:
@@ -293,6 +297,8 @@ spec:
               subPath: provider.yaml
             - mountPath: /etc/grafana/provisioning/datasources
               name: sc-datasources-volume
+            - mountPath: /etc/ssl/certs/hannahs.family.ca.cert.pem
+              name: ca
       initContainers:
         - command:
             - chown
@@ -347,6 +353,10 @@ spec:
           name: sc-datasources-volume
         - emptyDir: {}
           name: storage
+        - hostPath:
+            path: /etc/ssl/certs/hannahs.family.ca.cert.pem
+            type: File
+          name: ca
 
 ---
 apiVersion: traefik.containo.us/v1alpha1
