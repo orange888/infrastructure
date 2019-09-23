@@ -417,7 +417,7 @@ metadata:
   name: grafana-http
   namespace: monitoring
   labels:
-    app.kubernetes.io/app: grafana
+    app.kubernetes.io/name: grafana
     app.kubernetes.io/instance: grafana
 spec:
   entrypoints:
@@ -439,7 +439,7 @@ metadata:
   name: grafana-https
   namespace: monitoring
   labels:
-    app.kubernetes.io/app: grafana
+    app.kubernetes.io/name: grafana
     app.kubernetes.io/instance: grafana
 spec:
   entrypoints:
@@ -460,7 +460,7 @@ metadata:
   name: grafana
   namespace: monitoring
   labels:
-    app.kubernetes.io/app: grafana
+    app.kubernetes.io/name: grafana
     app.kubernetes.io/instance: grafana
 spec:
   endpoints:
