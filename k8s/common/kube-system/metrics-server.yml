@@ -162,8 +162,11 @@ metadata:
     app.kubernetes.io/name: metrics-server
   name: metrics-server
   namespace: kube-system
+  annotations:
+    flucxd.io/tag.metrics-server: semver:~0
+    fluxcd.io/automate: "true"
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: metrics-server
