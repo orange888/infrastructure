@@ -1,0 +1,73 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: postgres
+  namespace: default
+  labels:
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/instance: postgres
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: default
+  labels: &labels
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/instance: postgres
+spec:
+  clusterIP: None
+  ports:
+    - name: postgres
+      port: 5432
+  selector:
+    <<: *labels
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: default
+  labels: &labels
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/instance: postgres
+spec:
+  selector:
+    matchLabels:
+      <<: *labels
+  serviceName: postgres
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        <<: *labels
+    spec:
+      serviceAccountName: postgres
+      containers:
+        - name: postgres
+          image: postgres:11-alpine
+          resources:
+            limits: &res
+              cpu: 1
+              memory: 1Gi
+            requests:
+              <<: *res
+          envFrom:
+            - secretRef:
+                name: postgres
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+        labels:
+          <<: *labels
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          storage: 20Gi

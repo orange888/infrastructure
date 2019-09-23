@@ -1,0 +1,12 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres
+  namespace: default
+  labels:
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/instance: postgres
+data:
+  POSTGRES_PASSWORD: {{ postgres.password | b64encode }}
+  POSTGRES_USER: {{ postgres.user | b64encode }}
