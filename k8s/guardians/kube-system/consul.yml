@@ -211,6 +211,8 @@ spec:
   volumeClaimTemplates:
     - metadata:
         name: datadir
+        labels:
+          <<: *labels
       spec:
         accessModes:
           - ReadWriteOnce
