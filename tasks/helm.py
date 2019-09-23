@@ -121,24 +121,34 @@ def helm_template(c,
     if not dir:
         with open(manifest, "w") as file:
             for doc in yaml.safe_load_all(proc.stdout):
+                print(doc)
                 if doc is None:
                     continue
 
-                doc["metadata"].setdefault("namespace", namespace)
+                if doc["kind"] == "List":
+                    for d in doc["items"]:
+                        _write_manifest(d, file, namespace, name, chart)
+                    continue
 
-                for key in ["app", "chart", "heritage", "release"]:
-                    try:
-                        del doc["metadata"]["labels"][key]
-                    except KeyError:
-                        pass
+                _write_manifest(doc, file, namespace, name, chart)
 
-                doc["metadata"].setdefault("labels", {})
-                doc["metadata"]["labels"].setdefault("app.kubernetes.io/name",
-                                                     chart)
-                doc["metadata"]["labels"].setdefault(
-                    "app.kubernetes.io/instance", name)
 
-                yaml.dump(doc, file, explicit_start=True)
+def _write_manifest(doc, file, namespace, name, chart):
+    doc["metadata"].setdefault("namespace", namespace)
+
+    for key in ["app", "chart", "heritage", "release"]:
+        try:
+            del doc["metadata"]["labels"][key]
+        except KeyError:
+            pass
+
+    doc["metadata"].setdefault("labels", {})
+    doc["metadata"]["labels"].setdefault("app.kubernetes.io/name",
+                                            chart)
+    doc["metadata"]["labels"].setdefault(
+        "app.kubernetes.io/instance", name)
+
+    yaml.dump(doc, file, explicit_start=True)
 
 
 @task(help={"chart": "Helm chart to fetch and extract values.yaml from"},
