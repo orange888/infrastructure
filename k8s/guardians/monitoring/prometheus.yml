@@ -98,6 +98,10 @@ data:
     rule_files:
       - /etc/config/rules
       - /etc/config/alerts
+    remote_write:
+      - url: http://influxdb:8086/api/v1/prom/write?db=prometheus
+    remote_read:
+      - url: http://influxdb:8086/api/v1/prom/read?db=prometheus
     scrape_configs:
       - job_name: prometheus
         static_configs:
@@ -339,7 +343,6 @@ metadata:
   name: prometheus
   namespace: monitoring
 spec:
-  clusterIP: None
   ports:
     - name: http
       port: 9090
@@ -359,7 +362,7 @@ metadata:
 
 ---
 apiVersion: apps/v1
-kind: StatefulSet
+kind: Deployment
 metadata:
   labels: &labels
     app.kubernetes.io/name: prometheus
@@ -372,12 +375,10 @@ metadata:
     fluxcd.io/tag.prometheus: semver:~2
     fluxcd.io/automated: "true"
 spec:
-  serviceName: prometheus
   selector:
     matchLabels:
       <<: *labels
   replicas: 2
-  podManagementPolicy: Parallel
   template:
     metadata:
       labels:
@@ -436,8 +437,8 @@ spec:
             timeoutSeconds: 30
           resources:
             limits:
-              cpu: 500m
-              memory: 2Gi
+              cpu: 2
+              memory: 4Gi
             requests:
               cpu: 500m
               memory: 2Gi
@@ -446,7 +447,6 @@ spec:
               mountPath: /etc/config
             - name: data
               mountPath: /data
-              subPath: ""
       securityContext:
         fsGroup: 65534
         runAsGroup: 65534
@@ -457,15 +457,8 @@ spec:
         - name: config
           configMap:
             name: prometheus
-  volumeClaimTemplates:
-    - metadata:
-        name: data
-      spec:
-        accessModes:
-          - ReadWriteOnce
-        resources:
-          requests:
-            storage: 20Gi
+        - name: data
+          emptyDir: {}
 
 ---
 apiVersion: traefik.containo.us/v1alpha1
@@ -547,4 +540,3 @@ data:
         type: prometheus
         url: http://prometheus:9090
         access: proxy
-        isDefault: true
