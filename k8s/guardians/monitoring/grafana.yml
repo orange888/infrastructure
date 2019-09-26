@@ -416,3 +416,36 @@ spec:
       recordType: CNAME
       targets:
         - traefik.hannahs.family
+
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: postgres-createdb-grafana
+  namespace: default
+  labels: &labels
+    app.kubernetes.io/name: grafana
+    app.kubernetes.io/instance: grafana
+spec:
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        <<: *labels
+    spec:
+      serviceAccountName: postgres
+      restartPolicy: OnFailure
+      containers:
+        - name: createdb
+          image: postgres:11-alpine
+          command:
+            - createdb
+          args:
+            - -e
+            - grafana
+          env:
+            - name: PGHOST
+              value: postgres
+          envFrom:
+            - secretRef:
+                name: postgres
