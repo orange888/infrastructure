@@ -1,54 +1,4 @@
 ---
-apiVersion: extensions/v1beta1
-kind: PodSecurityPolicy
-metadata:
-  annotations:
-    apparmor.security.beta.kubernetes.io/allowedProfileNames: runtime/default
-    apparmor.security.beta.kubernetes.io/defaultProfileName: runtime/default
-    seccomp.security.alpha.kubernetes.io/allowedProfileNames: docker/default
-    seccomp.security.alpha.kubernetes.io/defaultProfileName: docker/default
-  labels:
-    app.kubernetes.io/instance: grafana
-    app.kubernetes.io/name: grafana
-  name: grafana
-  namespace: monitoring
-spec:
-  allowPrivilegeEscalation: false
-  fsGroup:
-    rule: RunAsAny
-  hostIPC: false
-  hostNetwork: false
-  hostPID: false
-  privileged: false
-  readOnlyRootFilesystem: false
-  requiredDropCapabilities:
-    - FOWNER
-    - FSETID
-    - KILL
-    - SETGID
-    - SETUID
-    - SETPCAP
-    - NET_BIND_SERVICE
-    - NET_RAW
-    - SYS_CHROOT
-    - MKNOD
-    - AUDIT_WRITE
-    - SETFCAP
-  runAsUser:
-    rule: RunAsAny
-  seLinux:
-    rule: RunAsAny
-  supplementalGroups:
-    rule: RunAsAny
-  volumes:
-    - configMap
-    - emptyDir
-    - projected
-    - secret
-    - downwardAPI
-    - persistentVolumeClaim
-
----
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -58,8 +8,80 @@ metadata:
     app.kubernetes.io/instance: grafana
     app.kubernetes.io/name: grafana
 data:
+  config.hcl: |-
+    vault {
+      vault_agent_token_file = "/vault/.vault-token"
+      renew_token = true
+
+      retry {
+        backoff = "1s"
+      }
+    }
+    template {
+      source = "/vault/ct-config/grafana.ini.tpl"
+      destination = "/vault/ct-secrets/grafana.ini"
+      error_on_missing_key = true
+    }
+  grafana.ini.tpl: |
+    [analytics]
+    check_for_updates = true
+
+    [database]
+    type = postgres
+    host = postgres.default.svc:5432
+    {{- with secret "database/creds/grafana" }}
+    user = {{ .Data.username }}
+    password = {{ .Data.password }}
+    {{ end }}
+
+    [grafana_net]
+    url = https://grafana.net
+
+    [server]
+    root_url = https://metrics.hannahs.family
+
+    [log]
+    mode = console
+
+    [auth.github]
+    enabled = true
+    allow_sign_up = true
+    {{- with secret "secrets/grafana/auth/github" }}
+    client_id = {{ .Data.data.client_id }}
+    client_secret = {{ .Data.data.client_secret }}
+    {{ end }}
+    scopes = user:email,read:org
+    auth_url = https://github.com/login/oauth/authorize
+    token_url = https://github.com/login/oauth/access_token
+    api_url = https://api.github.com/user
+    team_ids =
+    allowed_organizations = hannahs-family
+
+    [paths]
+    data = /var/lib/grafana/data
+    logs = /var/log/grafana
+    plugins = /var/lib/grafana/plugins
+    provisioning = /etc/grafana/provisioning
   plugins: |
     grafana-clock-panel
+  vault-agent-config.hcl: |
+    pid_file = "/tmp/pidfile"
+    exit_after_auth = true
+
+    auto_auth {
+      method "kubernetes" {
+        mount_path = "auth/kubernetes"
+        config = {
+          role = "grafana"
+        }
+      }
+
+      sink "file" {
+        config = {
+          path = "/vault/.vault-token"
+        }
+      }
+    }
 
 ---
 apiVersion: v1
@@ -131,43 +153,6 @@ subjects:
     namespace: monitoring
 
 ---
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: Role
-metadata:
-  labels:
-    app.kubernetes.io/instance: grafana
-    app.kubernetes.io/name: grafana
-  name: grafana
-  namespace: monitoring
-rules:
-  - apiGroups:
-      - extensions
-    resourceNames:
-      - grafana
-    resources:
-      - podsecuritypolicies
-    verbs:
-      - use
-
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: RoleBinding
-metadata:
-  labels:
-    app.kubernetes.io/instance: grafana
-    app.kubernetes.io/name: grafana
-  name: grafana
-  namespace: monitoring
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: grafana
-subjects:
-  - kind: ServiceAccount
-    name: grafana
-    namespace: monitoring
-
----
 apiVersion: v1
 kind: Service
 metadata:
@@ -197,7 +182,6 @@ metadata:
     fluxcd.io/tag.grafana-sc-datasources: semver:~0
     fluxcd.io/tag.grafana: semver:~6
     fluxcd.io/automate: "true"
-    vault.security.banzaicloud.io/vault-role: grafana
 spec:
   replicas: 2
   selector:
@@ -215,8 +199,76 @@ spec:
                 matchLabels:
                   <<: *labels
               topologyKey: kubernetes.io/hostname
+      initContainers:
+        - name: vault-agent
+          image: vault:latest
+          command:
+            - vault
+          args:
+            - agent
+            - -config=/vault/agent/config.hcl
+          env: &vault_env
+            - name: VAULT_ADDR
+              value: https://vault.kube-system.svc:8200
+            - name: VAULT_CACERT
+              value: /vault/tls/ca.crt
+          resources:
+            limits:
+              cpu: 50m
+              memory: 64Mi
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 100
+          volumeMounts:
+            - name: ca
+              mountPath: /vault/tls/ca.crt
+            - name: config
+              mountPath: /vault/agent/config.hcl
+              subPath: vault-agent-config.hcl
+            - name: vault-env
+              mountPath: /vault
+        - name: grafana-sc-datasources
+          image: kiwigrid/k8s-sidecar:0.1.20
+          env:
+            - name: METHOD
+              value: LIST
+            - name: LABEL
+              value: grafana.com/datasource
+            - name: FOLDER
+              value: /etc/grafana/provisioning/datasources
+            - name: RESOURCE
+              value: both
+          resources:
+            limits:
+              cpu: 100m
+              memory: 100Mi
+          volumeMounts:
+            - mountPath: /etc/grafana/provisioning/datasources
+              name: sc-datasources-volume
       containers:
-        - env:
+        - name: consul-template
+          image: hashicorp/consul-template:0.22.0-alpine
+          args:
+            - -config=/vault/ct-config/config.hcl
+          env: *vault_env
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              add:
+                - SYS_PTRACE
+          volumeMounts:
+            - name: ca
+              mountPath: /vault/tls/ca.crt
+            - name: config
+              mountPath: /vault/ct-config
+              readOnly: true
+            - name: ct-secrets
+              mountPath: /vault/secrets
+            - name: vault-env
+              mountPath: /vault
+        - name: grafana-sc-dashboard
+          image: kiwigrid/k8s-sidecar:0.1.20
+          env:
             - name: LABEL
               value: grafana.com/dashboard
             - name: FOLDER
@@ -225,23 +277,16 @@ spec:
               value: both
             - name: NAMESPACE
               value: ALL
-          image: kiwigrid/k8s-sidecar:0.1.20
-          name: grafana-sc-dashboard
           resources:
             limits:
               cpu: 100m
               memory: 100Mi
-            requests:
-              cpu: 50m
-              memory: 50Mi
           volumeMounts:
             - mountPath: /tmp/dashboards
               name: sc-dashboard-volume
-        - env:
-            - name: GF_DATABASE_USER
-              value: vault:database/creds/grafana#username
-            - name: GF_DATABASE_PASSWORD
-              value: vault:database/creds/grafana#password
+        - name: grafana
+          image: grafana/grafana:6.3.6
+          env:
             - name: GF_SECURITY_ADMIN_USER
               valueFrom:
                 secretKeyRef:
@@ -257,15 +302,6 @@ spec:
                 configMapKeyRef:
                   key: plugins
                   name: grafana
-          image: grafana/grafana:6.3.6
-          livenessProbe:
-            failureThreshold: 10
-            httpGet:
-              path: /api/health
-              port: 3000
-            initialDelaySeconds: 60
-            timeoutSeconds: 30
-          name: grafana
           ports:
             - containerPort: 80
               name: service
@@ -273,10 +309,15 @@ spec:
             - containerPort: 3000
               name: grafana
               protocol: TCP
-          readinessProbe:
+          readinessProbe: &probe
             httpGet:
               path: /api/health
               port: 3000
+          livenessProbe:
+            <<: *probe
+            failureThreshold: 10
+            initialDelaySeconds: 60
+            timeoutSeconds: 30
           resources:
             limits:
               cpu: 100m
@@ -285,78 +326,43 @@ spec:
               cpu: 100m
               memory: 128Mi
           volumeMounts:
-            - mountPath: /etc/grafana/grafana.ini
-              name: config
+            - name: ca
+              mountPath: /etc/ssl/certs/hannahs.family.ca.cert.pem
+            - name: ct-secrets
+              mountPath: /etc/grafana/grafana.ini
               subPath: grafana.ini
-            - mountPath: /var/lib/grafana
-              name: storage
-            - mountPath: /tmp/dashboards
-              name: sc-dashboard-volume
-            - mountPath: /etc/grafana/provisioning/dashboards/sc-dashboardproviders.yaml
-              name: sc-dashboard-provider
+              readOnly: true
+            - name: storage
+              mountPath: /var/lib/grafana
+            - name: sc-dashboard-provider
+              mountPath: /etc/grafana/provisioning/dashboards/sc-dashboardproviders.yaml
               subPath: provider.yaml
-            - mountPath: /etc/grafana/provisioning/datasources
-              name: sc-datasources-volume
-            - mountPath: /etc/ssl/certs/hannahs.family.ca.cert.pem
-              name: ca
-      initContainers:
-        - command:
-            - chown
-            - -R
-            - 472:472
-            - /var/lib/grafana
-          image: busybox:1.30
-          imagePullPolicy: IfNotPresent
-          name: init-chown-data
-          resources: {}
-          securityContext:
-            runAsUser: 0
-          volumeMounts:
-            - mountPath: /var/lib/grafana
-              name: storage
-        - env:
-            - name: METHOD
-              value: LIST
-            - name: LABEL
-              value: grafana.com/datasource
-            - name: FOLDER
-              value: /etc/grafana/provisioning/datasources
-            - name: RESOURCE
-              value: both
-          image: kiwigrid/k8s-sidecar:0.1.20
-          imagePullPolicy: IfNotPresent
-          name: grafana-sc-datasources
-          resources:
-            limits:
-              cpu: 100m
-              memory: 100Mi
-            requests:
-              cpu: 50m
-              memory: 50Mi
-          volumeMounts:
-            - mountPath: /etc/grafana/provisioning/datasources
-              name: sc-datasources-volume
-      securityContext:
-        fsGroup: 472
-        runAsUser: 472
+            - name: sc-dashboard-volume
+              mountPath: /tmp/dashboards
+            - name: sc-datasources-volume
+              mountPath: /etc/grafana/provisioning/datasources
       serviceAccountName: grafana
       volumes:
-        - secret:
-            secretName: grafana
-          name: config
-        - emptyDir: {}
-          name: sc-dashboard-volume
-        - configMap:
-            name: grafana-config-dashboards
-          name: sc-dashboard-provider
-        - emptyDir: {}
-          name: sc-datasources-volume
-        - emptyDir: {}
-          name: storage
-        - hostPath:
+        - name: ca
+          hostPath:
             path: /etc/ssl/certs/hannahs.family.ca.cert.pem
             type: File
-          name: ca
+        - name: config
+          configMap:
+            name: grafana
+        - name: ct-secrets
+          emptyDir: {}
+        - name: sc-dashboard-provider
+          configMap:
+            name: grafana-config-dashboards
+        - name: sc-dashboard-volume
+          emptyDir: {}
+        - name: sc-datasources-volume
+          emptyDir: {}
+        - name: storage
+          emptyDir: {}
+        - name: vault-env
+          emptyDir: {}
 
 ---
 apiVersion: traefik.containo.us/v1alpha1
