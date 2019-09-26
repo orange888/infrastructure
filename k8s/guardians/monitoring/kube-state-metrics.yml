@@ -9,91 +9,90 @@ metadata:
   name: kube-state-metrics
   namespace: monitoring
 rules:
-  - apiGroups:
-      - extensions
-    resources:
-      - podsecuritypolicies
-    verbs:
-      - use
-    resourceNames:
-      - kube-state-metrics
-  - apiGroups:
-      - ""
-    resources:
-      - namespaces
-      - nodes
-      - persistentvolumeclaims
-      - pods
-      - services
-      - resourcequotas
-      - replicationcontrollers
-      - limitranges
-      - persistentvolumeclaims
-      - persistentvolumes
-      - endpoints
-      - secrets
-      - configmaps
-    verbs:
-      - list
-      - watch
-  - apiGroups:
-      - extensions
-    resources:
-      - daemonsets
-      - deployments
-      - ingresses
-      - replicasets
-    verbs:
-      - list
-      - watch
-  - apiGroups:
-      - apps
-    resources:
-      - daemonsets
-      - deployments
-      - statefulsets
-      - replicasets
-    verbs:
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - batch
-    resources:
-      - cronjobs
-      - jobs
-    verbs:
-      - list
-      - watch
-  - apiGroups:
-      - autoscaling
-    resources:
-      - horizontalpodautoscalers
-    verbs:
-      - list
-      - watch
-  - apiGroups:
-      - policy
-    resources:
-      - poddisruptionbudgets
-    verbs:
-      - list
-      - watch
-  - apiGroups:
-      - certificates.k8s.io
-    resources:
-      - certificatesigningrequests
-    verbs:
-      - list
-      - watch
-  - apiGroups:
-      - storage.k8s.io
-    resources:
-      - storageclasses
-    verbs:
-      - list
-      - watch
-
+- apiGroups:
+  - extensions
+  resources:
+  - podsecuritypolicies
+  verbs:
+  - use
+  resourceNames:
+  - kube-state-metrics
+- apiGroups:
+  - ""
+  resources:
+  - namespaces
+  - nodes
+  - persistentvolumeclaims
+  - pods
+  - services
+  - resourcequotas
+  - replicationcontrollers
+  - limitranges
+  - persistentvolumeclaims
+  - persistentvolumes
+  - endpoints
+  - secrets
+  - configmaps
+  verbs:
+  - list
+  - watch
+- apiGroups:
+  - extensions
+  resources:
+  - daemonsets
+  - deployments
+  - ingresses
+  - replicasets
+  verbs:
+  - list
+  - watch
+- apiGroups:
+  - apps
+  resources:
+  - daemonsets
+  - deployments
+  - statefulsets
+  - replicasets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - batch
+  resources:
+  - cronjobs
+  - jobs
+  verbs:
+  - list
+  - watch
+- apiGroups:
+  - autoscaling
+  resources:
+  - horizontalpodautoscalers
+  verbs:
+  - list
+  - watch
+- apiGroups:
+  - policy
+  resources:
+  - poddisruptionbudgets
+  verbs:
+  - list
+  - watch
+- apiGroups:
+  - certificates.k8s.io
+  resources:
+  - certificatesigningrequests
+  verbs:
+  - list
+  - watch
+- apiGroups:
+  - storage.k8s.io
+  resources:
+  - storageclasses
+  verbs:
+  - list
+  - watch
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
@@ -105,14 +104,13 @@ metadata:
   name: kube-state-metrics
   namespace: monitoring
 subjects:
-  - kind: ServiceAccount
-    name: kube-state-metrics
-    namespace: monitoring
+- kind: ServiceAccount
+  name: kube-state-metrics
+  namespace: monitoring
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
   name: kube-state-metrics
-
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -142,42 +140,41 @@ spec:
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
-            - labelSelector:
-                matchLabels:
-                  <<: *labels
-              topologyKey: kubernetes.io/hostname
+          - labelSelector:
+              matchLabels:
+                <<: *labels
+            topologyKey: kubernetes.io/hostname
       containers:
-        - name: kube-state-metrics
-          image: quay.io/coreos/kube-state-metrics:v1.8.0-rc.0
-          imagePullPolicy: IfNotPresent
-          env:
-            - name: POD_NAME
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.name
-            - name: POD_NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
-          args:
-            - --pod
-            - $(POD_NAME)
-            - --pod-namespace
-            - $(POD_NAMESPACE)
-          ports:
-            - name: metrics
-              containerPort: 8080
-          resources:
-            limits:
-              cpu: 100m
-              memory: 128Mi
-            requests:
-              cpu: 100m
-              memory: 128Mi
+      - name: kube-state-metrics
+        image: quay.io/coreos/kube-state-metrics:v1.8.0-rc.1
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        args:
+        - --pod
+        - $(POD_NAME)
+        - --pod-namespace
+        - $(POD_NAMESPACE)
+        ports:
+        - name: metrics
+          containerPort: 8080
+        resources:
+          limits:
+            cpu: 100m
+            memory: 128Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
       securityContext:
         runAsNonRoot: true
         runAsUser: 65534
-
 ---
 apiVersion: policy/v1beta1
 kind: PodSecurityPolicy
@@ -192,9 +189,9 @@ spec:
   privileged: false
   allowPrivilegeEscalation: false
   requiredDropCapabilities:
-    - ALL
+  - ALL
   volumes:
-    - secret
+  - secret
   allowedHostPaths: []
   hostNetwork: false
   hostPID: false
@@ -206,15 +203,14 @@ spec:
   supplementalGroups:
     rule: MustRunAs
     ranges:
-      - min: 1
-        max: 65535
+    - min: 1
+      max: 65535
   fsGroup:
     rule: MustRunAs
     ranges:
-      - min: 1
-        max: 65535
+    - min: 1
+      max: 65535
   readOnlyRootFilesystem: true
-
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -225,7 +221,6 @@ metadata:
     app.kubernetes.io/component: kube-state-metrics
   name: kube-state-metrics
   namespace: monitoring
-
 ---
 apiVersion: v1
 kind: Service
@@ -240,8 +235,8 @@ metadata:
   namespace: monitoring
 spec:
   ports:
-    - name: http
-      port: 8080
+  - name: http
+    port: 8080
   selector:
     <<: *labels
   clusterIP: None
