@@ -238,7 +238,7 @@ spec:
             - mountPath: /tmp/dashboards
               name: sc-dashboard-volume
         - env:
-            - name: GF_DATABASE_USERNAME
+            - name: GF_DATABASE_USER
               value: vault:database/creds/grafana#username
             - name: GF_DATABASE_PASSWORD
               value: vault:database/creds/grafana#password
