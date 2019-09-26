@@ -8,5 +8,5 @@ metadata:
     app.kubernetes.io/name: postgres
     app.kubernetes.io/instance: postgres
 data:
-  POSTGRES_PASSWORD: {{ postgres.password | b64encode }}
-  POSTGRES_USER: {{ postgres.user | b64encode }}
+  PGPASSWORD: {{ postgres.password | b64encode }}
+  PGUSER: {{ postgres.user | b64encode }}
