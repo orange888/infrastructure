@@ -8,7 +8,7 @@ metadata:
     app.kubernetes.io/instance: grafana
     app.kubernetes.io/name: grafana
 data:
-  config.hcl: |-
+  config.hcl: |
     vault {
       vault_agent_token_file = "/vault/.vault-token"
       renew_token = true
@@ -19,7 +19,7 @@ data:
     }
     template {
       source = "/vault/ct-config/grafana.ini.tpl"
-      destination = "/vault/ct-secrets/grafana.ini"
+      destination = "/consul-template/data/grafana.ini"
       error_on_missing_key = true
     }
   grafana.ini.tpl: |
@@ -207,7 +207,7 @@ spec:
           args:
             - agent
             - -config=/vault/agent/config.hcl
-          env: &vault_env
+          env:
             - name: VAULT_ADDR
               value: https://vault.kube-system.svc:8200
             - name: VAULT_CACERT
@@ -217,8 +217,8 @@ spec:
               cpu: 50m
               memory: 64Mi
           securityContext:
-            runAsUser: 1000
-            runAsGroup: 100
+            runAsUser: 100
+            runAsGroup: 1000
           volumeMounts:
             - name: ca
               mountPath: /vault/tls/ca.crt
@@ -250,12 +250,11 @@ spec:
           image: hashicorp/consul-template:0.22.0-alpine
           args:
             - -config=/vault/ct-config/config.hcl
-          env: *vault_env
-          securityContext:
-            allowPrivilegeEscalation: false
-            capabilities:
-              add:
-                - SYS_PTRACE
+          env:
+            - name: VAULT_ADDR
+              value: https://vault.kube-system.svc:8200
+            - name: VAULT_CACERT
+              value: /vault/tls/ca.crt
           volumeMounts:
             - name: ca
               mountPath: /vault/tls/ca.crt
@@ -263,9 +262,18 @@ spec:
               mountPath: /vault/ct-config
               readOnly: true
             - name: ct-secrets
-              mountPath: /vault/secrets
+              mountPath: /consul-template/data
             - name: vault-env
               mountPath: /vault
+          resources:
+            limits:
+              cpu: 50m
+              memory: 64Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              add:
+                - SYS_PTRACE
         - name: grafana-sc-dashboard
           image: kiwigrid/k8s-sidecar:0.1.20
           env:
@@ -287,6 +295,8 @@ spec:
         - name: grafana
           image: grafana/grafana:6.3.6
           env:
+            - name: GF_PATHS_CONFIG
+              value: /etc/grafana/config/grafana.ini
             - name: GF_SECURITY_ADMIN_USER
               valueFrom:
                 secretKeyRef:
@@ -329,8 +339,7 @@ spec:
             - name: ca
               mountPath: /etc/ssl/certs/hannahs.family.ca.cert.pem
             - name: ct-secrets
-              mountPath: /etc/grafana/grafana.ini
-              subPath: grafana.ini
+              mountPath: /etc/grafana/config
               readOnly: true
             - name: storage
               mountPath: /var/lib/grafana
