@@ -13,12 +13,12 @@ spec:
   type: LoadBalancer
   externalTrafficPolicy: Cluster
   ports:
-    - name: http
-      port: 80
-      targetPort: http
-    - name: https
-      port: 443
-      targetPort: https
+  - name: http
+    port: 80
+    targetPort: http
+  - name: https
+    port: 443
+    targetPort: https
   selector:
     <<: *labels
 
@@ -37,9 +37,9 @@ metadata:
 spec:
   clusterIP: None
   ports:
-    - name: api
-      port: 8080
-      targetPort: api
+  - name: api
+    port: 8080
+    targetPort: api
   selector:
     <<: *labels
 
@@ -116,60 +116,59 @@ spec:
     spec:
       serviceAccountName: traefik
       containers:
-        - name: traefik
-          image: traefik:v2.0.0
-          args:
-            - --configFile=/config/traefik.yml
-          ports:
-            - name: http
-              containerPort: 80
-            - name: https
-              containerPort: 443
-            - name: api
-              containerPort: 8080
-          envFrom:
-            - secretRef:
-                name: cloudflare
-          livenessProbe: &probe
-            httpGet:
-              path: /ping
-              port: 8080
-            initialDelaySeconds: 10
-            periodSeconds: 10
-            timeoutSeconds: 2
-            successThreshold: 1
-            failureThreshold: 3
-          readinessProbe:
-            <<: *probe
-          volumeMounts:
-            - name: acme
-              mountPath: /acme
-            - name: tls
-              mountPath: /tls
-              readOnly: true
-            - name: config
-              mountPath: /config
-              readOnly: true
-      volumes:
+      - name: traefik
+        image: traefik:v2.0.1
+        args:
+        - --configFile=/config/traefik.yml
+        ports:
+        - name: http
+          containerPort: 80
+        - name: https
+          containerPort: 443
+        - name: api
+          containerPort: 8080
+        envFrom:
+        - secretRef:
+            name: cloudflare
+        livenessProbe: &probe
+          httpGet:
+            path: /ping
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 2
+          successThreshold: 1
+          failureThreshold: 3
+        readinessProbe:
+          <<: *probe
+        volumeMounts:
+        - name: acme
+          mountPath: /acme
         - name: tls
-          secret:
-            secretName: traefik-default-cert
-            defaultMode: 0400
+          mountPath: /tls
+          readOnly: true
         - name: config
-          configMap:
-            name: traefik
+          mountPath: /config
+          readOnly: true
+      volumes:
+      - name: tls
+        secret:
+          secretName: traefik-default-cert
+          defaultMode: 0400
+      - name: config
+        configMap:
+          name: traefik
   volumeClaimTemplates:
-    - metadata:
-        name: acme
-        labels:
-          <<: *labels
-      spec:
-        accessModes:
-          - ReadWriteOnce
-        resources:
-          requests:
-            storage: 100Mi
-
+  - metadata:
+      name: acme
+      labels:
+        <<: *labels
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 100Mi
 ---
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
@@ -181,17 +180,16 @@ metadata:
     app.kubernetes.io/name: traefik
 spec:
   entrypoints:
-    - http
+  - http
   routes:
-    - match: Host(`traefik.hannahs.family`)
-      kind: Rule
-      middlewares:
-        - name: https-redirect
-          namespace: kube-system
-      services:
-        - name: traefik-api
-          port: 8080
-
+  - match: Host(`traefik.hannahs.family`)
+    kind: Rule
+    middlewares:
+    - name: https-redirect
+      namespace: kube-system
+    services:
+    - name: traefik-api
+      port: 8080
 ---
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
@@ -203,12 +201,12 @@ metadata:
     app.kubernetes.io/name: traefik
 spec:
   entrypoints:
-    - https
+  - https
   routes:
-    - match: Host(`traefik.hannahs.family`)
-      kind: Rule
-      services:
-        - name: traefik-api
-          port: 8080
+  - match: Host(`traefik.hannahs.family`)
+    kind: Rule
+    services:
+    - name: traefik-api
+      port: 8080
   tls:
     certResolver: default
