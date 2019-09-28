@@ -623,7 +623,12 @@ spec:
               path: /ready
               port: http-metrics
             initialDelaySeconds: 45
-          resources: {}
+          resources:
+            limits: &resources
+              cpu: 100m
+              memory: 2Gi
+            requests:
+              <<: *resources
           securityContext:
             readOnlyRootFilesystem: true
           volumeMounts:

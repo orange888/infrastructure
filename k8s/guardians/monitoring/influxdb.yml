@@ -163,7 +163,12 @@ spec:
               port: api
             initialDelaySeconds: 5
             timeoutSeconds: 1
-          resources: {}
+          resources:
+            limits: &resources
+              cpu: 1
+              memory: 2Gi
+            requests:
+              <<: *resources
           volumeMounts:
             - name: config
               mountPath: /etc/influxdb

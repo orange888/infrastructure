@@ -436,12 +436,11 @@ spec:
             initialDelaySeconds: 30
             timeoutSeconds: 30
           resources:
-            limits:
-              cpu: 2
-              memory: 4Gi
+            limits: &resources
+              cpu: 250m
+              memory: 1Gi
             requests:
-              cpu: 500m
-              memory: 2Gi
+              <<: *resources
           volumeMounts:
             - name: config
               mountPath: /etc/config
