@@ -675,7 +675,7 @@ metadata:
     app.kubernetes.io/instance: grafana
     grafana.com/datasource: loki
 data:
-  influxdb.yml: |
+  loki.yml: |
     apiVersion: 1
     datasources:
       - name: Loki
