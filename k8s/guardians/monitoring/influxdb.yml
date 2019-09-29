@@ -105,11 +105,14 @@ data:
 apiVersion: v1
 kind: Service
 metadata:
+  name: influxdb
+  namespace: monitoring
   labels: &labels
     app.kubernetes.io/instance: influxdb
     app.kubernetes.io/name: influxdb
-  name: influxdb
-  namespace: monitoring
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8086"
 spec:
   clusterIP: None
   ports:

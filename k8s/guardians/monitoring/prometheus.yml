@@ -197,6 +197,8 @@ data:
             source_labels:
               - __meta_kubernetes_pod_node_name
             target_label: kubernetes_node
+        tls_config:
+          insecure_skip_verify: true
       - honor_labels: true
         job_name: prometheus-pushgateway
         kubernetes_sd_configs:
