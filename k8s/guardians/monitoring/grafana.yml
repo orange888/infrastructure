@@ -23,6 +23,11 @@ data:
       error_on_missing_key = true
     }
   grafana.ini.tpl: |
+    [security]
+    {{- with secret "secrets/grafana/admin" }}
+    admin_password = {{ .Data.data.admin_password }}
+    {{ end  }}
+
     [analytics]
     check_for_updates = true
 
@@ -297,16 +302,6 @@ spec:
           env:
             - name: GF_PATHS_CONFIG
               value: /etc/grafana/config/grafana.ini
-            - name: GF_SECURITY_ADMIN_USER
-              valueFrom:
-                secretKeyRef:
-                  key: adminUser
-                  name: grafana
-            - name: GF_SECURITY_ADMIN_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  key: adminPassword
-                  name: grafana
             - name: GF_INSTALL_PLUGINS
               valueFrom:
                 configMapKeyRef:
