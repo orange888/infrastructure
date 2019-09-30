@@ -1,0 +1,176 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: oauth2-proxy
+  namespace: default
+  labels:
+    app.kubernetes.io/name: oauth2-proxy
+    app.kubernetes.io/instance: oauth2-proxy
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: oauth2-proxy
+  namespace: default
+  labels:
+    app.kubernetes.io/name: oauth2-proxy
+    app.kubernetes.io/instance: oauth2-proxy
+data:
+  oauth2_proxy.cfg: |
+    cookie_domain = "hannahs.family"
+    email_domains = [ "*" ]
+    github_org = "hannahs-family"
+    github_team = ""
+    provider = "github"
+    redirect_url = "https://auth.hannahs.family/oauth2/callback"
+    set_xauthrequest = true
+    set_authorization_header = true
+    upstreams = [ "file:///dev/null" ]
+    whitelist_domain = ".hannahs.family"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: oauth2-proxy
+  namespace: default
+  labels: &labels
+    app.kubernetes.io/name: oauth2-proxy
+    app.kubernetes.io/instance: oauth2-proxy
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: http
+      name: http
+  selector:
+    <<: *labels
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oauth2-proxy
+  namespace: default
+  labels: &labels
+    app.kubernetes.io/name: oauth2-proxy
+    app.kubernetes.io/instance: oauth2-proxy
+  annotations:
+    fluxcd.io/tag.oauth2-proxy: semver:~4
+    fluxcd.io/automated: "true"
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      <<: *labels
+  template:
+    metadata:
+      labels:
+        <<: *labels
+      annotations:
+        vault.security.banzaicloud.io/vault-role: oauth2-proxy
+        vault.security.banzaicloud.io/vault-skip-verify: "true"
+    spec:
+      serviceAccountName: oauth2-proxy
+      containers:
+        - name: oauth2-proxy
+          image: quay.io/pusher/oauth2_proxy:v4.0.0
+          command:
+            - /bin/oauth2_proxy
+          args:
+            - --http-address=0.0.0.0:4180
+            - --config=/etc/oauth2_proxy/oauth2_proxy.cfg
+          env:
+            - name: OAUTH2_PROXY_CLIENT_ID
+              value: vault:secrets/data/oauth2-proxy#client_id
+            - name: OAUTH2_PROXY_CLIENT_SECRET
+              value: vault:secrets/data/oauth2-proxy#client_secret
+            - name: OAUTH2_PROXY_COOKIE_SECRET
+              value: vault:secrets/data/oauth2-proxy#cookie_secret
+          ports:
+            - containerPort: 4180
+              name: http
+          livenessProbe: &probe
+            httpGet:
+              path: /ping
+              port: http
+            initialDelaySeconds: 0
+            timeoutSeconds: 1
+          readinessProbe:
+            <<: *probe
+            periodSeconds: 10
+          resources:
+            requests: &resources
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              <<: *resources
+          volumeMounts:
+            - mountPath: /etc/oauth2_proxy
+              name: config
+      volumes:
+        - name: config
+          configMap:
+            defaultMode: 420
+            name: oauth2-proxy
+
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: oauth2-proxy-http
+  namespace: default
+  labels:
+    app.kubernetes.io/name: oauth2-proxy
+    app.kubernetes.io/instance: oauth2-proxy
+spec:
+  entryPoints:
+    - http
+  routes:
+    - match: Host(`auth.hannahs.family`) || PathPrefix(`/oauth2`)
+      kind: Rule
+      middlewares:
+        - name: https-redirect
+          namespace: default
+      services:
+        - name: oauth2-proxy
+          port: 80
+
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: oauth2-proxy-https
+  namespace: default
+  labels:
+    app.kubernetes.io/name: oauth2-proxy
+    app.kubernetes.io/instance: oauth2-proxy
+spec:
+  entryPoints:
+    - https
+  routes:
+    - match: Host(`auth.hannahs.family`) || PathPrefix(`/oauth2`)
+      kind: Rule
+      services:
+        - name: oauth2-proxy
+          port: 80
+  tls:
+    certResolver: default
+
+---
+apiVersion: externaldns.k8s.io/v1alpha1
+kind: DNSEndpoint
+metadata:
+  name: oauth2-proxy
+  namespace: default
+  labels:
+    app.kubernetes.io/name: oauth2-proxy
+    app.kubernetes.io/instance: oauth2-proxy
+spec:
+  endpoints:
+    - dnsName: auth.hannahs.family
+      recordType: CNAME
+      targets:
+        - traefik.hannahs.family

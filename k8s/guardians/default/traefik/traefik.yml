@@ -58,6 +58,7 @@ data:
       format: json
     api:
       dashboard: true
+      insecure: true
     certificatesResolvers:
       default:
         acme:
@@ -65,7 +66,7 @@ data:
             provider: cloudflare
           email: admin@hannahs.family
           storage: /acme/acme.json
-    entrypoints:
+    entryPoints:
       http:
         address: :80
       https:
@@ -76,7 +77,7 @@ data:
       sendAnonymousUsage: false
     log:
       format: json
-      level: WARN
+      level: DEBUG
     metrics:
       prometheus: {}
     ping: {}
@@ -185,7 +186,7 @@ metadata:
     app.kubernetes.io/instance: traefik
     app.kubernetes.io/name: traefik
 spec:
-  entrypoints:
+  entryPoints:
     - http
   routes:
     - match: Host(`traefik.hannahs.family`)
@@ -207,11 +208,14 @@ metadata:
     app.kubernetes.io/instance: traefik
     app.kubernetes.io/name: traefik
 spec:
-  entrypoints:
+  entryPoints:
     - https
   routes:
     - match: Host(`traefik.hannahs.family`)
       kind: Rule
+      middlewares:
+        - name: oauth2-proxy
+          namespace: default
       services:
         - name: traefik-api
           port: 8080

@@ -378,7 +378,7 @@ metadata:
     app.kubernetes.io/name: grafana
     app.kubernetes.io/instance: grafana
 spec:
-  entrypoints:
+  entryPoints:
     - http
   routes:
     - match: Host(`metrics.hannahs.family`)
@@ -400,7 +400,7 @@ metadata:
     app.kubernetes.io/name: grafana
     app.kubernetes.io/instance: grafana
 spec:
-  entrypoints:
+  entryPoints:
     - https
   routes:
     - match: Host(`metrics.hannahs.family`)

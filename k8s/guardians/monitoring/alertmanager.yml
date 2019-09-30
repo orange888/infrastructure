@@ -218,7 +218,7 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/component: alertmanager
 spec:
-  entrypoints:
+  entryPoints:
     - http
   routes:
     - match: Host(`alerts.metrics.hannahs.family`)
@@ -241,11 +241,14 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/component: alertmanager
 spec:
-  entrypoints:
+  entryPoints:
     - https
   routes:
     - match: Host(`alerts.metrics.hannahs.family`)
       kind: Rule
+      middlewares:
+        - name: oauth2-proxy
+          namespace: default
       services:
         - name: alertmanager
           port: 9093

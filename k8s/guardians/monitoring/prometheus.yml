@@ -479,7 +479,7 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/component: server
 spec:
-  entrypoints:
+  entryPoints:
     - http
   routes:
     - match: Host(`prometheus.metrics.hannahs.family`)
@@ -502,11 +502,14 @@ metadata:
     app.kubernetes.io/instance: prometheus
     app.kubernetes.io/component: server
 spec:
-  entrypoints:
+  entryPoints:
     - https
   routes:
     - match: Host(`prometheus.metrics.hannahs.family`)
       kind: Rule
+      middlewares:
+        - name: oauth2-proxy
+          namespace: default
       services:
         - name: prometheus
           port: 9090
