@@ -118,7 +118,6 @@ metadata:
     app.kubernetes.io/name: grafana
   name: grafana
   namespace: monitoring
-
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -138,7 +137,6 @@ rules:
       - get
       - watch
       - list
-
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -156,7 +154,6 @@ subjects:
   - kind: ServiceAccount
     name: grafana
     namespace: monitoring
-
 ---
 apiVersion: v1
 kind: Service
@@ -183,11 +180,12 @@ metadata:
     app.kubernetes.io/instance: grafana
     app.kubernetes.io/name: grafana
   annotations:
+    fluxcd.io/tag.consul-template: regexp:^0\.\d+\.\d+-alpine$
     fluxcd.io/tag.grafana-sc-dashboard: semver:~0
     fluxcd.io/tag.grafana-sc-datasources: semver:~0
     fluxcd.io/tag.grafana: semver:~6
     fluxcd.io/tag.vault-agent: semver:~1
-    fluxcd.io/automate: "true"
+    fluxcd.io/automated: "true"
 spec:
   replicas: 2
   selector:
@@ -299,7 +297,7 @@ spec:
             - mountPath: /tmp/dashboards
               name: sc-dashboard-volume
         - name: grafana
-          image: grafana/grafana:6.3.6
+          image: grafana/grafana:6.4.0
           env:
             - name: GF_PATHS_CONFIG
               value: /etc/grafana/config/grafana.ini
@@ -390,7 +388,6 @@ spec:
       services:
         - name: grafana
           port: 3000
-
 ---
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
@@ -411,7 +408,6 @@ spec:
           port: 3000
   tls:
     certResolver: default
-
 ---
 apiVersion: externaldns.k8s.io/v1alpha1
 kind: DNSEndpoint
@@ -427,7 +423,6 @@ spec:
       recordType: CNAME
       targets:
         - traefik.hannahs.family
-
 ---
 apiVersion: batch/v1
 kind: Job
