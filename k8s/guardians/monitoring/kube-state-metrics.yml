@@ -146,7 +146,7 @@ spec:
             topologyKey: kubernetes.io/hostname
       containers:
       - name: kube-state-metrics
-        image: quay.io/coreos/kube-state-metrics:v1.8.0-rc.1
+        image: quay.io/coreos/kube-state-metrics:v1.8.0
         imagePullPolicy: IfNotPresent
         env:
         - name: POD_NAME
