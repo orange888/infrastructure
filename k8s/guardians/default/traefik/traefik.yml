@@ -178,6 +178,20 @@ spec:
 
 ---
 apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: traefik-auth-redirect
+  namespace: default
+  labels:
+    app.kubernetes.io/instance: traefik
+    app.kubernetes.io/name: traefik
+spec:
+  headers:
+    customRequestHeaders:
+      X-Auth-Request-Redirect: https://traefik.hannahs.family
+
+---
+apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
   name: traefik-http
@@ -214,6 +228,8 @@ spec:
     - match: Host(`traefik.hannahs.family`)
       kind: Rule
       middlewares:
+        - name: traefik-auth-redirect
+          namespace: default
         - name: oauth2-proxy
           namespace: default
       services:
