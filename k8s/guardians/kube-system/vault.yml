@@ -23,18 +23,13 @@ metadata:
     app.kubernetes.io/instance: vault
   namespace: kube-system
 data:
-  extraconfig-from-values.hcl: |-
+  config.hcl: |
     ui = true
     listener "tcp" {
       address = "[::]:8200"
       cluster_address = "[::]:8201"
       tls_cert_file = "/vault/tls/cert.pem"
       tls_key_file = "/vault/tls/key.pem"
-    }
-    storage "consul" {
-      path = "vault"
-      address = "consul.kube-system.svc:8500"
-      token = "CONSUL_TOKEN"
     }
 
 ---
@@ -88,6 +83,178 @@ spec:
       targetPort: 8201
   selector:
     <<: *labels
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: vault
+  labels: &labels
+    app.kubernetes.io/name: vault
+    app.kubernetes.io/instance: vault
+  annotations:
+    fluxcd.io/tag.consul-agent: semver:~1
+    fluxcd.io/tag.vault: semver:~1
+    fluxcd.io/automated: "true"
+  namespace: kube-system
+spec:
+  serviceName: vault
+  podManagementPolicy: Parallel
+  replicas: 3
+  updateStrategy:
+    type: OnDelete
+  selector:
+    matchLabels:
+      <<: *labels
+  template:
+    metadata:
+      labels:
+        <<: *labels
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  <<: *labels
+              topologyKey: kubernetes.io/hostname
+      terminationGracePeriodSeconds: 10
+      serviceAccountName: vault
+      containers:
+        - name: consul-agent
+          image: consul:1.6.1
+          args:
+            - agent
+            - -config-dir=/etc/consul/config
+            - -encrypt=$(GOSSIP_KEY)
+          env:
+            - name: GOSSIP_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: consul
+                  key: gossip-key
+          volumeMounts:
+            - name: consul-config
+              mountPath: /etc/consul/config
+              readOnly: true
+            - name: consul-agent-datadir
+              mountPath: /var/lib/consul
+        - name: vault
+          image: vault:1.2.3
+          command:
+            - vault
+          args:
+            - server
+            - -config=/vault/config
+          env:
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: VAULT_ADDR
+              value: https://127.0.0.1:8200
+            - name: VAULT_API_ADDR
+              value: https://$(POD_NAME).vault:8200
+            - name: SKIP_CHOWN
+              value: "true"
+            - name: VAULT_CAPATH
+              value: /etc/ssl/certs/hannahs.family.ca.cert.pem
+          volumeMounts:
+            - name: ca
+              mountPath: /etc/ssl/certs/hannahs.family.ca.cert.pem
+              readOnly: true
+            - name: vault-config
+              mountPath: /vault/config
+              readOnly: true
+            - name: vault-tls
+              mountPath: /vault/tls
+              readOnly: true
+          ports:
+            - containerPort: 8200
+              name: https
+            - containerPort: 8201
+              name: internal
+            - containerPort: 8202
+              name: replication
+          resources:
+            limits:
+              cpu: 250m
+              memory: 256Mi
+          securityContext:
+            privileged: true
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -ec
+                - vault status -tls-skip-verify
+            failureThreshold: 2
+            initialDelaySeconds: 5
+            periodSeconds: 3
+            successThreshold: 1
+            timeoutSeconds: 5
+      volumes:
+        - name: ca
+          hostPath:
+            path: /etc/ssl/certs/hannahs.family.ca.cert.pem
+            type: File
+        - name: consul-config
+          configMap:
+            name: consul
+        - name: vault-config
+          projected:
+            sources:
+              - configMap:
+                  name: vault
+              - secret:
+                  name: vault
+                  items:
+                    - key: consul.hcl
+                      path: consul.hcl
+        - name: vault-tls
+          secret:
+            secretName: vault
+            items:
+              - key: cert.pem
+                path: cert.pem
+              - key: key.pem
+                path: key.pem
+  volumeClaimTemplates:
+    - metadata:
+        name: consul-agent-datadir
+        labels:
+          <<: *labels
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: vault-auth
+  namespace: kube-system
+  labels:
+    app.kubernetes.io/name: vault
+    app.kubernetes.io/instance: vault
+
+---
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: role-tokenreview-binding
+  namespace: kube-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:auth-delegator
+subjects:
+  - kind: ServiceAccount
+    name: vault-auth
+    namespace: kube-system
 
 ---
 apiVersion: traefik.containo.us/v1alpha1
@@ -147,152 +314,3 @@ spec:
       recordType: CNAME
       targets:
         - traefik.hannahs.family
-
----
-apiVersion: apps/v1
-kind: StatefulSet
-metadata:
-  name: vault
-  labels: &labels
-    app.kubernetes.io/name: vault
-    app.kubernetes.io/instance: vault
-  annotations:
-    fluxcd.io/tag.vault: semver:~1
-    fluxcd.io/automated: "true"
-  namespace: kube-system
-spec:
-  serviceName: vault
-  podManagementPolicy: Parallel
-  replicas: 3
-  updateStrategy:
-    type: OnDelete
-  selector:
-    matchLabels:
-      <<: *labels
-  template:
-    metadata:
-      labels:
-        <<: *labels
-    spec:
-      affinity:
-        podAntiAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            - labelSelector:
-                matchLabels:
-                  <<: *labels
-              topologyKey: kubernetes.io/hostname
-      terminationGracePeriodSeconds: 10
-      serviceAccountName: vault
-      volumes:
-        - name: ca
-          hostPath:
-            path: /etc/ssl/certs/hannahs.family.ca.cert.pem
-            type: File
-        - name: config
-          configMap:
-            name: vault
-        - name: secret
-          secret:
-            secretName: vault
-      containers:
-        - name: vault
-          resources:
-            limits:
-              cpu: 250m
-              memory: 256Mi
-            requests:
-              cpu: 250m
-              memory: 256Mi
-          securityContext:
-            privileged: true
-          image: vault:1.2.3
-          command:
-            - /bin/sh
-            - -ec
-          args:
-            - |
-              sed -E "s/HOST_IP/${HOST_IP?}/g" /vault/config/extraconfig-from-values.hcl > /tmp/storageconfig.hcl;
-              sed -Ei "s/POD_IP/${POD_IP?}/g" /tmp/storageconfig.hcl;
-              sed -Ei "s/CONSUL_TOKEN/${CONSUL_TOKEN?}/g" /tmp/storageconfig.hcl;
-              chown vault:vault /tmp/storageconfig.hcl;
-              /usr/local/bin/docker-entrypoint.sh vault server -config=/tmp/storageconfig.hcl
-          env:
-            - name: HOST_IP
-              valueFrom:
-                fieldRef:
-                  fieldPath: status.hostIP
-            - name: POD_IP
-              valueFrom:
-                fieldRef:
-                  fieldPath: status.podIP
-            - name: POD_NAME
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.name
-            - name: CONSUL_TOKEN
-              valueFrom:
-                secretKeyRef:
-                  name: vault
-                  key: CONSUL_TOKEN
-            - name: VAULT_ADDR
-              value: https://127.0.0.1:8200
-            - name: VAULT_API_ADDR
-              value: https://$(POD_NAME).vault:8200
-            - name: SKIP_CHOWN
-              value: "true"
-            - name: VAULT_CAPATH
-              value: /etc/ssl/certs/hannahs.family.ca.cert.pem
-          volumeMounts:
-            - name: config
-              mountPath: /vault/config
-            - name: secret
-              mountPath: /vault/tls/cert.pem
-              subPath: cert.pem
-            - name: secret
-              mountPath: /vault/tls/key.pem
-              subPath: key.pem
-            - name: ca
-              mountPath: /etc/ssl/certs/hannahs.family.ca.cert.pem
-          ports:
-            - containerPort: 8200
-              name: https
-            - containerPort: 8201
-              name: internal
-            - containerPort: 8202
-              name: replication
-          readinessProbe:
-            exec:
-              command:
-                - /bin/sh
-                - -ec
-                - vault status -tls-skip-verify
-            failureThreshold: 2
-            initialDelaySeconds: 5
-            periodSeconds: 3
-            successThreshold: 1
-            timeoutSeconds: 5
-
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: vault-auth
-  namespace: kube-system
-  labels:
-    app.kubernetes.io/name: vault
-    app.kubernetes.io/instance: vault
-
----
-apiVersion: rbac.authorization.k8s.io/v1beta1
-kind: ClusterRoleBinding
-metadata:
-  name: role-tokenreview-binding
-  namespace: kube-system
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: system:auth-delegator
-subjects:
-  - kind: ServiceAccount
-    name: vault-auth
-    namespace: kube-system

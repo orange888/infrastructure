@@ -186,6 +186,7 @@ metadata:
     fluxcd.io/tag.grafana-sc-dashboard: semver:~0
     fluxcd.io/tag.grafana-sc-datasources: semver:~0
     fluxcd.io/tag.grafana: semver:~6
+    fluxcd.io/tag.vault-agent: semver:~1
     fluxcd.io/automate: "true"
 spec:
   replicas: 2
@@ -206,7 +207,7 @@ spec:
               topologyKey: kubernetes.io/hostname
       initContainers:
         - name: vault-agent
-          image: vault:latest
+          image: vault:1.2.3
           command:
             - vault
           args:

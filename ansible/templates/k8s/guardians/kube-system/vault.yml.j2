@@ -11,4 +11,11 @@ type: Opaque
 data:
   cert.pem: "{{ vault.cert | b64encode }}"
   key.pem: "{{ vault.key | b64encode }}"
-  CONSUL_TOKEN: "{{ vault.consul_token | b64encode }}"
+stringData:
+  consul.hcl: |
+    storage "consul" {
+      address = "[::]:8500"
+      path = "vault"
+      disable_registration = "true"
+      token = "{{ vault.consul_token }}"
+    }

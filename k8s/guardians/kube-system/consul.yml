@@ -23,6 +23,13 @@ metadata:
     app.kubernetes.io/instance: consul
     app.kubernetes.io/name: consul
 data:
+  consul.hcl: |
+    data_dir = "/var/lib/consul"
+    retry_join = [
+      "consul-0.consul.kube-system.svc",
+      "consul-1.consul.kube-system.svc",
+      "consul-2.consul.kube-system.svc"
+    ]
 
 ---
 apiVersion: v1
@@ -77,8 +84,6 @@ metadata:
     fluxcd.io/automated: "true"
 spec:
   replicas: 3
-  updateStrategy:
-    type: OnDelete
   selector:
     matchLabels:
       <<: *labels
@@ -98,60 +103,29 @@ spec:
                 topologyKey: kubernetes.io/hostname
               weight: 1
       containers:
-        - command:
-            - /bin/sh
-            - -ec
-            - |
-              IP=$(hostname -i)
-              if [ -e /etc/consul/secrets/gossip-key ]; then
-                echo "{\"encrypt\": \"$(base64 /etc/consul/secrets/gossip-key)\"}" > /etc/consul/encrypt.json
-                GOSSIP_KEY="-config-file /etc/consul/encrypt.json"
-              fi
-              for i in $(seq 0 $((${INITIAL_CLUSTER_SIZE} - 1))); do
-                  while true; do
-                      echo "Waiting for ${STATEFULSET_NAME}-${i}.${STATEFULSET_NAME} to come up"
-                      ping -W 1 -c 1 ${STATEFULSET_NAME}-${i}.${STATEFULSET_NAME}.${STATEFULSET_NAMESPACE}.svc > /dev/null && break
-                      sleep 1s
-                  done
-              done
-              PEERS=""
-              for i in $(seq 0 $((${INITIAL_CLUSTER_SIZE} - 1))); do
-                NEXT_PEER="$(ping -c 1 ${STATEFULSET_NAME}-${i}.${STATEFULSET_NAME}.${STATEFULSET_NAMESPACE}.svc | awk -F'[()]' '/PING/{print $2}')"
-                if [ "${NEXT_PEER}" != "${POD_IP}" ]; then
-                  PEERS="${PEERS}${PEERS:+ } -retry-join ${STATEFULSET_NAME}-${i}.${STATEFULSET_NAME}.${STATEFULSET_NAMESPACE}.svc"
-                fi
-              done
-              exec /bin/consul agent \
-                -config-dir=/etc/consul/config \
-                -domain=consul \
-                -data-dir=/var/lib/consul \
-                -server \
-                -bootstrap-expect=${INITIAL_CLUSTER_SIZE} \
-                -disable-keyring-file \
-                -bind=0.0.0.0 \
-                -advertise=${IP} \
-                ${PEERS} \
-                ${GOSSIP_KEY} \
-                -client=0.0.0.0 \
-                -dns-port=${DNSPORT} \
-                -http-port=8500
+        - name: consul
+          image: consul:1.6.1
+          command:
+            - consul
+          args:
+            - agent
+            - -config-dir=/etc/consul/config
+            - -encrypt=$(GOSSIP_KEY)
+            - -server
+            - -advertise=$(POD_IP)
+            - -bootstrap-expect=$(INITIAL_CLUSTER_SIZE)
           env:
+            - name: GOSSIP_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: consul
+                  key: gossip-key
             - name: INITIAL_CLUSTER_SIZE
               value: "3"
-            - name: STATEFULSET_NAME
-              value: consul
             - name: POD_IP
               valueFrom:
                 fieldRef:
                   fieldPath: status.podIP
-            - name: STATEFULSET_NAMESPACE
-              valueFrom:
-                fieldRef:
-                  fieldPath: metadata.namespace
-            - name: DNSPORT
-              value: "8600"
-          image: consul:1.6.1
-          imagePullPolicy: Always
           livenessProbe:
             exec:
               command:
@@ -160,7 +134,6 @@ spec:
                 - -http-addr=http://127.0.0.1:8500
             initialDelaySeconds: 300
             timeoutSeconds: 5
-          name: consul
           ports:
             - containerPort: 8500
               name: http
@@ -185,7 +158,10 @@ spec:
             - containerPort: 8600
               name: consuldns-udp
               protocol: UDP
-          resources: {}
+          resources:
+            limits:
+              cpu: 100m
+              memory: 128Mi
           volumeMounts:
             - mountPath: /var/lib/consul
               name: datadir
