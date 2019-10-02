@@ -132,6 +132,16 @@ data:
             source_labels:
               - __meta_kubernetes_node_name
             target_label: __metrics_path__
+          - regex: true
+            replacement: master
+            source_labels:
+              - __meta_kubernetes_node_label_node_role_kubernetes_io_master
+            target_label: node_role
+          - regex: true
+            replacement: worker
+            source_labels:
+              - __meta_kubernetes_node_label_node_role_kubernetes_io_worker
+            target_label: node_role
         scheme: https
         tls_config:
           ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
