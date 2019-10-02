@@ -138,7 +138,7 @@ spec:
           medium: Memory
       containers:
       - name: flux
-        image: fluxcd/flux:1.15.0
+        image: fluxcd/flux:1.14.2
         imagePullPolicy: IfNotPresent
         resources:
           requests:
