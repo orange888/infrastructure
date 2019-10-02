@@ -25,11 +25,17 @@ metadata:
 data:
   config.hcl: |
     ui = true
+
     listener "tcp" {
       address = "[::]:8200"
       cluster_address = "[::]:8201"
       tls_cert_file = "/vault/tls/cert.pem"
       tls_key_file = "/vault/tls/key.pem"
+    }
+
+    telemetry {
+      disable_hostname = true
+      prometheus_retention_time = "24h"
     }
 
 ---

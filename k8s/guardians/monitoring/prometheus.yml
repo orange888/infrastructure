@@ -262,6 +262,39 @@ data:
             source_labels:
               - __meta_kubernetes_pod_name
             target_label: kubernetes_pod_name
+      - job_name: vault
+        kubernetes_sd_configs:
+          - role: endpoints
+        bearer_token_file: /var/run/secrets/vaultproject.io/vault/token
+        params:
+          format:
+            - prometheus
+        metrics_path: /v1/sys/metrics
+        scheme: https
+        tls_config:
+          ca_file: /etc/ssl/certs/hannahs.family.ca.cert.pem
+          insecure_skip_verify: true
+        relabel_configs:
+          - action: keep
+            regex: kube-system;vault;https
+            source_labels:
+              - __meta_kubernetes_namespace
+              - __meta_kubernetes_service_name
+              - __meta_kubernetes_endpoint_port_name
+          - action: labelmap
+            regex: __meta_kubernetes_service_label_(.+)
+          - action: replace
+            source_labels:
+              - __meta_kubernetes_namespace
+            target_label: kubernetes_namespace
+          - action: replace
+            source_labels:
+              - __meta_kubernetes_service_name
+            target_label: kubernetes_name
+          - action: replace
+            source_labels:
+              - __meta_kubernetes_pod_node_name
+            target_label: kubernetes_node
 
     alerting:
       alertmanagers:
@@ -285,6 +318,21 @@ data:
               action: drop
   rules: |
     {}
+  vault-agent-config.hcl: |-
+    auto_auth {
+      method "kubernetes" {
+        mount_path = "auth/kubernetes"
+        config = {
+          role = "prometheus"
+        }
+      }
+
+      sink "file" {
+        config = {
+          path = "/var/run/secrets/vaultproject.io/vault/token"
+        }
+      }
+    }
 
 ---
 apiVersion: policy/v1beta1
@@ -372,6 +420,7 @@ metadata:
   annotations:
     fluxcd.io/tag.configmap-reload: semver:~0
     fluxcd.io/tag.prometheus: semver:~2
+    fluxcd.io/tag.vault-agent: semver:~1
     fluxcd.io/automated: "true"
 spec:
   serviceName: prometheus
@@ -410,6 +459,33 @@ spec:
             - name: config
               mountPath: /etc/config
               readOnly: true
+        - name: vault-agent
+          image: vault:1.2.3
+          command:
+            - vault
+          args:
+            - agent
+            - -config=/vault/agent/config.hcl
+          env:
+            - name: VAULT_ADDR
+              value: https://vault.kube-system.svc:8200
+            - name: VAULT_CACERT
+              value: /vault/tls/ca.crt
+          resources:
+            limits:
+              cpu: 50m
+              memory: 64Mi
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+          volumeMounts:
+            - name: ca
+              mountPath: /vault/tls/ca.crt
+            - name: config
+              mountPath: /vault/agent/config.hcl
+              subPath: vault-agent-config.hcl
+            - name: vault-secrets
+              mountPath: /var/run/secrets/vaultproject.io/vault
         - name: prometheus
           image: prom/prometheus:v2.12.0
           imagePullPolicy: IfNotPresent
@@ -442,10 +518,14 @@ spec:
             requests:
               <<: *resources
           volumeMounts:
+            - name: ca
+              mountPath: /etc/ssl/certs/hannahs.family.ca.cert.pem
             - name: config
               mountPath: /etc/config
             - name: data
               mountPath: /data
+            - name: vault-secrets
+              mountPath: /var/run/secrets/vaultproject.io/vault
       securityContext:
         fsGroup: 65534
         runAsGroup: 65534
@@ -453,9 +533,15 @@ spec:
         runAsUser: 65534
       terminationGracePeriodSeconds: 300
       volumes:
+        - name: ca
+          hostPath:
+            path: /etc/ssl/certs/hannahs.family.ca.cert.pem
+            type: File
         - name: config
           configMap:
             name: prometheus
+        - name: vault-secrets
+          emptyDir: {}
   volumeClaimTemplates:
     - metadata:
         name: data
