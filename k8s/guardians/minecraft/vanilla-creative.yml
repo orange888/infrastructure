@@ -221,3 +221,144 @@ spec:
         - name: storage
           persistentVolumeClaim:
             claimName: vanilla-creative
+
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: vanilla-creative-backup
+  namespace: minecraft
+  labels:
+    app.kubernetes.io/instance: vanilla-creative
+    app.kubernetes.io/name: minecraft
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+
+---
+apiVersion: batch/v1beta1
+kind: CronJobList
+items:
+  - apiVersion: batch/v1beta1
+    kind: CronJob
+    metadata: &metadata
+      name: vanilla-creative-backup-daily
+      namespace: minecraft
+      labels: &labels
+        app.kubernetes.io/instance: vanilla-creative
+        app.kubernetes.io/name: minecraft
+        app.kubernetes.io/component: backup
+    spec:
+      schedule: "0 9 * * *"
+      concurrencyPolicy: &policy Forbid
+      jobTemplate:
+        metadata:
+          labels:
+            <<: *labels
+        spec:
+          template:
+            metadata:
+              labels:
+                <<: *labels
+            spec:
+              restartPolicy: Never
+              containers:
+                - name: backup
+                  image: alpine
+                  command:
+                    - sh
+                    - /daily.sh
+                  volumeMounts:
+                    - name: scripts
+                      mountPath: /daily.sh
+                      subPath: daily.sh
+                    - name: vanilla-creative
+                      mountPath: /pvc
+                    - name: vanilla-creative-backup
+                      mountPath: /backup/daily
+                      subPath: daily
+              volumes: &volumes
+                - name: scripts
+                  configMap:
+                    name: backup-scripts
+                - name: vanilla-creative
+                  persistentVolumeClaim:
+                    claimName: vanilla-creative
+                - name: vanilla-creative-backup
+                  persistentVolumeClaim:
+                    claimName: vanilla-creative-backup
+  - apiVersion: batch/v1beta1
+    kind: CronJob
+    metadata:
+      <<: *metadata
+      name: vanilla-creative-backup-weekly
+    spec:
+      schedule: "0 9 * * 0"
+      concurrencyPolicy: *policy
+      jobTemplate:
+        metadata:
+          labels:
+            <<: *labels
+        spec:
+          template:
+            metadata:
+              labels:
+                <<: *labels
+            spec:
+              restartPolicy: Never
+              containers:
+                - name: backup
+                  image: alpine
+                  command:
+                    - sh
+                    - /weekly.sh
+                  volumeMounts:
+                    - name: scripts
+                      mountPath: /weekly.sh
+                      subPath: weekly.sh
+                    - name: vanilla-creative-backup
+                      mountPath: /backup/weekly
+                      subPath: weekly
+                    - name: vanilla-creative-backup
+                      mountPath: /backup/daily
+                      subPath: daily
+              volumes: *volumes
+  - apiVersion: batch/v1beta1
+    kind: CronJob
+    metadata:
+      <<: *metadata
+      name: vanilla-creative-backup-monthly
+    spec:
+      schedule: "0 9 1 * *"
+      concurrencyPolicy: *policy
+      jobTemplate:
+        metadata:
+          labels:
+            <<: *labels
+        spec:
+          template:
+            metadata:
+              labels:
+                <<: *labels
+            spec:
+              restartPolicy: Never
+              containers:
+                - name: backup
+                  image: alpine
+                  command:
+                    - sh
+                    - /monthly.sh
+                  volumeMounts:
+                    - name: scripts
+                      mountPath: /monthly.sh
+                      subPath: monthly.sh
+                    - name: vanilla-creative-backup
+                      mountPath: /backup/monthly
+                      subPath: monthly
+                    - name: vanilla-creative-backup
+                      mountPath: /backup/weekly
+                      subPath: weekly
+              volumes: *volumes
