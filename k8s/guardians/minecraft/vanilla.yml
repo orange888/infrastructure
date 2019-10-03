@@ -9,7 +9,7 @@ metadata:
     app.kubernetes.io/name: minecraft
 spec:
   accessModes:
-    - ReadWriteOnce
+    - ReadWriteMany
   resources:
     requests:
       storage: 5Gi
@@ -70,7 +70,7 @@ spec:
             claimName: vanilla
         - name: xz
           hostPath:
-            path: /home/ansible/minecraft-vanilla-1567293508.tar.xz
+            path: /home/ansible/minecraft-vanilla-1570135874.tar.xz
             type: File
 
 ---
@@ -143,7 +143,7 @@ spec:
 
 ---
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: vanilla
   namespace: minecraft
@@ -151,9 +151,8 @@ metadata:
     app.kubernetes.io/instance: vanilla
     app.kubernetes.io/name: minecraft
 spec:
+  serviceName: vanilla
   replicas: 0
-  strategy:
-    type: Recreate
   selector:
     matchLabels:
       <<: *labels
@@ -161,6 +160,9 @@ spec:
     metadata:
       labels:
         <<: *labels
+      annotations:
+        vault.security.banzaicloud.io/vault-role: minecraft__vanilla
+        vault.security.banzaicloud.io/vault-skip-verify: "true"
     spec:
       serviceAccountName: vanilla
       affinity:
@@ -186,10 +188,7 @@ spec:
             - name: JVM_MEM_MAX
               value: 4096M
             - name: RCON_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: vanilla
-                  key: rconPassword
+              value: vault:secrets/data/minecraft/vanilla/rcon#rcon_password
           livenessProbe:
             tcpSocket:
               port: 25565
@@ -201,7 +200,7 @@ spec:
               cpu: 1
               memory: 1024Mi
             limits:
-              cpu: 4
+              cpu: 3
               memory: 4096Mi
           volumeMounts:
             - name: storage
