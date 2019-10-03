@@ -100,6 +100,21 @@ data:
     enforce-whitelist=true
     motd=Hannah Family Minecraft - Vanilla (Survival)
     enable-rcon=true
+  whitelist.json: |
+    [
+      {
+        "uuid": "aedf3044-aaed-40cf-8ac3-2eb19ea89e59",
+        "name": "FragPenguin"
+      },
+      {
+        "uuid": "11d158b7-df6d-409c-a6a4-39afc5ec3985",
+        "name": "Jay51617"
+      },
+      {
+        "uuid": "f63dcac9-344f-4dcf-a7e9-68005d6ac204",
+        "name": "Koji31"
+      }
+    ]
 
 ---
 apiVersion: v1
