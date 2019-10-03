@@ -152,7 +152,7 @@ metadata:
     app.kubernetes.io/name: minecraft
 spec:
   serviceName: vanilla
-  replicas: 0
+  replicas: 1
   selector:
     matchLabels:
       <<: *labels
