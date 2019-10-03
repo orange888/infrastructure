@@ -151,7 +151,7 @@ metadata:
     app.kubernetes.io/instance: vanilla
     app.kubernetes.io/name: minecraft
 spec:
-  replicas: 1
+  replicas: 0
   strategy:
     type: Recreate
   selector:
