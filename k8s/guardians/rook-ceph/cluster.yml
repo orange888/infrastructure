@@ -8,6 +8,10 @@ spec:
   cephVersion:
     image: ceph/ceph:v14
   dataDirHostPath: /var/lib/rook
+  mgr:
+    modules:
+      - name: pg_autoscaler
+        enabled: true
   mon:
     count: 3
   dashboard:
