@@ -8,6 +8,7 @@ metadata:
     app.kubernetes.io/instance: vanilla-creative
     app.kubernetes.io/name: minecraft
 spec:
+  storageClassName: rook-ceph-fs
   accessModes:
     - ReadWriteMany
   resources:
@@ -275,8 +276,10 @@ items:
                     - name: scripts
                       mountPath: /daily.sh
                       subPath: daily.sh
+                      readOnly: true
                     - name: vanilla-creative
                       mountPath: /pvc
+                      readOnly: true
                     - name: vanilla-creative-backup
                       mountPath: /backup/daily
                       subPath: daily
@@ -319,12 +322,14 @@ items:
                     - name: scripts
                       mountPath: /weekly.sh
                       subPath: weekly.sh
+                      readOnly: true
                     - name: vanilla-creative-backup
                       mountPath: /backup/weekly
                       subPath: weekly
                     - name: vanilla-creative-backup
                       mountPath: /backup/daily
                       subPath: daily
+                      readOnly: true
               volumes: *volumes
   - apiVersion: batch/v1beta1
     kind: CronJob
@@ -355,10 +360,12 @@ items:
                     - name: scripts
                       mountPath: /monthly.sh
                       subPath: monthly.sh
+                      readOnly: true
                     - name: vanilla-creative-backup
                       mountPath: /backup/monthly
                       subPath: monthly
                     - name: vanilla-creative-backup
                       mountPath: /backup/weekly
                       subPath: weekly
+                      readOnly: true
               volumes: *volumes

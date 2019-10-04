@@ -27,8 +27,8 @@ data:
     ### Remove oldest weekly backup if there are 12
     [ `ls ${DST} | wc -l` -eq 12 ] && rm -f ${DST}/$(ls -tc ${DST} | head -n 1)
 
-    ### Move oldest daily backup (if one exists) into weekly backups
-    [ `ls ${SRC} | wc -l` -gt 0 ] && mv ${SRC}/$(ls -tc ${SRC} | head -n 1) ${DST}
+    ### Copy oldest daily backup (if one exists) into weekly backups
+    [ `ls ${SRC} | wc -l` -gt 0 ] && cp ${SRC}/$(ls -tc ${SRC} | head -n 1) ${DST}
   monthly.sh: |
     #!/bin/sh
     export DST=/backup/monthly
@@ -37,5 +37,5 @@ data:
     ### Remove oldest monthly backup if there are 12
     [ `ls ${DST} | wc -l` -eq 12 ] && rm -f ${DST}/$(ls -tc ${DST} | head -n 1)
 
-    ### Move oldest weekly backup (if one exists) into monthly backups
-    [ `ls ${SRC} | wc -l` -gt 0 ] && mv ${SRC}/$(ls -tc ${SRC} | head -n 1) ${DST}
+    ### Copy oldest weekly backup (if one exists) into monthly backups
+    [ `ls ${SRC} | wc -l` -gt 0 ] && cp ${SRC}/$(ls -tc ${SRC} | head -n 1) ${DST}
