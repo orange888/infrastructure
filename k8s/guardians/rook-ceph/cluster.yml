@@ -6,7 +6,7 @@ metadata:
   namespace: rook-ceph
 spec:
   cephVersion:
-    image: ceph/ceph:v14
+    image: ceph/ceph:v14.2.4-20190917
   dataDirHostPath: /var/lib/rook
   mgr:
     modules:

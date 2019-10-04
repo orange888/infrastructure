@@ -44,6 +44,8 @@ spec:
               value: "false"
             - name: ROOK_LOG_LEVEL
               value: INFO
+            - name: ROOK_CSI_KUBELET_DIR_PATH
+              value: /var/lib/rancher/k3s/agent/kubelet
             - name: ROOK_CEPH_STATUS_CHECK_INTERVAL
               value: "60s"
             - name: ROOK_MON_HEALTHCHECK_INTERVAL
@@ -55,11 +57,11 @@ spec:
             - name: ROOK_HOSTPATH_REQUIRES_PRIVILEGED
               value: "false"
             - name: ROOK_ENABLE_SELINUX_RELABELING
-              value: "true"
+              value: "false"
             - name: ROOK_ENABLE_FSGROUP
               value: "true"
             - name: ROOK_DISABLE_DEVICE_HOTPLUG
-              value: "false"
+              value: "true"
             - name: NODE_NAME
               valueFrom:
                 fieldRef:
