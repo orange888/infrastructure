@@ -1032,16 +1032,9 @@ spec:
     - projected
     - hostPath
     - flexVolume
-  allowedHostPaths:
-    - pathPrefix: "/run/udev" # for OSD prep
-      readOnly: false
-    - pathPrefix: "/dev" # for OSD prep
-      readOnly: false
-    - pathPrefix: "/var/lib/rook" # or whatever the dataDirHostPath value is set to
-      readOnly: false
   hostIPC: true
   hostPID: true
-  hostNetwork: false
+  hostNetwork: true
   hostPorts:
     - min: 6789
       max: 6790
