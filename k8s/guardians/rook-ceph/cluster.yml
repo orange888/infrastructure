@@ -17,3 +17,13 @@ spec:
     useAllDevices: false
     directories:
       - path: /srv/rook-ceph
+  resources:
+    mon:
+      limits:
+        memory: 1Gi
+    mgr:
+      limits:
+        memory: 512Mi
+    osd:
+      limits:
+        memory: 2Gi
