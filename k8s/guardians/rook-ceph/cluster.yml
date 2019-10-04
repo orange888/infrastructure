@@ -12,6 +12,7 @@ spec:
     count: 3
   dashboard:
     enabled: true
+    port: 8443
   storage:
     useAllNodes: true
     useAllDevices: false
