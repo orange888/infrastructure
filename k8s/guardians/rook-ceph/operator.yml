@@ -8,7 +8,8 @@ metadata:
     operator: rook
     storage-backend: ceph
   annotations:
-    fluxcd.io/tag.rook-ceph-operator: semver:~1
+    fluxcd.io/tag.rook-ceph-operator: semver:~1.1
+    fluxcd.io/automated: "true"
 spec:
   selector:
     matchLabels:
@@ -22,7 +23,7 @@ spec:
       serviceAccountName: rook-ceph-system
       containers:
         - name: rook-ceph-operator
-          image: rook/ceph:v1.0.6
+          image: rook/ceph:v1.1.2
           args: ["ceph", "operator"]
           volumeMounts:
             - mountPath: /var/lib/rook
