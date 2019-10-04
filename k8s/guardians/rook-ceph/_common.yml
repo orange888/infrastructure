@@ -23,14 +23,12 @@ spec:
       properties:
         spec:
           properties:
+            annotations: {}
             cephVersion:
               properties:
                 allowUnsupported:
                   type: boolean
                 image:
-                  type: string
-                name:
-                  pattern: ^(luminous|mimic|nautilus)$
                   type: string
             dashboard:
               properties:
@@ -40,37 +38,115 @@ spec:
                   type: string
                 port:
                   type: integer
+                  minimum: 0
+                  maximum: 65535
+                ssl:
+                  type: boolean
             dataDirHostPath:
               pattern: ^/(\S+)
               type: string
+            skipUpgradeChecks:
+              type: boolean
             mon:
               properties:
                 allowMultiplePerNode:
                   type: boolean
                 count:
                   maximum: 9
-                  minimum: 1
-                  type: integer
-                preferredCount:
-                  maximum: 9
                   minimum: 0
                   type: integer
-              required:
-                - count
+            mgr:
+              properties:
+                modules:
+                  items:
+                    properties:
+                      name:
+                        type: string
+                      enabled:
+                        type: boolean
             network:
               properties:
                 hostNetwork:
                   type: boolean
             storage:
               properties:
-                nodes:
-                  items: {}
-                  type: array
-                useAllDevices: {}
+                disruptionManagement:
+                  properties:
+                    managePodBudgets:
+                      type: boolean
+                    osdMaintenanceTimeout:
+                      type: integer
+                    manageMachineDisruptionBudgets:
+                      type: boolean
                 useAllNodes:
                   type: boolean
-          required:
-            - mon
+                nodes:
+                  items:
+                    properties:
+                      name:
+                        type: string
+                      config:
+                        properties:
+                          metadataDevice:
+                            type: string
+                          storeType:
+                            type: string
+                            pattern: ^(filestore|bluestore)$
+                          databaseSizeMB:
+                            type: string
+                          walSizeMB:
+                            type: string
+                          journalSizeMB:
+                            type: string
+                          osdsPerDevice:
+                            type: string
+                          encryptedDevice:
+                            type: string
+                            pattern: ^(true|false)$
+                      useAllDevices:
+                        type: boolean
+                      deviceFilter: {}
+                      directories:
+                        type: array
+                        items:
+                          properties:
+                            path:
+                              type: string
+                      devices:
+                        type: array
+                        items:
+                          properties:
+                            name:
+                              type: string
+                            config: {}
+                      location: {}
+                      resources: {}
+                  type: array
+                useAllDevices:
+                  type: boolean
+                deviceFilter: {}
+                location: {}
+                directories:
+                  type: array
+                  items:
+                    properties:
+                      path:
+                        type: string
+                config: {}
+                topologyAware:
+                  type: boolean
+            monitoring:
+              properties:
+                enabled:
+                  type: boolean
+                rulesNamespace:
+                  type: string
+            rbdMirroring:
+              properties:
+                workers:
+                  type: integer
+            placement: {}
+            resources: {}
   additionalPrinterColumns:
     - name: DataDirHostPath
       type: string
@@ -106,10 +182,60 @@ spec:
     singular: cephfilesystem
   scope: Namespaced
   version: v1
+  validation:
+    openAPIV3Schema:
+      properties:
+        spec:
+          properties:
+            metadataServer:
+              properties:
+                activeCount:
+                  minimum: 1
+                  maximum: 10
+                  type: integer
+                activeStandby:
+                  type: boolean
+                annotations: {}
+                placement: {}
+                resources: {}
+            metadataPool:
+              properties:
+                failureDomain:
+                  type: string
+                replicated:
+                  properties:
+                    size:
+                      minimum: 1
+                      maximum: 10
+                      type: integer
+                erasureCoded:
+                  properties:
+                    dataChunks:
+                      type: integer
+                    codingChunks:
+                      type: integer
+            dataPools:
+              type: array
+              items:
+                properties:
+                  failureDomain:
+                    type: string
+                  replicated:
+                    properties:
+                      size:
+                        minimum: 1
+                        maximum: 10
+                        type: integer
+                  erasureCoded:
+                    properties:
+                      dataChunks:
+                        type: integer
+                      codingChunks:
+                        type: integer
   additionalPrinterColumns:
-    - name: MdsCount
+    - name: ActiveMDS
       type: string
-      description: Number of MDSs
+      description: Number of desired active MDS daemons
       JSONPath: .spec.metadataServer.activeCount
     - name: Age
       type: date
@@ -131,6 +257,24 @@ spec:
       - nfs
   scope: Namespaced
   version: v1
+  validation:
+    openAPIV3Schema:
+      properties:
+        spec:
+          properties:
+            rados:
+              properties:
+                pool:
+                  type: string
+                namespace:
+                  type: string
+            server:
+              properties:
+                active:
+                  type: integer
+                annotations: {}
+                placement: {}
+                resources: {}
 
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
@@ -146,6 +290,52 @@ spec:
     singular: cephobjectstore
   scope: Namespaced
   version: v1
+  validation:
+    openAPIV3Schema:
+      properties:
+        spec:
+          properties:
+            gateway:
+              properties:
+                type:
+                  type: string
+                sslCertificateRef: {}
+                port:
+                  type: integer
+                securePort: {}
+                instances:
+                  type: integer
+                annotations: {}
+                placement: {}
+                resources: {}
+            metadataPool:
+              properties:
+                failureDomain:
+                  type: string
+                replicated:
+                  properties:
+                    size:
+                      type: integer
+                erasureCoded:
+                  properties:
+                    dataChunks:
+                      type: integer
+                    codingChunks:
+                      type: integer
+            dataPool:
+              properties:
+                failureDomain:
+                  type: string
+                replicated:
+                  properties:
+                    size:
+                      type: integer
+                erasureCoded:
+                  properties:
+                    dataChunks:
+                      type: integer
+                    codingChunks:
+                      type: integer
 
 ---
 apiVersion: apiextensions.k8s.io/v1beta1
@@ -817,6 +1007,143 @@ subjects:
     namespace: rook-ceph
 
 ---
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: rook-privileged
+spec:
+  privileged: true
+  allowedCapabilities:
+    - SYS_ADMIN
+  fsGroup:
+    rule: RunAsAny
+  runAsUser:
+    rule: RunAsAny
+  supplementalGroups:
+    rule: RunAsAny
+  seLinux:
+    rule: RunAsAny
+  volumes:
+    - configMap
+    - downwardAPI
+    - emptyDir
+    - persistentVolumeClaim
+    - secret
+    - projected
+    - hostPath
+    - flexVolume
+  allowedHostPaths:
+    - pathPrefix: "/run/udev" # for OSD prep
+      readOnly: false
+    - pathPrefix: "/dev" # for OSD prep
+      readOnly: false
+    - pathPrefix: "/var/lib/rook" # or whatever the dataDirHostPath value is set to
+      readOnly: false
+  hostIPC: true
+  hostPID: true
+  hostNetwork: false
+  hostPorts:
+    - min: 6789
+      max: 6790
+    - min: 3300
+      max: 3300
+    - min: 6800
+      max: 7300
+    - min: 8443
+      max: 8443
+    - min: 9283
+      max: 9283
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: "psp:rook"
+rules:
+  - apiGroups:
+      - policy
+    resources:
+      - podsecuritypolicies
+    resourceNames:
+      - rook-privileged
+    verbs:
+      - use
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: rook-ceph-system-psp
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: "psp:rook"
+subjects:
+  - kind: ServiceAccount
+    name: rook-ceph-system
+    namespace: rook-ceph
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: rook-ceph-default-psp
+  namespace: rook-ceph
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: psp:rook
+subjects:
+  - kind: ServiceAccount
+    name: default
+    namespace: rook-ceph
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: rook-ceph-osd-psp
+  namespace: rook-ceph
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: psp:rook
+subjects:
+  - kind: ServiceAccount
+    name: rook-ceph-osd
+    namespace: rook-ceph
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: rook-ceph-mgr-psp
+  namespace: rook-ceph
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: psp:rook
+subjects:
+  - kind: ServiceAccount
+    name: rook-ceph-mgr
+    namespace: rook-ceph
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: rook-ceph-cmd-reporter-psp
+  namespace: rook-ceph
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: psp:rook
+subjects:
+  - kind: ServiceAccount
+    name: rook-ceph-cmd-reporter
+    namespace: rook-ceph
+
+---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -937,6 +1264,34 @@ rules:
   - apiGroups: [""]
     resources: ["nodes"]
     verbs: ["get", "list", "watch"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: rook-csi-cephfs-plugin-sa-psp
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: "psp:rook"
+subjects:
+  - kind: ServiceAccount
+    name: rook-csi-cephfs-plugin-sa
+    namespace: rook-ceph
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: rook-csi-cephfs-provisioner-sa-psp
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: "psp:rook"
+subjects:
+  - kind: ServiceAccount
+    name: rook-csi-cephfs-provisioner-sa
+    namespace: rook-ceph
 
 ---
 kind: ClusterRoleBinding
@@ -1105,6 +1460,34 @@ rules:
   - apiGroups: ["snapshot.storage.k8s.io"]
     resources: ["volumesnapshots/status"]
     verbs: ["update"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: rook-csi-rbd-plugin-sa-psp
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: "psp:rook"
+subjects:
+  - kind: ServiceAccount
+    name: rook-csi-rbd-plugin-sa
+    namespace: rook-ceph
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: rook-csi-rbd-provisioner-sa-psp
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: "psp:rook"
+subjects:
+  - kind: ServiceAccount
+    name: rook-csi-rbd-provisioner-sa
+    namespace: rook-ceph
 
 ---
 kind: ClusterRoleBinding
