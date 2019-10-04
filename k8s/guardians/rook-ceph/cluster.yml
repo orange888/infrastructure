@@ -20,10 +20,13 @@ spec:
   resources:
     mon:
       limits:
+        cpu: 500m
         memory: 1Gi
     mgr:
       limits:
+        cpu: 500m
         memory: 512Mi
     osd:
       limits:
+        cpu: 500m
         memory: 2Gi
