@@ -1,0 +1,156 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: Alertmanager
+metadata:
+  labels:
+    alertmanager: main
+  name: main
+  namespace: monitoring
+spec:
+  affinity:
+    podAntiAffinity:
+      preferredDuringSelectionIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              alertmanager: main
+          topologyKey: kubernetes.io/hostname
+  baseImage: quay.io/prometheus/alertmanager
+  externalURL: https://alerts.metrics.hannahs.family
+  replicas: 2
+  securityContext:
+    fsGroup: 2000
+    runAsNonRoot: true
+    runAsUser: 1000
+  serviceAccountName: alertmanager-main
+  storageSpec:
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 2Gi
+  version: v0.19.0
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: alertmanager-main
+  namespace: monitoring
+stringData:
+  alertmanager.yaml: |
+    global:
+      resolve_timeout: 5m
+    receivers:
+      - name: "null"
+    route:
+      group_by:
+        - job
+      group_interval: 5m
+      group_wait: 30s
+      receiver: "null"
+      repeat_interval: 12h
+      routes:
+        - match:
+            alertname: Watchdog
+          receiver: "null"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    alertmanager: main
+  name: alertmanager-main
+  namespace: monitoring
+spec:
+  ports:
+    - name: web
+      port: 9093
+      targetPort: web
+  selector:
+    alertmanager: main
+    app: alertmanager
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: alertmanager-main
+  namespace: monitoring
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    k8s-app: alertmanager
+  name: alertmanager
+  namespace: monitoring
+spec:
+  endpoints:
+    - interval: 30s
+      port: web
+  selector:
+    matchLabels:
+      alertmanager: main
+
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: alertmanager-main-http
+  namespace: monitoring
+  labels:
+    alertmanager: main
+spec:
+  entryPoints:
+    - http
+  routes:
+    - match: Host(`alerts.metrics.hannahs.family`)
+      kind: Rule
+      middlewares:
+        - name: https-redirect
+          namespace: default
+      services:
+        - name: alertmanager-main
+          port: 9093
+
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: alertmanager-main-https
+  namespace: monitoring
+  labels:
+    alertmanager: main
+spec:
+  entryPoints:
+    - https
+  routes:
+    - match: Host(`alerts.metrics.hannahs.family`)
+      kind: Rule
+      middlewares:
+        - name: oauth2-proxy
+          namespace: default
+      services:
+        - name: alertmanager-main
+          port: 9093
+  tls:
+    certResolver: default
+
+---
+apiVersion: externaldns.k8s.io/v1alpha1
+kind: DNSEndpoint
+metadata:
+  name: alertmanager-main
+  namespace: monitoring
+  labels:
+    alertmanager: main
+spec:
+  endpoints:
+    - dnsName: alerts.metrics.hannahs.family
+      recordType: CNAME
+      targets:
+        - traefik.hannahs.family
