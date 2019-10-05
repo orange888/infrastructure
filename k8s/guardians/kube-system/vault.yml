@@ -320,3 +320,28 @@ spec:
       recordType: CNAME
       targets:
         - traefik.hannahs.family
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app.kubernetes.io/name: vault
+    app.kubernetes.io/instance: prometheus-operator
+  name: prometheus-operator-vault
+  namnespace: kube-system
+spec:
+  endpoints:
+    - bearerTokenFile: /var/run/secrets/vaultproject.io/vault
+      interval: 30s
+      params:
+        format: ["prometheus"]
+      path: /v1/sys/metrics
+      port: https
+      scheme: https
+      tlsConfig:
+        caFile: /etc/ssl/certs/hannahs.family.ca.cert.pem
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: vault
+      app.kubernetes.io/instance: vault
