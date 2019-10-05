@@ -107,6 +107,12 @@ spec:
           subPath: config.hcl
         - name: vault-secrets
           mountPath: /var/run/secrets/vaultproject.io/vault
+    - name: prometheus
+      volumeMounts:
+        - name: ca
+          mountPath: /etc/ssl/certs/hannahs.family.ca.cert.pem
+        - name: vault-secrets
+          mountPath: /var/run/secrets/vaultproject.io/vault
   podMonitorSelector: {}
   replicas: 2
   resources:
@@ -134,11 +140,6 @@ spec:
         name: prometheus-k8s-vault-agent
     - name: vault-secrets
       emptyDir: {}
-  volumeMounts:
-    - name: ca
-      mountPath: /etc/ssl/certs/hannahs.family.ca.cert.pem
-    - name: vault-secrets
-      mountPath: /var/run/secrets/vaultproject.io/vault
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -238,7 +239,6 @@ spec:
       scheme: https
       tlsConfig:
         caFile: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
-        insecure_skip_verify: true
   jobLabel: component
   namespaceSelector:
     matchNames:

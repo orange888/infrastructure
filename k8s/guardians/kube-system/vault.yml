@@ -325,11 +325,11 @@ spec:
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  labels:
+  labels: &labels
     app.kubernetes.io/name: vault
-    app.kubernetes.io/instance: prometheus-operator
-  name: prometheus-operator-vault
-  namnespace: kube-system
+    app.kubernetes.io/instance: vault
+  name: vault
+  namespace: kube-system
 spec:
   endpoints:
     - bearerTokenFile: /var/run/secrets/vaultproject.io/vault
@@ -341,7 +341,9 @@ spec:
       scheme: https
       tlsConfig:
         caFile: /etc/ssl/certs/hannahs.family.ca.cert.pem
+  namespaceSelector:
+    matchNames:
+      - kube-system
   selector:
     matchLabels:
-      app.kubernetes.io/name: vault
-      app.kubernetes.io/instance: vault
+      <<: *labels
