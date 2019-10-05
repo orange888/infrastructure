@@ -114,7 +114,7 @@ metadata:
   name: kube-state-metrics
   namespace: monitoring
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: kube-state-metrics
@@ -125,46 +125,15 @@ spec:
     spec:
       containers:
         - args:
-            - --logtostderr
-            - --secure-listen-address=:8443
-            - --tls-cipher-suites=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_RSA_WITH_AES_128_CBC_SHA256,TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256
-            - --upstream=http://127.0.0.1:8081/
-          image: quay.io/coreos/kube-rbac-proxy:v0.4.1
-          name: kube-rbac-proxy-main
-          ports:
-            - containerPort: 8443
-              name: https-main
-          resources:
-            limits:
-              cpu: 20m
-              memory: 40Mi
-            requests:
-              cpu: 10m
-              memory: 20Mi
-        - args:
-            - --logtostderr
-            - --secure-listen-address=:9443
-            - --tls-cipher-suites=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,TLS_RSA_WITH_AES_128_CBC_SHA256,TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256,TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256
-            - --upstream=http://127.0.0.1:8082/
-          image: quay.io/coreos/kube-rbac-proxy:v0.4.1
-          name: kube-rbac-proxy-self
-          ports:
-            - containerPort: 9443
-              name: https-self
-          resources:
-            limits:
-              cpu: 20m
-              memory: 40Mi
-            requests:
-              cpu: 10m
-              memory: 20Mi
-        - args:
-            - --host=127.0.0.1
             - --port=8081
-            - --telemetry-host=127.0.0.1
             - --telemetry-port=8082
           image: quay.io/coreos/kube-state-metrics:v1.8.0
           name: kube-state-metrics
+          ports:
+            - containerPort: 8081
+              name: http-main
+            - containerPort: 8082
+              name: http-self
           resources:
             limits:
               cpu: 100m
@@ -232,14 +201,13 @@ metadata:
   name: kube-state-metrics
   namespace: monitoring
 spec:
-  clusterIP: None
   ports:
-    - name: https-main
-      port: 8443
-      targetPort: https-main
-    - name: https-self
-      port: 9443
-      targetPort: https-self
+    - name: http-main
+      port: 8081
+      targetPort: http-main
+    - name: http-self
+      port: 8082
+      targetPort: http-self
   selector:
     app: kube-state-metrics
 
@@ -260,23 +228,15 @@ metadata:
   namespace: monitoring
 spec:
   endpoints:
-    - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
-      honorLabels: true
+    - honorLabels: true
       interval: 30s
-      port: https-main
+      port: http-main
       relabelings:
         - action: labeldrop
           regex: (pod|service|endpoint|namespace)
-      scheme: https
       scrapeTimeout: 30s
-      tlsConfig:
-        insecureSkipVerify: true
-    - bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
-      interval: 30s
-      port: https-self
-      scheme: https
-      tlsConfig:
-        insecureSkipVerify: true
+    - interval: 30s
+      port: http-self
   jobLabel: k8s-app
   selector:
     matchLabels:
