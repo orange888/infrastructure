@@ -332,7 +332,7 @@ metadata:
   namespace: kube-system
 spec:
   endpoints:
-    - bearerTokenFile: /var/run/secrets/vaultproject.io/vault
+    - bearerTokenFile: /var/run/secrets/vaultproject.io/vault/token
       interval: 30s
       params:
         format: ["prometheus"]
@@ -340,7 +340,7 @@ spec:
       port: https
       scheme: https
       tlsConfig:
-        caFile: /etc/ssl/certs/hannahs.family.ca.cert.pem
+        insecureSkipVerify: true
   namespaceSelector:
     matchNames:
       - kube-system

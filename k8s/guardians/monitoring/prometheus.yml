@@ -109,8 +109,6 @@ spec:
           mountPath: /var/run/secrets/vaultproject.io/vault
     - name: prometheus
       volumeMounts:
-        - name: ca
-          mountPath: /etc/ssl/certs/hannahs.family.ca.cert.pem
         - name: vault-secrets
           mountPath: /var/run/secrets/vaultproject.io/vault
   podMonitorSelector: {}
