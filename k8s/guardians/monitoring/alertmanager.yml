@@ -10,10 +10,12 @@ spec:
   affinity:
     podAntiAffinity:
       preferredDuringSelectionIgnoredDuringExecution:
-        - labelSelector:
-            matchLabels:
-              alertmanager: main
-          topologyKey: kubernetes.io/hostname
+        - podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                alertmanager: main
+            topologyKey: kubernetes.io/hostname
+          weight: 1
   baseImage: quay.io/prometheus/alertmanager
   externalURL: https://alerts.metrics.hannahs.family
   replicas: 2

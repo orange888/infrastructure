@@ -68,11 +68,21 @@ data:
 apiVersion: monitoring.coreos.com/v1
 kind: Prometheus
 metadata:
-  labels:
+  labels: &labels
+    app: prometheus
     prometheus: k8s
   name: k8s
   namespace: monitoring
 spec:
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - podAffinityTerm:
+            labelSelector:
+              matchLabels:
+                <<: *labels
+            topologyKey: kubernetes.io/hostname
+          weight: 1
   alerting:
     alertmanagers:
       - name: alertmanager-main
@@ -116,6 +126,8 @@ spec:
   resources:
     requests:
       memory: 400Mi
+  retention: 2w
+  retentionSize: 20GB
   ruleSelector:
     matchLabels:
       prometheus: k8s
@@ -127,6 +139,14 @@ spec:
   serviceAccountName: prometheus
   serviceMonitorNamespaceSelector: {}
   serviceMonitorSelector: {}
+  storage:
+    volumeClaimTemplate:
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 21Gi
   version: v2.13.0
   volumes:
     - name: ca
