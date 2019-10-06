@@ -39,10 +39,18 @@ data:
     difficulty=normal
     enforce-whitelist=true
     server-name=Hannah Family Minecraft - Bedrock
+  permissions.json: |
+    [
+      {
+        "permission": "operator",
+        "xuid": "00090000011D14B1"
+      }
+    ]
   whitelist.json: |
     [
       {
-        "name": "FragPenguin89"
+        "name": "FragPenguin89",
+        "xuid": "00090000011D14B1"
       }
     ]
 
