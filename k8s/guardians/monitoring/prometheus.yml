@@ -125,7 +125,11 @@ spec:
   replicas: 2
   resources:
     requests:
+      cpu: 50m
       memory: 400Mi
+    limits:
+      cpu: 250m
+      memory: 4Gi
   retention: 2w
   retentionSize: 20GB
   ruleSelector:
