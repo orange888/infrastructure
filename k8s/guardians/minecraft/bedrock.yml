@@ -62,6 +62,7 @@ spec:
   ports:
     - name: minecraft
       port: 19132
+      protocol: UDP
   selector:
     <<: *labels
 
@@ -102,6 +103,7 @@ spec:
             - name: minecraft
               containerPort: 19132
               hostPort: 19132
+              protocol: UDP
           volumeMounts:
             - name: config
               mountPath: /bedrock-server/config
