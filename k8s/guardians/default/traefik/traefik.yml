@@ -254,3 +254,48 @@ spec:
   selector:
     matchLabels:
       <<: *labels
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: traefik
+  namespace: default
+  labels:
+    app.kubernetes.io/name: traefik
+    app.kubernetes.io/instance: traefik
+    prometheus: k8s
+spec:
+  groups:
+    - name: traefik.rules
+      rules:
+        - expr: |
+            histogram_quantile(0.99, sum(rate(traefik_entrypoint_request_duration_seconds_bucket[5m])) by (code, entrypoint, method, le))
+          labels:
+            quantile: "0.99"
+          record: traefik:entrypoint:request_duration_seconds:histogram_quantile
+        - expr: |
+            histogram_quantile(0.9, sum(rate(traefik_entrypoint_request_duration_seconds_bucket[5m])) by (code, entrypoint, method, le))
+          labels:
+            quantile: "0.9"
+          record: traefik:entrypoint:request_duration_seconds:histogram_quantile
+        - expr: |
+            histogram_quantile(0.5, sum(rate(traefik_entrypoint_request_duration_seconds_bucket[5m])) by (code, entrypoint, method, le))
+          labels:
+            quantile: "0.5"
+          record: traefik:entrypoint:request_duration_seconds:histogram_quantile
+        - expr: |
+            histogram_quantile(0.99, sum(rate(traefik_service_request_duration_seconds_bucket[5m])) by (code, exported_service, method, le))
+          labels:
+            quantile: "0.99"
+          record: traefik:service:request_duration_seconds:histogram_quantile
+        - expr: |
+            histogram_quantile(0.9, sum(rate(traefik_service_request_duration_seconds_bucket[5m])) by (code, exported_service, method, le))
+          labels:
+            quantile: "0.9"
+          record: traefik:service:request_duration_seconds:histogram_quantile
+        - expr: |
+            histogram_quantile(0.5, sum(rate(traefik_service_request_duration_seconds_bucket[5m])) by (code, exported_service, method, le))
+          labels:
+            quantile: "0.5"
+          record: traefik:service:request_duration_seconds:histogram_quantile

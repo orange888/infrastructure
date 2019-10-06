@@ -121,6 +121,7 @@ spec:
       volumeMounts:
         - name: vault-secrets
           mountPath: /var/run/secrets/vaultproject.io/vault
+  podMonitorNamespaceSelector: {}
   podMonitorSelector: {}
   replicas: 2
   resources:
@@ -132,10 +133,10 @@ spec:
       memory: 4Gi
   retention: 2w
   retentionSize: 20GB
+  ruleNamespaceSelector: {}
   ruleSelector:
     matchLabels:
       prometheus: k8s
-      role: alert-rules
   securityContext:
     fsGroup: 2000
     runAsNonRoot: true
