@@ -31,9 +31,6 @@ metadata:
   labels: &labels
     app.kubernetes.io/name: traefik
     app.kubernetes.io/instance: traefik
-  annotations:
-    prometheus.io/port: "8080"
-    prometheus.io/scrape: "true"
 spec:
   clusterIP: None
   ports:
@@ -237,3 +234,23 @@ spec:
           port: 8080
   tls:
     certResolver: default
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: traefik
+  namespace: default
+  labels: &labels
+    app.kubernetes.io/name: traefik
+    app.kubernetes.io/instance: traefik
+spec:
+  endpoints:
+    - interval: 30s
+      port: api
+  namespaceSelector:
+    matchNames:
+      - default
+  selector:
+    matchLabels:
+      <<: *labels

@@ -153,9 +153,6 @@ metadata:
     kubernetes.io/cluster-service: "true"
     kubernetes.io/name: CoreDNS
     app.kubernetes.io/name: coredns
-  annotations:
-    prometheus.io/port: "9153"
-    prometheus.io/scrape: "true"
 spec:
   selector:
     app.kubernetes.io/instance: coredns
