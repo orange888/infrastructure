@@ -16,11 +16,11 @@ metadata:
     app.kubernetes.io/instance: flux
   name: flux
 rules:
-- apiGroups: ["*"]
-  resources: ["*"]
-  verbs: ["*"]
-- nonResourceURLs: ["*"]
-  verbs: ["*"]
+  - apiGroups: ["*"]
+    resources: ["*"]
+    verbs: ["*"]
+  - nonResourceURLs: ["*"]
+    verbs: ["*"]
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
@@ -35,9 +35,9 @@ roleRef:
   kind: ClusterRole
   name: flux
 subjects:
-- kind: ServiceAccount
-  name: flux
-  namespace: default
+  - kind: ServiceAccount
+    name: flux
+    namespace: default
 ---
 apiVersion: policy/v1beta1
 kind: PodSecurityPolicy
@@ -56,7 +56,7 @@ spec:
   readOnlyRootFilesystem: false
   allowPrivilegeEscalation: true
   allowedCapabilities:
-  - "*"
+    - "*"
   fsGroup:
     rule: RunAsAny
   runAsUser:
@@ -66,7 +66,7 @@ spec:
   supplementalGroups:
     rule: RunAsAny
   volumes:
-  - "*"
+    - "*"
 
 ---
 kind: ClusterRole
@@ -77,11 +77,11 @@ metadata:
     app.kubernetes.io/name: flux
     app.kubernetes.io/instance: flux
 rules:
-- apiGroups: ["policy"]
-  resources: ["podsecuritypolicies"]
-  verbs: ["use"]
-  resourceNames:
-  - flux
+  - apiGroups: ["policy"]
+    resources: ["podsecuritypolicies"]
+    verbs: ["use"]
+    resourceNames:
+      - flux
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -95,9 +95,9 @@ roleRef:
   kind: ClusterRole
   name: flux-psp
 subjects:
-- kind: ServiceAccount
-  name: flux
-  namespace: default
+  - kind: ServiceAccount
+    name: flux
+    namespace: default
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -123,57 +123,52 @@ spec:
     metadata:
       labels:
         <<: *labels
-      annotations:
-        prometheus.io/port: "3031"
-        prometheus.io/scrape: "true"
     spec:
       serviceAccountName: flux
       volumes:
-      - name: git-key
-        secret:
-          secretName: flux-git-deploy
-          defaultMode: 0400
-      - name: git-keygen
-        emptyDir:
-          medium: Memory
-      containers:
-      - name: flux
-        image: fluxcd/flux:1.15.0
-        imagePullPolicy: IfNotPresent
-        resources:
-          requests:
-            cpu: 50m
-            memory: 64Mi
-        env:
-        - name: CLUSTER_NAME
-          valueFrom:
-            configMapKeyRef:
-              name: cluster-info
-              key: CLUSTER_NAME
-        ports:
-        - name: flux
-          containerPort: 3030
-          protocol: TCP
-        - name: prometheus
-          containerPort: 3031
-          protocol: TCP
-        volumeMounts:
         - name: git-key
-          mountPath: /etc/fluxd/ssh
-          readOnly: true
+          secret:
+            secretName: flux-git-deploy
+            defaultMode: 0400
         - name: git-keygen
-          mountPath: /var/fluxd/keygen
-        args:
-        - --git-url=git@github.com:hannahs-family/infrastructure
-        - --git-branch=master
-        - --git-path=k8s/common,k8s/$(CLUSTER_NAME)
-        - --git-label=flux-$(CLUSTER_NAME)
-        - --listen-metrics=:3031
-        - --log-format=json
-        - --memcached-hostname=memcached.kube-system.svc
-        - --memcached-service=
-        - --ssh-keygen-dir=/var/fluxd/keygen
-        - --sync-garbage-collection
+          emptyDir:
+            medium: Memory
+      containers:
+        - name: flux
+          image: fluxcd/flux:1.15.0
+          imagePullPolicy: IfNotPresent
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+          env:
+            - name: CLUSTER_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: cluster-info
+                  key: CLUSTER_NAME
+          ports:
+            - name: flux
+              containerPort: 3030
+            - name: metrics
+              containerPort: 3031
+          volumeMounts:
+            - name: git-key
+              mountPath: /etc/fluxd/ssh
+              readOnly: true
+            - name: git-keygen
+              mountPath: /var/fluxd/keygen
+          args:
+            - --git-url=git@github.com:hannahs-family/infrastructure
+            - --git-branch=master
+            - --git-path=k8s/common,k8s/$(CLUSTER_NAME)
+            - --git-label=flux-$(CLUSTER_NAME)
+            - --listen-metrics=:3031
+            - --log-format=json
+            - --memcached-hostname=memcached.kube-system.svc
+            - --memcached-service=
+            - --ssh-keygen-dir=/var/fluxd/keygen
+            - --sync-garbage-collection
 ---
 apiVersion: v1
 kind: Secret
@@ -181,3 +176,42 @@ metadata:
   name: flux-git-deploy
   namespace: default
 type: Opaque
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: flux
+  namespace: default
+  labels: &labels
+    app.kubernetes.io/name: flux
+    app.kubernetes.io/instance: flux
+spec:
+  clusterIP: None
+  selector:
+    <<: *labels
+  ports:
+    - name: flux
+      port: 3030
+    - name: metrics
+      port: 3031
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: flux
+  namespace: default
+  labels: &labels
+    app.kubernetes.io/name: flux
+    app.kubernetes.io/instance: flux
+spec:
+  endpoints:
+    - interval: 30s
+      port: metrics
+  namespaceSelector:
+    matchNames:
+      - default
+  selector:
+    matchLabels:
+      <<: *labels
