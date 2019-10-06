@@ -182,6 +182,7 @@ spec:
             - --txt-owner-id=external-dns-$(CLUSTER_NAME)
             - --source=service
             - --source=crd
+            - --publish-host-ip
           env:
             - name: CF_API_EMAIL
               value: vault:secrets/data/cloudflare#api_email
