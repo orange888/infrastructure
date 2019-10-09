@@ -128,15 +128,15 @@ metadata:
   name: grafana-clusterrole
   namespace: monitoring
 rules:
-- apiGroups:
-  - ""
-  resources:
-  - configmaps
-  - secrets
-  verbs:
-  - get
-  - watch
-  - list
+  - apiGroups:
+      - ""
+    resources:
+      - configmaps
+      - secrets
+    verbs:
+      - get
+      - watch
+      - list
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -151,9 +151,9 @@ roleRef:
   kind: ClusterRole
   name: grafana-clusterrole
 subjects:
-- kind: ServiceAccount
-  name: grafana
-  namespace: monitoring
+  - kind: ServiceAccount
+    name: grafana
+    namespace: monitoring
 ---
 apiVersion: v1
 kind: Service
@@ -165,8 +165,8 @@ metadata:
     app.kubernetes.io/name: grafana
 spec:
   ports:
-  - name: service
-    port: 3000
+    - name: service
+      port: 3000
   selector:
     <<: *labels
 
@@ -199,173 +199,173 @@ spec:
       affinity:
         podAntiAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
-          - labelSelector:
-              matchLabels:
-                <<: *labels
-            topologyKey: kubernetes.io/hostname
+            - labelSelector:
+                matchLabels:
+                  <<: *labels
+              topologyKey: kubernetes.io/hostname
       initContainers:
-      - name: vault-agent
-        image: vault:1.2.3
-        command:
-        - vault
-        args:
-        - agent
-        - -config=/vault/agent/config.hcl
-        env:
-        - name: VAULT_ADDR
-          value: https://vault.kube-system.svc:8200
-        - name: VAULT_CACERT
-          value: /vault/tls/ca.crt
-        resources:
-          limits:
-            cpu: 50m
-            memory: 64Mi
-        securityContext:
-          runAsUser: 100
-          runAsGroup: 1000
-        volumeMounts:
-        - name: ca
-          mountPath: /vault/tls/ca.crt
-        - name: config
-          mountPath: /vault/agent/config.hcl
-          subPath: vault-agent-config.hcl
-        - name: vault-env
-          mountPath: /vault
-      - name: grafana-sc-datasources
-        image: kiwigrid/k8s-sidecar:0.1.20
-        env:
-        - name: METHOD
-          value: LIST
-        - name: LABEL
-          value: grafana.com/datasource
-        - name: FOLDER
-          value: /etc/grafana/provisioning/datasources
-        - name: RESOURCE
-          value: both
-        resources:
-          limits:
-            cpu: 100m
-            memory: 100Mi
-        volumeMounts:
-        - mountPath: /etc/grafana/provisioning/datasources
-          name: sc-datasources-volume
+        - name: vault-agent
+          image: vault:1.2.3
+          command:
+            - vault
+          args:
+            - agent
+            - -config=/vault/agent/config.hcl
+          env:
+            - name: VAULT_ADDR
+              value: https://vault.kube-system.svc:8200
+            - name: VAULT_CACERT
+              value: /vault/tls/ca.crt
+          resources:
+            limits:
+              cpu: 100m
+              memory: 128Mi
+          securityContext:
+            runAsUser: 100
+            runAsGroup: 1000
+          volumeMounts:
+            - name: ca
+              mountPath: /vault/tls/ca.crt
+            - name: config
+              mountPath: /vault/agent/config.hcl
+              subPath: vault-agent-config.hcl
+            - name: vault-env
+              mountPath: /vault
+        - name: grafana-sc-datasources
+          image: kiwigrid/k8s-sidecar:0.1.20
+          env:
+            - name: METHOD
+              value: LIST
+            - name: LABEL
+              value: grafana.com/datasource
+            - name: FOLDER
+              value: /etc/grafana/provisioning/datasources
+            - name: RESOURCE
+              value: both
+          resources:
+            limits:
+              cpu: 100m
+              memory: 100Mi
+          volumeMounts:
+            - mountPath: /etc/grafana/provisioning/datasources
+              name: sc-datasources-volume
       containers:
-      - name: consul-template
-        image: hashicorp/consul-template:0.22.0-alpine
-        args:
-        - -config=/vault/ct-config/config.hcl
-        env:
-        - name: VAULT_ADDR
-          value: https://vault.kube-system.svc:8200
-        - name: VAULT_CACERT
-          value: /vault/tls/ca.crt
-        volumeMounts:
-        - name: ca
-          mountPath: /vault/tls/ca.crt
-        - name: config
-          mountPath: /vault/ct-config
-          readOnly: true
-        - name: ct-secrets
-          mountPath: /consul-template/data
-        - name: vault-env
-          mountPath: /vault
-        resources:
-          limits:
-            cpu: 50m
-            memory: 64Mi
-        securityContext:
-          allowPrivilegeEscalation: false
-          capabilities:
-            add:
-            - SYS_PTRACE
-      - name: grafana-sc-dashboard
-        image: kiwigrid/k8s-sidecar:0.1.20
-        env:
-        - name: LABEL
-          value: grafana.com/dashboard
-        - name: FOLDER
-          value: /tmp/dashboards
-        - name: RESOURCE
-          value: both
-        - name: NAMESPACE
-          value: ALL
-        resources:
-          limits:
-            cpu: 100m
-            memory: 100Mi
-        volumeMounts:
-        - mountPath: /tmp/dashboards
-          name: sc-dashboard-volume
-      - name: grafana
-        image: grafana/grafana:6.4.2
-        env:
-        - name: GF_PATHS_CONFIG
-          value: /etc/grafana/config/grafana.ini
-        - name: GF_INSTALL_PLUGINS
-          valueFrom:
-            configMapKeyRef:
-              key: plugins
+        - name: consul-template
+          image: hashicorp/consul-template:0.22.0-alpine
+          args:
+            - -config=/vault/ct-config/config.hcl
+          env:
+            - name: VAULT_ADDR
+              value: https://vault.kube-system.svc:8200
+            - name: VAULT_CACERT
+              value: /vault/tls/ca.crt
+          volumeMounts:
+            - name: ca
+              mountPath: /vault/tls/ca.crt
+            - name: config
+              mountPath: /vault/ct-config
+              readOnly: true
+            - name: ct-secrets
+              mountPath: /consul-template/data
+            - name: vault-env
+              mountPath: /vault
+          resources:
+            limits:
+              cpu: 50m
+              memory: 64Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              add:
+                - SYS_PTRACE
+        - name: grafana-sc-dashboard
+          image: kiwigrid/k8s-sidecar:0.1.20
+          env:
+            - name: LABEL
+              value: grafana.com/dashboard
+            - name: FOLDER
+              value: /tmp/dashboards
+            - name: RESOURCE
+              value: both
+            - name: NAMESPACE
+              value: ALL
+          resources:
+            limits:
+              cpu: 100m
+              memory: 100Mi
+          volumeMounts:
+            - mountPath: /tmp/dashboards
+              name: sc-dashboard-volume
+        - name: grafana
+          image: grafana/grafana:6.4.2
+          env:
+            - name: GF_PATHS_CONFIG
+              value: /etc/grafana/config/grafana.ini
+            - name: GF_INSTALL_PLUGINS
+              valueFrom:
+                configMapKeyRef:
+                  key: plugins
+                  name: grafana
+          ports:
+            - containerPort: 80
+              name: service
+              protocol: TCP
+            - containerPort: 3000
               name: grafana
-        ports:
-        - containerPort: 80
-          name: service
-          protocol: TCP
-        - containerPort: 3000
-          name: grafana
-          protocol: TCP
-        readinessProbe: &probe
-          httpGet:
-            path: /api/health
-            port: 3000
-        livenessProbe:
-          <<: *probe
-          failureThreshold: 10
-          initialDelaySeconds: 60
-          timeoutSeconds: 30
-        resources:
-          limits:
-            cpu: 100m
-            memory: 128Mi
-          requests:
-            cpu: 100m
-            memory: 128Mi
-        volumeMounts:
-        - name: ca
-          mountPath: /etc/ssl/certs/hannahs.family.ca.cert.pem
-        - name: ct-secrets
-          mountPath: /etc/grafana/config
-          readOnly: true
-        - name: storage
-          mountPath: /var/lib/grafana
-        - name: sc-dashboard-provider
-          mountPath: /etc/grafana/provisioning/dashboards/sc-dashboardproviders.yaml
-          subPath: provider.yaml
-        - name: sc-dashboard-volume
-          mountPath: /tmp/dashboards
-        - name: sc-datasources-volume
-          mountPath: /etc/grafana/provisioning/datasources
+              protocol: TCP
+          readinessProbe: &probe
+            httpGet:
+              path: /api/health
+              port: 3000
+          livenessProbe:
+            <<: *probe
+            failureThreshold: 10
+            initialDelaySeconds: 60
+            timeoutSeconds: 30
+          resources:
+            limits:
+              cpu: 100m
+              memory: 128Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          volumeMounts:
+            - name: ca
+              mountPath: /etc/ssl/certs/hannahs.family.ca.cert.pem
+            - name: ct-secrets
+              mountPath: /etc/grafana/config
+              readOnly: true
+            - name: storage
+              mountPath: /var/lib/grafana
+            - name: sc-dashboard-provider
+              mountPath: /etc/grafana/provisioning/dashboards/sc-dashboardproviders.yaml
+              subPath: provider.yaml
+            - name: sc-dashboard-volume
+              mountPath: /tmp/dashboards
+            - name: sc-datasources-volume
+              mountPath: /etc/grafana/provisioning/datasources
       serviceAccountName: grafana
       volumes:
-      - name: ca
-        hostPath:
-          path: /etc/ssl/certs/hannahs.family.ca.cert.pem
-          type: File
-      - name: config
-        configMap:
-          name: grafana
-      - name: ct-secrets
-        emptyDir: {}
-      - name: sc-dashboard-provider
-        configMap:
-          name: grafana-config-dashboards
-      - name: sc-dashboard-volume
-        emptyDir: {}
-      - name: sc-datasources-volume
-        emptyDir: {}
-      - name: storage
-        emptyDir: {}
-      - name: vault-env
-        emptyDir: {}
+        - name: ca
+          hostPath:
+            path: /etc/ssl/certs/hannahs.family.ca.cert.pem
+            type: File
+        - name: config
+          configMap:
+            name: grafana
+        - name: ct-secrets
+          emptyDir: {}
+        - name: sc-dashboard-provider
+          configMap:
+            name: grafana-config-dashboards
+        - name: sc-dashboard-volume
+          emptyDir: {}
+        - name: sc-datasources-volume
+          emptyDir: {}
+        - name: storage
+          emptyDir: {}
+        - name: vault-env
+          emptyDir: {}
 
 ---
 apiVersion: traefik.containo.us/v1alpha1
@@ -378,16 +378,16 @@ metadata:
     app.kubernetes.io/instance: grafana
 spec:
   entryPoints:
-  - http
+    - http
   routes:
-  - match: Host(`metrics.hannahs.family`)
-    kind: Rule
-    middlewares:
-    - name: https-redirect
-      namespace: default
-    services:
-    - name: grafana
-      port: 3000
+    - match: Host(`metrics.hannahs.family`)
+      kind: Rule
+      middlewares:
+        - name: https-redirect
+          namespace: default
+      services:
+        - name: grafana
+          port: 3000
 ---
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
@@ -399,13 +399,13 @@ metadata:
     app.kubernetes.io/instance: grafana
 spec:
   entryPoints:
-  - https
+    - https
   routes:
-  - match: Host(`metrics.hannahs.family`)
-    kind: Rule
-    services:
-    - name: grafana
-      port: 3000
+    - match: Host(`metrics.hannahs.family`)
+      kind: Rule
+      services:
+        - name: grafana
+          port: 3000
   tls:
     certResolver: default
 ---
@@ -419,7 +419,7 @@ metadata:
     app.kubernetes.io/instance: grafana
 spec:
   endpoints:
-  - dnsName: metrics.hannahs.family
-    recordType: CNAME
-    targets:
-    - traefik.hannahs.family
+    - dnsName: metrics.hannahs.family
+      recordType: CNAME
+      targets:
+        - traefik.hannahs.family

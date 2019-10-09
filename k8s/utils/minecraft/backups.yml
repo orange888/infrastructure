@@ -10,21 +10,15 @@ spec:
       image: ubuntu:latest
       tty: true
       stdin: true
-      resources:
-        limits: &res
-          memory: 2Gi
-          cpu: 2
-        requests:
-          <<: *res
       volumeMounts:
         - name: vanilla
           mountPath: /vanilla
-        - name: creative
-          mountPath: /creative
+        - name: backup
+          mountPath: /backup
   volumes:
     - name: vanilla
       persistentVolumeClaim:
         claimName: vanilla
-    - name: creative
+    - name: backup
       persistentVolumeClaim:
-        claimName: vanilla-creative
+        claimName: vanilla-backup

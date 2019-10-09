@@ -62,12 +62,11 @@ spec:
               hostPort: 9100
               name: http
           resources:
-            limits:
-              cpu: 250m
-              memory: 180Mi
+            limits: &resources
+              cpu: 100m
+              memory: 128Mi
             requests:
-              cpu: 102m
-              memory: 180Mi
+              <<: *resources
           volumeMounts:
             - mountPath: /host/proc
               name: proc

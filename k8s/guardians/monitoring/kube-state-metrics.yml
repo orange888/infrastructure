@@ -135,12 +135,11 @@ spec:
             - containerPort: 8082
               name: http-self
           resources:
-            limits:
+            limits: &resources
               cpu: 100m
-              memory: 150Mi
+              memory: 128Mi
             requests:
-              cpu: 100m
-              memory: 150Mi
+              <<: *resources
       securityContext:
         runAsNonRoot: true
         runAsUser: 65534

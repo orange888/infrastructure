@@ -19,6 +19,10 @@ spec:
   baseImage: quay.io/prometheus/alertmanager
   externalURL: https://alerts.metrics.hannahs.family
   replicas: 2
+  resources:
+    limits:
+      cpu: 100m
+      memory: 256Mi
   securityContext:
     fsGroup: 2000
     runAsNonRoot: true

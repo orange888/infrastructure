@@ -130,7 +130,7 @@ spec:
       memory: 400Mi
     limits:
       cpu: 250m
-      memory: 4Gi
+      memory: 2Gi
   retention: 2w
   retentionSize: 20GB
   ruleNamespaceSelector: {}
