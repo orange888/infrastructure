@@ -179,17 +179,17 @@ spec:
         fsGroup: 1000
       containers:
         - name: minecraft
-          image: hannahsfamily/mc-server-vanilla:1.14.4
+          image: hannahsfamily/mc-server-vanilla:1.14.4-2
           ports:
             - name: minecraft
               containerPort: 25565
             - name: rcon
               containerPort: 25575
           env:
-            - name: JVM_MEM_INIT
-              value: 4096M
             - name: JVM_MEM_MAX
               value: 4096M
+            - name: JVM_OPTS
+              value: -server -XX:+UseConcMarkSweepGC -XX:+UseParNewGC -XX:+CMSIncrementalPacing -XX:ParallelGCThreads=2 -XX:+AggressiveOpts
             - name: RCON_PASSWORD
               value: vault:secrets/data/minecraft/vanilla/rcon#rcon_password
           livenessProbe:
