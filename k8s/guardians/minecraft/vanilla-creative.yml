@@ -188,7 +188,7 @@ spec:
               containerPort: 25575
           env:
             - name: JVM_MEM_INIT
-              value: 1024M
+              value: 4096M
             - name: JVM_MEM_MAX
               value: 4096M
             - name: RCON_PASSWORD
