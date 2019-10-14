@@ -163,12 +163,14 @@ spec:
             - --git-branch=master
             - --git-path=k8s/common,k8s/$(CLUSTER_NAME)
             - --git-label=flux-$(CLUSTER_NAME)
+            - --git-poll-interval=1h
             - --listen-metrics=:3031
             - --log-format=json
             - --memcached-hostname=memcached.kube-system.svc
             - --memcached-service=
             - --ssh-keygen-dir=/var/fluxd/keygen
             - --sync-garbage-collection
+            - --sync-interval=1h
 ---
 apiVersion: v1
 kind: Secret
