@@ -51,7 +51,7 @@ spec:
           image: postgres:11-alpine
           resources:
             limits: &res
-              cpu: 1
+              cpu: 100m
               memory: 1Gi
             requests:
               <<: *res
