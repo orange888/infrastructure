@@ -176,7 +176,7 @@ metadata:
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  labels:
+  labels: &labels
     app.kubernetes.io/component: controller
     app.kubernetes.io/name: prometheus-operator
     app.kubernetes.io/version: v0.33.0
@@ -188,6 +188,4 @@ spec:
       port: http
   selector:
     matchLabels:
-      app.kubernetes.io/component: controller
-      app.kubernetes.io/name: prometheus-operator
-      app.kubernetes.io/version: v0.33.0
+      <<: *labels
