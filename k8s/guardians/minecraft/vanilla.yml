@@ -181,17 +181,15 @@ spec:
         fsGroup: 1000
       containers:
         - name: minecraft
-          image: hannahsfamily/mc-server-vanilla:1.14.4-3
+          image: hannahsfamily/mc-server-vanilla:1.14.4-4
           ports:
             - name: minecraft
               containerPort: 25565
             - name: rcon
               containerPort: 25575
           env:
-            - name: JVM_MEM_MAX
-              value: 2G
-            - name: JVM_OPTS
-              value: -server -XX:+UseG1GC -XX:+UnlockExperimentalVMOptions -XX:MaxGCPauseMillis=100 -XX:+DisableExplicitGC -XX:TargetSurvivorRatio=90 -XX:G1NewSizePercent=50 -XX:G1MaxNewSizePercent=80 -XX:G1MixedGCLiveThresholdPercent=35 -XX:+AlwaysPreTouch -XX:+ParallelRefProcEnabled
+            - name: HEAP_SIZE
+              value: "2048"
             - name: RCON_PASSWORD
               value: vault:secrets/data/minecraft/vanilla/rcon#rcon_password
           livenessProbe: &probe
@@ -202,10 +200,10 @@ spec:
           resources:
             requests:
               cpu: 1
-              memory: 2Gi
+              memory: 2304Mi # 2Gi heap + 256Mi overhead
             limits:
               cpu: 2
-              memory: 2Gi
+              memory: 2304Mi
           volumeMounts:
             - name: storage
               mountPath: /opt/minecraft/config
