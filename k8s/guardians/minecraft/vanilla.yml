@@ -181,7 +181,7 @@ spec:
         fsGroup: 1000
       containers:
         - name: minecraft
-          image: hannahsfamily/mc-server-vanilla:1.14.4-2
+          image: hannahsfamily/mc-server-vanilla:1.14.4-3
           ports:
             - name: minecraft
               containerPort: 25565
