@@ -123,7 +123,7 @@ spec:
           mountPath: /var/run/secrets/vaultproject.io/vault
   podMonitorNamespaceSelector: {}
   podMonitorSelector: {}
-  replicas: 2
+  replicas: 1
   resources:
     requests:
       cpu: 50m

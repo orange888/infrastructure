@@ -18,7 +18,7 @@ spec:
           weight: 1
   baseImage: quay.io/prometheus/alertmanager
   externalURL: https://alerts.metrics.hannahs.family
-  replicas: 2
+  replicas: 1
   resources:
     limits:
       cpu: 100m
