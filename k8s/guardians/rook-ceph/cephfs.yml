@@ -14,6 +14,15 @@ spec:
   metadataServer:
     activeCount: 1
     activeStandby: true
+    placement:
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app: rook-ceph-mds
+                rook_cluster: rook-ceph
+                rook_file_system: rook-ceph-fs
+            topologyKey: kubernetes.io/hostname
     resources:
       limits: &resources
         cpu: 25m
