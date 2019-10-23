@@ -176,7 +176,7 @@ metadata:
     fluxcd.io/tag.cassandra: semver:~3.11
     fluxcd.io/automated: "true"
 spec:
-  replicas: 2
+  replicas: 3
   selector:
     matchLabels:
       <<: *labels
