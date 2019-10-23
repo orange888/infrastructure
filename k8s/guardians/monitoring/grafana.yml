@@ -219,8 +219,8 @@ spec:
               value: /vault/tls/ca.crt
           resources:
             limits:
-              cpu: 100m
-              memory: 128Mi
+              cpu: 10m
+              memory: 64Mi
           securityContext:
             runAsUser: 100
             runAsGroup: 1000
@@ -245,8 +245,8 @@ spec:
               value: both
           resources:
             limits:
-              cpu: 100m
-              memory: 100Mi
+              cpu: 10m
+              memory: 64Mi
           volumeMounts:
             - mountPath: /etc/grafana/provisioning/datasources
               name: sc-datasources-volume
@@ -272,7 +272,7 @@ spec:
               mountPath: /vault
           resources:
             limits:
-              cpu: 50m
+              cpu: 10m
               memory: 64Mi
           securityContext:
             allowPrivilegeEscalation: false
@@ -292,8 +292,8 @@ spec:
               value: ALL
           resources:
             limits:
-              cpu: 100m
-              memory: 100Mi
+              cpu: 10m
+              memory: 64Mi
           volumeMounts:
             - mountPath: /tmp/dashboards
               name: sc-dashboard-volume
@@ -324,12 +324,11 @@ spec:
             initialDelaySeconds: 60
             timeoutSeconds: 30
           resources:
-            limits:
-              cpu: 100m
+            limits: &resources
+              cpu: 80m
               memory: 128Mi
             requests:
-              cpu: 100m
-              memory: 128Mi
+              <<: *resources
           volumeMounts:
             - name: ca
               mountPath: /etc/ssl/certs/hannahs.family.ca.cert.pem

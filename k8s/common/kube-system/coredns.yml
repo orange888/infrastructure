@@ -211,12 +211,12 @@ spec:
               mountPath: /etc/coredns
               readOnly: true
           resources:
-            limits:
+            limits: &resources
               cpu: 100m
-              memory: 128Mi
+              memory: 64Mi
             requests:
-              cpu: 100m
-              memory: 128Mi
+              <<: *resources
+              cpu: 10m
           ports:
             - { containerPort: 53, protocol: UDP, name: udp-53 }
             - { containerPort: 53, protocol: TCP, name: tcp-53 }

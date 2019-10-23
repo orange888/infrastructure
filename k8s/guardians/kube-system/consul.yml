@@ -159,9 +159,11 @@ spec:
               name: consuldns-udp
               protocol: UDP
           resources:
-            limits:
-              cpu: 100m
+            limits: &resources
+              cpu: 50m
               memory: 128Mi
+            requests:
+              <<: *resources
           volumeMounts:
             - mountPath: /var/lib/consul
               name: datadir

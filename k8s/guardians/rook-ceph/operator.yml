@@ -31,12 +31,12 @@ spec:
             - mountPath: /etc/ceph
               name: default-config-dir
           resources:
+            limits: &resources
+              memory: 128Mi
+              cpu: 200m
             requests:
-              memory: 256Mi
-              cpu: 100m
-            limits:
-              memory: 1Gi
-              cpu: 1000m
+              <<: *resources
+              cpu: 10m
           env:
             - name: ROOK_CURRENT_NAMESPACE_ONLY
               value: "true"

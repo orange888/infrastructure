@@ -183,9 +183,11 @@ spec:
             - containerPort: 8202
               name: replication
           resources:
-            limits:
-              cpu: 250m
+            limits: &resources
+              cpu: 100m
               memory: 256Mi
+            requests:
+              <<: *resources
           securityContext:
             privileged: true
           readinessProbe:

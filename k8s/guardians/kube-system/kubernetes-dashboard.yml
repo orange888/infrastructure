@@ -161,12 +161,11 @@ spec:
               name: https
               protocol: TCP
           resources:
-            limits:
-              cpu: 100m
-              memory: 100Mi
+            limits: &resources
+              cpu: 10m
+              memory: 64Mi
             requests:
-              cpu: 100m
-              memory: 100Mi
+              <<: *resources
           volumeMounts:
             - mountPath: /certs
               name: kubernetes-dashboard-certs

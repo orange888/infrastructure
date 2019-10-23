@@ -136,8 +136,8 @@ spec:
               name: http-self
           resources:
             limits: &resources
-              cpu: 100m
-              memory: 128Mi
+              cpu: 10m
+              memory: 64Mi
             requests:
               <<: *resources
       securityContext:

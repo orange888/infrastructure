@@ -24,17 +24,26 @@ spec:
       - path: /srv/rook-ceph
   resources:
     mon:
-      limits:
-        cpu: 500m
+      limits: &resources
+        cpu: 250m
         memory: 1Gi
+      requests:
+        <<: *resources
+        cpu: 10m
     mgr:
-      limits:
-        cpu: 500m
+      limits: &resources
+        cpu: 100m
         memory: 512Mi
+      requests:
+        <<: *resources
+        cpu: 25m
     osd:
-      limits:
-        cpu: 500m
+      limits: &resources
+        cpu: 250m
         memory: 2Gi
+      requests:
+        <<: *resources
+        cpu: 25m
     prepareosd:
       limits:
         cpu: 100m

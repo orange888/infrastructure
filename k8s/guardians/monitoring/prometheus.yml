@@ -104,7 +104,7 @@ spec:
           value: /vault/tls/ca.crt
       resources:
         limits:
-          cpu: 50m
+          cpu: 10m
           memory: 64Mi
       securityContext:
         runAsUser: 1000
@@ -125,12 +125,11 @@ spec:
   podMonitorSelector: {}
   replicas: 1
   resources:
-    requests:
-      cpu: 50m
-      memory: 400Mi
-    limits:
+    limits: &resources
       cpu: 250m
       memory: 2Gi
+    requests:
+      <<: *resources
   retention: 2w
   retentionSize: 20GB
   ruleNamespaceSelector: {}
