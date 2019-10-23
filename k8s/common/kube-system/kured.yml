@@ -169,6 +169,9 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
+          ports:
+            - containerPort: 8080
+              name: metrics
           image: weaveworks/kured:1.2.0
           imagePullPolicy: IfNotPresent
           name: kured
@@ -181,3 +184,39 @@ spec:
       tolerations:
         - effect: NoSchedule
           key: node-role.kubernetes.io/master
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kured
+  namespace: kube-system
+  labels: &labels
+    app.kubernetes.io/instance: kured
+    app.kubernetes.io/name: kured
+spec:
+  clusterIP: None
+  ports:
+    - name: metrics
+      port: 8080
+  selector:
+    <<: *labels
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: kured
+  namespace: kube-system
+  labels: &labels
+    app.kubernetes.io/instance: kured
+    app.kubernetes.io/name: kured
+spec:
+  endpoints:
+    - port: metrics
+  namespaceSelector:
+    matchNames:
+      - kube-system
+  selector:
+    matchLabels:
+      <<: *labels
