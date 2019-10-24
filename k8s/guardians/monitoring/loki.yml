@@ -577,7 +577,7 @@ spec:
           valueFrom:
             fieldRef:
               fieldPath: spec.nodeName
-        image: grafana/promtail:v0.3.0
+        image: grafana/promtail:v0.4.0
         name: promtail
         ports:
         - containerPort: 3101
