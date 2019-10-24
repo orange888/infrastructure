@@ -652,7 +652,7 @@ spec:
       containers:
       - args:
         - -config.file=/etc/loki/loki.yml
-        image: grafana/loki:v0.3.0
+        image: grafana/loki:v0.4.0
         livenessProbe:
           httpGet:
             path: /ready
