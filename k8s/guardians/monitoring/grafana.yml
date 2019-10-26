@@ -325,7 +325,7 @@ spec:
             timeoutSeconds: 30
           resources:
             limits: &resources
-              cpu: 80m
+              cpu: 200m
               memory: 128Mi
             requests:
               <<: *resources

@@ -11,8 +11,8 @@ spec:
   allowPrivilegeEscalation: false
   fsGroup:
     ranges:
-    - max: 65535
-      min: 1
+      - max: 65535
+        min: 1
     rule: MustRunAs
   hostIPC: false
   hostNetwork: false
@@ -20,21 +20,21 @@ spec:
   privileged: false
   readOnlyRootFilesystem: true
   requiredDropCapabilities:
-  - ALL
+    - ALL
   runAsUser:
     rule: MustRunAsNonRoot
   seLinux:
     rule: RunAsAny
   supplementalGroups:
     ranges:
-    - max: 65535
-      min: 1
+      - max: 65535
+        min: 1
     rule: MustRunAs
   volumes:
-  - configMap
-  - emptyDir
-  - persistentVolumeClaim
-  - secret
+    - configMap
+    - emptyDir
+    - persistentVolumeClaim
+    - secret
 ---
 apiVersion: policy/v1beta1
 kind: PodSecurityPolicy
@@ -54,7 +54,7 @@ spec:
   privileged: false
   readOnlyRootFilesystem: true
   requiredDropCapabilities:
-  - ALL
+    - ALL
   runAsUser:
     rule: RunAsAny
   seLinux:
@@ -62,9 +62,9 @@ spec:
   supplementalGroups:
     rule: RunAsAny
   volumes:
-  - secret
-  - configMap
-  - hostPath
+    - secret
+    - configMap
+    - hostPath
 ---
 apiVersion: v1
 kind: Secret
@@ -414,18 +414,18 @@ metadata:
   name: loki-promtail-clusterrole
   namespace: monitoring
 rules:
-- apiGroups:
-  - ""
-  resources:
-  - nodes
-  - nodes/proxy
-  - services
-  - endpoints
-  - pods
-  verbs:
-  - get
-  - watch
-  - list
+  - apiGroups:
+      - ""
+    resources:
+      - nodes
+      - nodes/proxy
+      - services
+      - endpoints
+      - pods
+    verbs:
+      - get
+      - watch
+      - list
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -440,9 +440,9 @@ roleRef:
   kind: ClusterRole
   name: loki-promtail-clusterrole
 subjects:
-- kind: ServiceAccount
-  name: loki-promtail
-  namespace: monitoring
+  - kind: ServiceAccount
+    name: loki-promtail
+    namespace: monitoring
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -453,14 +453,14 @@ metadata:
   name: loki
   namespace: monitoring
 rules:
-- apiGroups:
-  - extensions
-  resourceNames:
-  - loki
-  resources:
-  - podsecuritypolicies
-  verbs:
-  - use
+  - apiGroups:
+      - extensions
+    resourceNames:
+      - loki
+    resources:
+      - podsecuritypolicies
+    verbs:
+      - use
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -471,14 +471,14 @@ metadata:
   name: loki-promtail
   namespace: monitoring
 rules:
-- apiGroups:
-  - extensions
-  resourceNames:
-  - loki-promtail
-  resources:
-  - podsecuritypolicies
-  verbs:
-  - use
+  - apiGroups:
+      - extensions
+    resourceNames:
+      - loki-promtail
+    resources:
+      - podsecuritypolicies
+    verbs:
+      - use
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -493,8 +493,8 @@ roleRef:
   kind: Role
   name: loki
 subjects:
-- kind: ServiceAccount
-  name: loki
+  - kind: ServiceAccount
+    name: loki
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -509,8 +509,8 @@ roleRef:
   kind: Role
   name: loki-promtail
 subjects:
-- kind: ServiceAccount
-  name: loki-promtail
+  - kind: ServiceAccount
+    name: loki-promtail
 ---
 apiVersion: v1
 kind: Service
@@ -523,9 +523,9 @@ metadata:
 spec:
   clusterIP: None
   ports:
-  - name: http-metrics
-    port: 3100
-    targetPort: http-metrics
+    - name: http-metrics
+      port: 3100
+      targetPort: http-metrics
   selector:
     <<: *labels
 
@@ -541,9 +541,9 @@ metadata:
 spec:
   clusterIP: None
   ports:
-  - name: http-metrics
-    port: 3100
-    targetPort: http-metrics
+    - name: http-metrics
+      port: 3100
+      targetPort: http-metrics
   selector:
     <<: *labels
 
@@ -569,60 +569,60 @@ spec:
         <<: *labels
     spec:
       containers:
-      - args:
-        - -config.file=/etc/promtail/promtail.yml
-        - -client.url=http://loki:3100/api/prom/push
-        env:
-        - name: HOSTNAME
-          valueFrom:
-            fieldRef:
-              fieldPath: spec.nodeName
-        image: grafana/promtail:v0.4.0
-        name: promtail
-        ports:
-        - containerPort: 3101
-          name: http-metrics
-        readinessProbe:
-          failureThreshold: 5
-          httpGet:
-            path: /ready
-            port: http-metrics
-          initialDelaySeconds: 10
-          periodSeconds: 10
-          successThreshold: 1
-          timeoutSeconds: 1
-        securityContext:
-          readOnlyRootFilesystem: true
-          runAsGroup: 0
-          runAsUser: 0
-        volumeMounts:
-        - mountPath: /etc/promtail
-          name: config
-        - mountPath: /run/promtail
-          name: run
-        - mountPath: /var/lib/docker/containers
-          name: docker
-          readOnly: true
-        - mountPath: /var/log/pods
-          name: pods
-          readOnly: true
+        - args:
+            - -config.file=/etc/promtail/promtail.yml
+            - -client.url=http://loki:3100/api/prom/push
+          env:
+            - name: HOSTNAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          image: grafana/promtail:v0.4.0
+          name: promtail
+          ports:
+            - containerPort: 3101
+              name: http-metrics
+          readinessProbe:
+            failureThreshold: 5
+            httpGet:
+              path: /ready
+              port: http-metrics
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 1
+          securityContext:
+            readOnlyRootFilesystem: true
+            runAsGroup: 0
+            runAsUser: 0
+          volumeMounts:
+            - mountPath: /etc/promtail
+              name: config
+            - mountPath: /run/promtail
+              name: run
+            - mountPath: /var/lib/docker/containers
+              name: docker
+              readOnly: true
+            - mountPath: /var/log/pods
+              name: pods
+              readOnly: true
       serviceAccountName: loki-promtail
       tolerations:
-      - effect: NoSchedule
-        key: node-role.kubernetes.io/master
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/master
       volumes:
-      - configMap:
-          name: loki-promtail
-        name: config
-      - hostPath:
-          path: /run/promtail
-        name: run
-      - hostPath:
-          path: /var/lib/docker/containers
-        name: docker
-      - hostPath:
-          path: /var/log/pods
-        name: pods
+        - configMap:
+            name: loki-promtail
+          name: config
+        - hostPath:
+            path: /run/promtail
+          name: run
+        - hostPath:
+            path: /var/lib/docker/containers
+          name: docker
+        - hostPath:
+            path: /var/log/pods
+          name: pods
   updateStrategy:
     type: RollingUpdate
 ---
@@ -650,39 +650,39 @@ spec:
         <<: *labels
     spec:
       containers:
-      - args:
-        - -config.file=/etc/loki/loki.yml
-        image: grafana/loki:v0.4.0
-        livenessProbe:
-          httpGet:
-            path: /ready
-            port: http-metrics
-          initialDelaySeconds: 45
-        name: loki
-        ports:
-        - containerPort: 3100
-          name: http-metrics
-          protocol: TCP
-        readinessProbe:
-          httpGet:
-            path: /ready
-            port: http-metrics
-          initialDelaySeconds: 45
-        resources:
-          limits: &resources
-            cpu: 25m
-            memory: 1Gi
-          requests:
-            <<: *resources
-            memory: 64Mi
-        securityContext:
-          readOnlyRootFilesystem: true
-        volumeMounts:
-        - mountPath: /etc/loki
-          name: config
-        - mountPath: /data
-          name: storage
-          subPath:
+        - args:
+            - -config.file=/etc/loki/loki.yml
+          image: grafana/loki:v0.4.0
+          livenessProbe:
+            httpGet:
+              path: /ready
+              port: http-metrics
+            initialDelaySeconds: 45
+          name: loki
+          ports:
+            - containerPort: 3100
+              name: http-metrics
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: http-metrics
+            initialDelaySeconds: 45
+          resources:
+            limits: &resources
+              cpu: 250m
+              memory: 1Gi
+            requests:
+              <<: *resources
+              memory: 64Mi
+          securityContext:
+            readOnlyRootFilesystem: true
+          volumeMounts:
+            - mountPath: /etc/loki
+              name: config
+            - mountPath: /data
+              name: storage
+              subPath:
       nodeSelector: {}
       securityContext:
         fsGroup: 10001
@@ -693,20 +693,20 @@ spec:
       terminationGracePeriodSeconds: 30
       tolerations: []
       volumes:
-      - name: config
-        secret:
-          secretName: loki
+        - name: config
+          secret:
+            secretName: loki
   volumeClaimTemplates:
-  - metadata:
-      name: storage
-      labels:
-        <<: *labels
-    spec:
-      accessModes:
-      - ReadWriteOnce
-      resources:
-        requests:
-          storage: 20Gi
+    - metadata:
+        name: storage
+        labels:
+          <<: *labels
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 20Gi
   updateStrategy:
     type: RollingUpdate
 ---
@@ -741,8 +741,8 @@ metadata:
     app.kubernetes.io/instance: loki
 spec:
   endpoints:
-  - port: http-metrics
-    honorLabels: true
+    - port: http-metrics
+      honorLabels: true
   selector:
     matchLabels:
       <<: *labels
@@ -758,8 +758,8 @@ metadata:
     app.kubernetes.io/instance: loki
 spec:
   endpoints:
-  - port: http-metrics
-    honorLabels: true
+    - port: http-metrics
+      honorLabels: true
   selector:
     matchLabels:
       <<: *labels
