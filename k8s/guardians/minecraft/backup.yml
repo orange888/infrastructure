@@ -11,8 +11,8 @@ data:
     #!/bin/sh
     export DST=/backup/daily
 
-    ### Remove oldest daily backup if there are 7
-    [ `ls ${DST} | wc -l` -eq 7 ] && rm -f ${DST}/$(ls -tc ${DST} | head -n 1)
+    ### Remove oldest daily backup if there are 7 or more
+    [ `ls ${DST} | wc -l` -gt 6 ] && rm -f ${DST}/$(ls -t ${DST} | tail -n 1)
 
     ### Create a new daily backup
     apk add xz
@@ -24,18 +24,18 @@ data:
     export DST=/backup/weekly
     export SRC=/backup/daily
 
-    ### Remove oldest weekly backup if there are 12
-    [ `ls ${DST} | wc -l` -eq 12 ] && rm -f ${DST}/$(ls -tc ${DST} | head -n 1)
+    ### Remove oldest weekly backup if there are 12 or more
+    [ `ls ${DST} | wc -l` -gt 11 ] && rm -f ${DST}/$(ls -t ${DST} | tail -n 1)
 
     ### Copy oldest daily backup (if one exists) into weekly backups
-    [ `ls ${SRC} | wc -l` -gt 0 ] && cp ${SRC}/$(ls -tc ${SRC} | head -n 1) ${DST}
+    [ `ls ${SRC} | wc -l` -gt 0 ] && cp ${SRC}/$(ls -t ${SRC} | tail -n 1) ${DST}
   monthly.sh: |
     #!/bin/sh
     export DST=/backup/monthly
     export SRC=/backup/weekly
 
-    ### Remove oldest monthly backup if there are 12
-    [ `ls ${DST} | wc -l` -eq 12 ] && rm -f ${DST}/$(ls -tc ${DST} | head -n 1)
+    ### Remove oldest monthly backup if there are 12 or more
+    [ `ls ${DST} | wc -l` -gt 11 ] && rm -f ${DST}/$(ls -t ${DST} | tail -n 1)
 
     ### Copy oldest weekly backup (if one exists) into monthly backups
-    [ `ls ${SRC} | wc -l` -gt 0 ] && cp ${SRC}/$(ls -tc ${SRC} | head -n 1) ${DST}
+    [ `ls ${SRC} | wc -l` -gt 0 ] && cp ${SRC}/$(ls -t ${SRC} | tail -n 1) ${DST}
