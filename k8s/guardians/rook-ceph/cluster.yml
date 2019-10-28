@@ -44,3 +44,9 @@ spec:
       requests:
         <<: *resources
         cpu: 25m
+    prepareosd:
+      limits:
+        cpu: 250m
+        memory: 1Gi
+      requests:
+        <<: *resources
