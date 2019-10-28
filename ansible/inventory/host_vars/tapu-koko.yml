@@ -1,9 +1,9 @@
 ---
 k3s_command: server
 k3s_command_args:
-  - --no-deploy coredns,local-storage,traefik
+  - --no-deploy coredns
+  - --no-deploy traefik
   - --no-flannel
-  - --node-external-ip {{ ansible_facts.default_ipv4.address }}
   - --node-name {{ inventory_hostname }}
 root_password: !vault |
   $ANSIBLE_VAULT;1.1;AES256
