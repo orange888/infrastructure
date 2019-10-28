@@ -188,7 +188,7 @@ metadata:
     fluxcd.io/tag.vault-agent: semver:~1
     fluxcd.io/automated: "true"
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       <<: *labels
