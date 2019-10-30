@@ -13,12 +13,12 @@ spec:
   type: LoadBalancer
   externalTrafficPolicy: Cluster
   ports:
-    - name: http
-      port: 80
-      targetPort: http
-    - name: https
-      port: 443
-      targetPort: https
+  - name: http
+    port: 80
+    targetPort: http
+  - name: https
+    port: 443
+    targetPort: https
   selector:
     <<: *labels
 
@@ -34,9 +34,9 @@ metadata:
 spec:
   clusterIP: None
   ports:
-    - name: api
-      port: 8080
-      targetPort: api
+  - name: api
+    port: 8080
+    targetPort: api
   selector:
     <<: *labels
 
@@ -116,67 +116,67 @@ spec:
     spec:
       serviceAccountName: traefik
       containers:
-        - name: traefik
-          image: traefik:v2.0.2
-          args:
-            - --configFile=/config/traefik.yml
-          env:
-            - name: CF_API_EMAIL
-              value: vault:secrets/data/cloudflare#api_email
-            - name: CF_API_KEY
-              value: vault:secrets/data/cloudflare#api_key
-          ports:
-            - name: http
-              containerPort: 80
-            - name: https
-              containerPort: 443
-            - name: api
-              containerPort: 8080
-          livenessProbe: &probe
-            httpGet:
-              path: /ping
-              port: 8080
-            initialDelaySeconds: 10
-            periodSeconds: 10
-            timeoutSeconds: 2
-            successThreshold: 1
-            failureThreshold: 3
-          readinessProbe:
-            <<: *probe
-          resources:
-            limits: &resources
-              cpu: 250m
-              memory: 64Mi
-            requests:
-              <<: *resources
-          volumeMounts:
-            - name: acme
-              mountPath: /acme
-            - name: tls
-              mountPath: /tls
-              readOnly: true
-            - name: config
-              mountPath: /config
-              readOnly: true
-      volumes:
-        - name: tls
-          secret:
-            secretName: traefik-default-cert
-            defaultMode: 0400
-        - name: config
-          configMap:
-            name: traefik
-  volumeClaimTemplates:
-    - metadata:
-        name: acme
-        labels:
-          <<: *labels
-      spec:
-        accessModes:
-          - ReadWriteOnce
+      - name: traefik
+        image: traefik:v2.0.4
+        args:
+        - --configFile=/config/traefik.yml
+        env:
+        - name: CF_API_EMAIL
+          value: vault:secrets/data/cloudflare#api_email
+        - name: CF_API_KEY
+          value: vault:secrets/data/cloudflare#api_key
+        ports:
+        - name: http
+          containerPort: 80
+        - name: https
+          containerPort: 443
+        - name: api
+          containerPort: 8080
+        livenessProbe: &probe
+          httpGet:
+            path: /ping
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 10
+          timeoutSeconds: 2
+          successThreshold: 1
+          failureThreshold: 3
+        readinessProbe:
+          <<: *probe
         resources:
+          limits: &resources
+            cpu: 250m
+            memory: 64Mi
           requests:
-            storage: 100Mi
+            <<: *resources
+        volumeMounts:
+        - name: acme
+          mountPath: /acme
+        - name: tls
+          mountPath: /tls
+          readOnly: true
+        - name: config
+          mountPath: /config
+          readOnly: true
+      volumes:
+      - name: tls
+        secret:
+          secretName: traefik-default-cert
+          defaultMode: 0400
+      - name: config
+        configMap:
+          name: traefik
+  volumeClaimTemplates:
+  - metadata:
+      name: acme
+      labels:
+        <<: *labels
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 100Mi
 ---
 apiVersion: traefik.containo.us/v1alpha1
 kind: Middleware
@@ -201,16 +201,16 @@ metadata:
     app.kubernetes.io/name: traefik
 spec:
   entryPoints:
-    - http
+  - http
   routes:
-    - match: Host(`traefik.hannahs.family`)
-      kind: Rule
-      middlewares:
-        - name: https-redirect
-          namespace: default
-      services:
-        - name: traefik-api
-          port: 8080
+  - match: Host(`traefik.hannahs.family`)
+    kind: Rule
+    middlewares:
+    - name: https-redirect
+      namespace: default
+    services:
+    - name: traefik-api
+      port: 8080
 ---
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
@@ -222,18 +222,18 @@ metadata:
     app.kubernetes.io/name: traefik
 spec:
   entryPoints:
-    - https
+  - https
   routes:
-    - match: Host(`traefik.hannahs.family`)
-      kind: Rule
-      middlewares:
-        - name: traefik-auth-redirect
-          namespace: default
-        - name: oauth2-proxy
-          namespace: default
-      services:
-        - name: traefik-api
-          port: 8080
+  - match: Host(`traefik.hannahs.family`)
+    kind: Rule
+    middlewares:
+    - name: traefik-auth-redirect
+      namespace: default
+    - name: oauth2-proxy
+      namespace: default
+    services:
+    - name: traefik-api
+      port: 8080
   tls:
     certResolver: default
 ---
@@ -247,11 +247,11 @@ metadata:
     app.kubernetes.io/instance: traefik
 spec:
   endpoints:
-    - interval: 30s
-      port: api
+  - interval: 30s
+    port: api
   namespaceSelector:
     matchNames:
-      - default
+    - default
   selector:
     matchLabels:
       <<: *labels
@@ -268,35 +268,35 @@ metadata:
     prometheus: k8s
 spec:
   groups:
-    - name: traefik.rules
-      rules:
-        - expr: |
-            histogram_quantile(0.99, sum(rate(traefik_entrypoint_request_duration_seconds_bucket[5m])) by (code, entrypoint, method, le))
-          labels:
-            quantile: "0.99"
-          record: traefik:entrypoint:request_duration_seconds:histogram_quantile
-        - expr: |
-            histogram_quantile(0.9, sum(rate(traefik_entrypoint_request_duration_seconds_bucket[5m])) by (code, entrypoint, method, le))
-          labels:
-            quantile: "0.9"
-          record: traefik:entrypoint:request_duration_seconds:histogram_quantile
-        - expr: |
-            histogram_quantile(0.5, sum(rate(traefik_entrypoint_request_duration_seconds_bucket[5m])) by (code, entrypoint, method, le))
-          labels:
-            quantile: "0.5"
-          record: traefik:entrypoint:request_duration_seconds:histogram_quantile
-        - expr: |
-            histogram_quantile(0.99, sum(rate(traefik_service_request_duration_seconds_bucket[5m])) by (code, exported_service, method, le))
-          labels:
-            quantile: "0.99"
-          record: traefik:service:request_duration_seconds:histogram_quantile
-        - expr: |
-            histogram_quantile(0.9, sum(rate(traefik_service_request_duration_seconds_bucket[5m])) by (code, exported_service, method, le))
-          labels:
-            quantile: "0.9"
-          record: traefik:service:request_duration_seconds:histogram_quantile
-        - expr: |
-            histogram_quantile(0.5, sum(rate(traefik_service_request_duration_seconds_bucket[5m])) by (code, exported_service, method, le))
-          labels:
-            quantile: "0.5"
-          record: traefik:service:request_duration_seconds:histogram_quantile
+  - name: traefik.rules
+    rules:
+    - expr: |
+        histogram_quantile(0.99, sum(rate(traefik_entrypoint_request_duration_seconds_bucket[5m])) by (code, entrypoint, method, le))
+      labels:
+        quantile: "0.99"
+      record: traefik:entrypoint:request_duration_seconds:histogram_quantile
+    - expr: |
+        histogram_quantile(0.9, sum(rate(traefik_entrypoint_request_duration_seconds_bucket[5m])) by (code, entrypoint, method, le))
+      labels:
+        quantile: "0.9"
+      record: traefik:entrypoint:request_duration_seconds:histogram_quantile
+    - expr: |
+        histogram_quantile(0.5, sum(rate(traefik_entrypoint_request_duration_seconds_bucket[5m])) by (code, entrypoint, method, le))
+      labels:
+        quantile: "0.5"
+      record: traefik:entrypoint:request_duration_seconds:histogram_quantile
+    - expr: |
+        histogram_quantile(0.99, sum(rate(traefik_service_request_duration_seconds_bucket[5m])) by (code, exported_service, method, le))
+      labels:
+        quantile: "0.99"
+      record: traefik:service:request_duration_seconds:histogram_quantile
+    - expr: |
+        histogram_quantile(0.9, sum(rate(traefik_service_request_duration_seconds_bucket[5m])) by (code, exported_service, method, le))
+      labels:
+        quantile: "0.9"
+      record: traefik:service:request_duration_seconds:histogram_quantile
+    - expr: |
+        histogram_quantile(0.5, sum(rate(traefik_service_request_duration_seconds_bucket[5m])) by (code, exported_service, method, le))
+      labels:
+        quantile: "0.5"
+      record: traefik:service:request_duration_seconds:histogram_quantile
