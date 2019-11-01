@@ -3,7 +3,7 @@ apt_unattended_upgrades: true
 dns_records:
   guardians:
     type: A
-    value: "{{ ansible_facts.default_ipv4.address }}"
+    value: "{{ ansible_facts.ens3.ipv4.address }}"
     solo: false
     zone: hannahs.family
 k3s_cluster_name: guardians
@@ -24,8 +24,8 @@ k3s_cluster_secret: !vault |
   6161
 k3s_command: agent
 k3s_command_args:
-  - --no-flannel
-  - --node-name {{ inventory_hostname }}
+  - --node-external-ip={{ ansible_facts.ens3.ipv4.address }}
+  - --node-name={{ inventory_hostname }}
 k3s_url: https://tapu-koko.hannahs.family:6443
 wireguard_group: guardians
 cloudflare:
