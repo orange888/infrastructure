@@ -4,7 +4,7 @@ k3s_command_args:
   - --flannel-backend=wireguard
   - --no-deploy=coredns,traefik
   - --node-external-ip={{ ansible_facts.ens3.ipv4.address }}
-  - --node-name={{ inventory_hostname }}
+  - --node-name={{ ansible_facts.nodename }}
 root_password: !vault |
   $ANSIBLE_VAULT;1.1;AES256
   61633830666532383134333561653838363337393836353663303561343764313566303264316237
