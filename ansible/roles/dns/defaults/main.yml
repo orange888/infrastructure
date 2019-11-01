@@ -3,6 +3,6 @@ dns_records:
   self:
     record: "{{ ansible_facts.hostname }}"
     type: A
-    value: "{{ ansible_facts.default_ipv4.address }}"
+    value: "{{ ansible_facts.ens3.ipv4.address }}"
     solo: true
     zone: "{{ ansible_facts.domain }}"
