@@ -1,8 +1,8 @@
 ---
 k3s_command: server
 k3s_command_args:
-  - --flannel-backend=wireguard
   - --no-deploy=coredns,traefik
+  - --no-flannel
   - --node-external-ip={{ ansible_facts.ens3.ipv4.address }}
   - --node-name={{ ansible_facts.nodename }}
 root_password: !vault |
