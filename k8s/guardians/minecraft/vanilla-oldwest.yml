@@ -1,0 +1,145 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: vanilla-oldwest
+  namespace: minecraft
+  labels:
+    app.kubernetes.io/instance: vanilla-oldwest
+    app.kubernetes.io/name: minecraft
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vanilla-oldwest
+  namespace: minecraft
+  labels:
+    app.kubernetes.io/instance: vanilla-oldwest
+    app.kubernetes.io/name: minecraft
+data:
+  eula.txt: |
+    eula=true
+  server.properties: |
+    difficulty=normal
+    enforce-whitelist=true
+    motd=Hannah Family Minecraft - Vanilla (oldwest)
+    enable-rcon=true
+  whitelist.json: |
+    [
+      {
+        "uuid": "aedf3044-aaed-40cf-8ac3-2eb19ea89e59",
+        "name": "FragPenguin"
+      },
+      {
+        "uuid": "11d158b7-df6d-409c-a6a4-39afc5ec3985",
+        "name": "Jay51617"
+      },
+      {
+        "uuid": "f63dcac9-344f-4dcf-a7e9-68005d6ac204",
+        "name": "Koji31"
+      }
+    ]
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vanilla-oldwest
+  namespace: minecraft
+  labels: &labels
+    app.kubernetes.io/instance: vanilla-oldwest
+    app.kubernetes.io/name: minecraft
+    app.kubernetes.io/component: server
+  annotations:
+    external-dns.alpha.kubernetes.io/hostname: oldwest.mc.hannahs.family
+spec:
+  clusterIP: None
+  ports:
+    - name: minecraft
+      port:  30110
+      targetPort: minecraft
+    - name: rcon
+      port:  30111
+      targetPort: rcon
+  selector:
+    <<: *labels
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: vanilla-oldwest
+  namespace: minecraft
+  labels: &labels
+    app.kubernetes.io/instance: vanilla-oldwest
+    app.kubernetes.io/name: minecraft
+    app.kubernetes.io/component: server
+spec:
+  serviceName: vanilla-oldwest
+  replicas: 1
+  selector:
+    matchLabels:
+      <<: *labels
+  template:
+    metadata:
+      labels:
+        <<: *labels
+      annotations:
+        vault.security.banzaicloud.io/vault-role: minecraft__vanilla-oldwest
+        vault.security.banzaicloud.io/vault-skip-verify: "true"
+    spec:
+      serviceAccountName: vanilla-oldwest
+      nodeSelector:
+        kubernetes.io/hostname: tapu-fini.hannahs.family
+      securityContext:
+        fsGroup: 1000
+      containers:
+        - name: minecraft
+          image: hannahsfamily/mc-server-vanilla:1.14.4-4
+          ports:
+            - name: minecraft
+              containerPort: 25565
+              hostPort: 30110
+            - name: rcon
+              containerPort: 25575
+              hostPort: 30111
+          env:
+            - name: HEAP_SIZE
+              value: "2048"
+            - name: RCON_PASSWORD
+              value: vault:secrets/data/minecraft/vanilla-oldwest#rcon_password
+          livenessProbe: &probe
+            tcpSocket:
+              port: 25565
+          readinessProbe:
+            <<: *probe
+          resources:
+            requests:
+              cpu: 1
+              memory: 2304Mi # 2Gi heap + 256Mi overhead
+            limits:
+              cpu: 2
+              memory: 2304Mi
+          volumeMounts:
+            - name: storage
+              mountPath: /opt/minecraft/config
+              subPath: config
+            - name: overrides
+              mountPath: /opt/minecraft/overrides
+            - name: storage
+              mountPath: /opt/minecraft/server
+              subPath: server
+      volumes:
+        - name: overrides
+          configMap:
+            name: vanilla-oldwest
+  volumeClaimTemplates:
+    - metadata:
+        name: storage
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 5Gi
