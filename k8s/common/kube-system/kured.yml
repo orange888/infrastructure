@@ -1,5 +1,5 @@
 ---
-apiVersion: extensions/v1beta1
+apiVersion: policy/v1beta1
 kind: PodSecurityPolicy
 metadata:
   labels:
@@ -59,7 +59,7 @@ rules:
       - delete
       - get
   - apiGroups:
-      - extensions
+      - apps
     resources:
       - daemonsets
     verbs:
@@ -100,7 +100,7 @@ metadata:
   namespace: kube-system
 rules:
   - apiGroups:
-      - extensions
+      - apps
     resourceNames:
       - kured
     resources:
@@ -108,7 +108,7 @@ rules:
     verbs:
       - update
   - apiGroups:
-      - extensions
+      - policy
     resourceNames:
       - kured
     resources:
@@ -172,8 +172,8 @@ spec:
           ports:
             - containerPort: 8080
               name: metrics
-          image: weaveworks/kured:1.2.0
-          imagePullPolicy: IfNotPresent
+          image: weaveworks/kured:master-4beddb5
+          imagePullPolicy: Always
           name: kured
           resources: null
           securityContext:
