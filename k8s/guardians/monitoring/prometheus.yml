@@ -74,15 +74,6 @@ metadata:
   name: k8s
   namespace: monitoring
 spec:
-  affinity:
-    podAntiAffinity:
-      preferredDuringSchedulingIgnoredDuringExecution:
-        - podAffinityTerm:
-            labelSelector:
-              matchLabels:
-                <<: *labels
-            topologyKey: kubernetes.io/hostname
-          weight: 1
   alerting:
     alertmanagers:
       - name: alertmanager-main
@@ -123,7 +114,9 @@ spec:
           mountPath: /var/run/secrets/vaultproject.io/vault
   podMonitorNamespaceSelector: {}
   podMonitorSelector: {}
-  replicas: 2
+  replicas: 1
+  nodeSelctor:
+    kubernetes.io/hostname: tapu-fini.hannahs.family
   resources:
     limits: &resources
       cpu: 500m
