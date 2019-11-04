@@ -131,15 +131,13 @@ metadata:
   annotations:
     external-dns.alpha.kubernetes.io/hostname: creative.mc.hannahs.family
 spec:
-  type: NodePort
+  clusterIP: None
   ports:
     - name: minecraft
-      port: 25565
-      nodePort: 30110
+      port:  30110
       targetPort: minecraft
     - name: rcon
-      port: 25575
-      nodePort: 30111
+      port:  30111
       targetPort: rcon
   selector:
     <<: *labels
@@ -186,8 +184,10 @@ spec:
           ports:
             - name: minecraft
               containerPort: 25565
+              hostPort: 30110
             - name: rcon
               containerPort: 25575
+              hostPort: 30111
           env:
             - name: HEAP_SIZE
               value: "2048"
