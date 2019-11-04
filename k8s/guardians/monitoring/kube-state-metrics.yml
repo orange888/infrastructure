@@ -3,6 +3,9 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: kube-state-metrics
+  labels: &labels
+    app.kubernetes.io/name: kube-state-metrics
+    app.kubernetes.io/instance: kube-state-metrics
 rules:
   - apiGroups:
       - ""
@@ -96,6 +99,9 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: kube-state-metrics
+  labels: &labels
+    app.kubernetes.io/name: kube-state-metrics
+    app.kubernetes.io/instance: kube-state-metrics
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -109,19 +115,21 @@ subjects:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  labels:
-    app: kube-state-metrics
+  labels: &labels
+    app.kubernetes.io/name: kube-state-metrics
+    app.kubernetes.io/instance: kube-state-metrics
+    k8s-app: kube-state-metrics
   name: kube-state-metrics
   namespace: monitoring
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: kube-state-metrics
+      <<: *labels
   template:
     metadata:
       labels:
-        app: kube-state-metrics
+        <<: *labels
     spec:
       containers:
         - args:
@@ -151,6 +159,9 @@ kind: Role
 metadata:
   name: kube-state-metrics
   namespace: monitoring
+  labels: &labels
+    app.kubernetes.io/name: kube-state-metrics
+    app.kubernetes.io/instance: kube-state-metrics
 rules:
   - apiGroups:
       - ""
@@ -183,6 +194,9 @@ kind: RoleBinding
 metadata:
   name: kube-state-metrics
   namespace: monitoring
+  labels: &labels
+    app.kubernetes.io/name: kube-state-metrics
+    app.kubernetes.io/instance: kube-state-metrics
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -195,10 +209,12 @@ subjects:
 apiVersion: v1
 kind: Service
 metadata:
-  labels:
-    k8s-app: kube-state-metrics
   name: kube-state-metrics
   namespace: monitoring
+  labels: &labels
+    app.kubernetes.io/name: kube-state-metrics
+    app.kubernetes.io/instance: kube-state-metrics
+    k8s-app: kube-state-metrics
 spec:
   ports:
     - name: http-main
@@ -208,7 +224,7 @@ spec:
       port: 8082
       targetPort: http-self
   selector:
-    app: kube-state-metrics
+    <<: *labels
 
 ---
 apiVersion: v1
@@ -221,10 +237,12 @@ metadata:
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  labels:
-    k8s-app: kube-state-metrics
   name: kube-state-metrics
   namespace: monitoring
+  labels: &labels
+    app.kubernetes.io/name: kube-state-metrics
+    app.kubernetes.io/instance: kube-state-metrics
+    k8s-app: kube-state-metrics
 spec:
   endpoints:
     - honorLabels: true
@@ -239,4 +257,4 @@ spec:
   jobLabel: k8s-app
   selector:
     matchLabels:
-      k8s-app: kube-state-metrics
+      <<: *labels
