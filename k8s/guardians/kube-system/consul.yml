@@ -192,6 +192,7 @@ spec:
         labels:
           <<: *labels
       spec:
+        storageClassName: fast
         accessModes:
           - ReadWriteOnce
         resources:

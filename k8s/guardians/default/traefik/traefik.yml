@@ -167,16 +167,17 @@ spec:
         configMap:
           name: traefik
   volumeClaimTemplates:
-  - metadata:
-      name: acme
-      labels:
-        <<: *labels
-    spec:
-      accessModes:
-      - ReadWriteOnce
-      resources:
-        requests:
-          storage: 100Mi
+    - metadata:
+        name: acme
+        labels:
+          <<: *labels
+      spec:
+        storageClassName: fast
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 100Mi
 ---
 apiVersion: traefik.containo.us/v1alpha1
 kind: Middleware
