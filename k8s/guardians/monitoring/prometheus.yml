@@ -53,7 +53,7 @@ data:
       method "kubernetes" {
         mount_path = "auth/kubernetes"
         config = {
-          role = "prometheus"
+          role = "monitoring__prometheus"
         }
       }
 

@@ -164,7 +164,7 @@ spec:
       labels:
         <<: *labels
       annotations:
-        vault.security.banzaicloud.io/vault-role: external-dns
+        vault.security.banzaicloud.io/vault-role: kube-system__external-dns
         vault.security.banzaicloud.io/vault-skip-verify: "true"
     spec:
       serviceAccountName: external-dns

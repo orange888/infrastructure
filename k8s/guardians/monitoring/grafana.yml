@@ -25,7 +25,7 @@ data:
     }
   grafana.ini.tpl: |
     [security]
-    {{- with secret "secrets/grafana/admin" }}
+    {{- with secret "secrets/monitoring/grafana" }}
     admin_password = {{ .Data.data.admin_password }}
     {{ end  }}
 
@@ -35,7 +35,7 @@ data:
     [database]
     type = postgres
     host = postgres.default.svc:5432
-    {{- with secret "database/creds/grafana" }}
+    {{- with secret "database/creds/monitoring__grafana" }}
     user = {{ .Data.username }}
     password = {{ .Data.password }}
     {{ end }}
@@ -52,7 +52,7 @@ data:
     [auth.github]
     enabled = true
     allow_sign_up = true
-    {{- with secret "secrets/grafana/auth/github" }}
+    {{- with secret "secrets/monitoring/grafana/auth/github" }}
     client_id = {{ .Data.data.client_id }}
     client_secret = {{ .Data.data.client_secret }}
     {{ end }}
@@ -78,7 +78,7 @@ data:
       method "kubernetes" {
         mount_path = "auth/kubernetes"
         config = {
-          role = "grafana"
+          role = "monitoring__grafana"
         }
       }
 

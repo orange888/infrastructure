@@ -153,7 +153,7 @@ spec:
             - name: HEAP_SIZE
               value: "2048"
             - name: RCON_PASSWORD
-              value: vault:secrets/data/minecraft/vanilla/rcon#rcon_password
+              value: vault:secrets/data/minecraft/vanilla#rcon_password
           livenessProbe: &probe
             tcpSocket:
               port: 25565

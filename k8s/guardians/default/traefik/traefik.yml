@@ -111,7 +111,7 @@ spec:
       labels:
         <<: *labels
       annotations:
-        vault.security.banzaicloud.io/vault-role: traefik
+        vault.security.banzaicloud.io/vault-role: default__traefik
         vault.security.banzaicloud.io/vault-skip-verify: "true"
     spec:
       serviceAccountName: traefik

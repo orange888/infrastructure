@@ -70,7 +70,7 @@ spec:
       labels:
         <<: *labels
       annotations:
-        vault.security.banzaicloud.io/vault-role: oauth2-proxy
+        vault.security.banzaicloud.io/vault-role: default__oauth2-proxy
         vault.security.banzaicloud.io/vault-skip-verify: "true"
     spec:
       serviceAccountName: oauth2-proxy
@@ -84,11 +84,11 @@ spec:
             - --config=/etc/oauth2_proxy/oauth2_proxy.cfg
           env:
             - name: OAUTH2_PROXY_CLIENT_ID
-              value: vault:secrets/data/oauth2-proxy#client_id
+              value: vault:secrets/data/default/oauth2-proxy#client_id
             - name: OAUTH2_PROXY_CLIENT_SECRET
-              value: vault:secrets/data/oauth2-proxy#client_secret
+              value: vault:secrets/data/default/oauth2-proxy#client_secret
             - name: OAUTH2_PROXY_COOKIE_SECRET
-              value: vault:secrets/data/oauth2-proxy#cookie_secret
+              value: vault:secrets/data/default/oauth2-proxy#cookie_secret
           ports:
             - containerPort: 4180
               name: http
