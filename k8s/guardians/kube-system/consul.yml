@@ -26,9 +26,9 @@ data:
   consul.hcl: |
     data_dir = "/var/lib/consul"
     retry_join = [
-      "consul-0.consul.kube-system.svc",
-      "consul-1.consul.kube-system.svc",
-      "consul-2.consul.kube-system.svc"
+      "consul-0.consul",
+      "consul-1.consul",
+      "consul-2.consul"
     ]
 
 ---
@@ -160,7 +160,7 @@ spec:
               protocol: UDP
           resources:
             limits: &resources
-              cpu: 50m
+              cpu: 150m
               memory: 128Mi
             requests:
               <<: *resources
