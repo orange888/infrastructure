@@ -126,6 +126,12 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: status.podIP
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - consul
+                  - leave
           livenessProbe:
             exec:
               command:
