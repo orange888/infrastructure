@@ -13,7 +13,6 @@ def status(c,
            ]),
            namespace="kube-system",
            vault_pods=[]):
-    print(labels)
     if len(vault_pods) == 0:
         vault_pods = _get_vault_pods(c, labels, namespace)
 
@@ -80,7 +79,6 @@ def _get_vault_pods(c, labels, namespace):
         "kubectl", "get", "pod", "-n", namespace, "-l", labels, "-o", "name"
     ]
     vault_pods = c.run(" ".join(pods_cmd), hide=True).stdout.splitlines()
-    print(vault_pods)
 
     return sorted(vault_pods)
 
