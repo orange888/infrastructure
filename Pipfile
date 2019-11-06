@@ -9,7 +9,7 @@ yapf = "*"
 importmagic = "*"
 
 [packages]
-ansible = "*"
+hannah-family-infrastructure = {editable = true,path = "."}
 invoke = "*"
 passlib = "*"
 pyyaml = "*"
