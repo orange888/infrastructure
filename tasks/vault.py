@@ -7,15 +7,19 @@ from invoke import Collection, task
 @task(default=True, iterable=["vault_pods"])
 def status(c,
            container="vault",
-           name="vault",
+           labels=",".join([
+               "app.kubernetes.io/name=vault",
+               "app.kubernetes.io/instance=vault"
+           ]),
            namespace="kube-system",
            vault_pods=[]):
+    print(labels)
     if len(vault_pods) == 0:
-        vault_pods = _get_vault_pods(c, name, namespace)
+        vault_pods = _get_vault_pods(c, labels, namespace)
 
     cmd = [
         "kubectl", "exec", "-n", namespace, "{vault_pod}", "-c", container,
-        "--", "vault", "status", "-tls-skip-verify"
+        "--", "vault", "status"
     ]
 
     for vault_pod in vault_pods:
@@ -27,7 +31,7 @@ def status(c,
     help={
         "cluster": "Kubernetes cluster name",
         "container": "Vault server container name",
-        "name": "Vault pod base name",
+        "labels": "Vault pod selector labels",
         "namespace": "Namespace of Vault deployment",
         "pgp_decrypt_cmd":
         "Command that takes a PGP-encrypted unseal key on STDIN and puts the decrypted key to STDOUT",
@@ -36,14 +40,17 @@ def status(c,
 def unseal(c,
            cluster="guardians",
            container="vault",
-           name="vault",
+           labels=",".join([
+               "app.kubernetes.io/name=vault",
+               "app.kubernetes.io/instance=vault"
+           ]),
            namespace="kube-system",
            pgp_decrypt_cmd="keybase pgp decrypt",
            vault_pods=[]):
     """Find and unseal all Vault pods in the cluster
     """
     if len(vault_pods) == 0:
-        vault_pods = _get_vault_pods(c, name, namespace)
+        vault_pods = _get_vault_pods(c, labels, namespace)
 
     unseal_keys_path = Path.cwd().joinpath("ansible", "files", cluster,
                                            "vault").glob("unseal_key_*.pgp")
@@ -52,7 +59,7 @@ def unseal(c,
     decode_cmd = ["base64", "--decode"]
     unseal_cmd = [
         "xargs", "-o", "kubectl", "exec", "-n", namespace, "{vault_pod}", "-c",
-        container, "--", "vault", "operator", "unseal", "-tls-skip-verify"
+        container, "--", "vault", "operator", "unseal"
     ]
 
     fmt_cmd = " | ".join(
@@ -68,12 +75,14 @@ def unseal(c,
         c.run(cmd)
 
 
-def _get_vault_pods(c, name, namespace):
-    pods_cmd = ["kubectl", "get", "pod", "-n", namespace, "-o", "name"]
-    all_pods = c.run(" ".join(pods_cmd), hide=True).stdout.splitlines()
+def _get_vault_pods(c, labels, namespace):
+    pods_cmd = [
+        "kubectl", "get", "pod", "-n", namespace, "-l", labels, "-o", "name"
+    ]
+    vault_pods = c.run(" ".join(pods_cmd), hide=True).stdout.splitlines()
+    print(vault_pods)
 
-    pod_name_pattern = compile(r"pod/{}-".format(name))
-    return sorted(filter(pod_name_pattern.findall, all_pods))
+    return sorted(vault_pods)
 
 
 vault = Collection("vault")
