@@ -1,1 +1,3 @@
 .ansible-password filter=git-crypt diff=git-crypt
+.ssh/id_ed25519 filter=git-crypt diff=git-crypt
+ca/*-key.pem filter=git-crypt diff=git-crypt
