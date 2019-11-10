@@ -33,7 +33,6 @@ spec:
   storageSpec:
     volumeClaimTemplate:
       spec:
-        storageClassName: fast
         accessModes:
           - ReadWriteOnce
         resources:
