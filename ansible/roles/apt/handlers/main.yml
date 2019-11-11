@@ -2,3 +2,4 @@
 - name: Reboot
   become: true
   reboot:
+  when: apt_do_reboot

@@ -1,4 +1,5 @@
 ---
+apt_do_reboot: false
 apt_do_upgrade: false
 apt_reboot_sentinel: /var/run/reboot-required
 apt_unattended_upgrades: false
