@@ -58,6 +58,9 @@ class Loader:
 
         return self._variables
 
+    def get_hosts(self, pattern='all', source=None):
+        return self._get_inventory(source).get_hosts(pattern)
+
     def get_host(self, hostname, source=None):
         return self._get_inventory(source).get_host(hostname)
 

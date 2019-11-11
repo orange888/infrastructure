@@ -5,12 +5,15 @@ from .agent import SSHAgent
 
 
 @contextmanager
-def ssh_agent(key_path: str):
+def ssh_agent(key_path: str = None, agent: SSHAgent = None):
     """Provides an ssh-agent instance to the wrapped block."""
-    key_file = Path(key_path).resolve()
-    agent = SSHAgent.start(key_file)
+    start_agent = (agent is None)
+    if start_agent:
+        key_file = Path(key_path or ".ssh/id_ed25519").resolve()
+        agent = SSHAgent.start(key_file)
 
     try:
         yield agent
     finally:
-        agent.stop()
+        if start_agent:
+            agent.stop()

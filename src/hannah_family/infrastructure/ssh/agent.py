@@ -1,9 +1,9 @@
-import os
-import subprocess
+from os import environ
 from pathlib import Path
+from subprocess import DEVNULL, check_output
 from typing import Dict
 
-from ..utils import parse_env
+from ..utils import parse_env, run
 
 
 class SSHAgent:
@@ -12,7 +12,7 @@ class SSHAgent:
         self.agent_env = agent_env
         self.pid = agent_env["SSH_AGENT_PID"]
         self.environ = {}
-        self.environ.update(os.environ)
+        self.environ.update(environ)
         self.environ.update(agent_env)
 
     def __enter__(self):
@@ -24,7 +24,7 @@ class SSHAgent:
     @classmethod
     def start(cls, key_file: Path = None):
         """Starts a new ssh-agent for the current process."""
-        output = subprocess.check_output(["ssh-agent", "-s"]).decode("ascii")
+        output = check_output(["ssh-agent", "-s"]).decode("ascii")
         agent_env = parse_env(output)
         agent = cls(agent_env)
 
@@ -35,11 +35,11 @@ class SSHAgent:
 
     def add_key(self, file: Path):
         """Adds a key to the ssh-agent."""
-        subprocess.check_call(["ssh-add", str(file.resolve())],
-                              env=self.environ,
-                              stdout=subprocess.DEVNULL,
-                              stderr=subprocess.DEVNULL)
+        run(["ssh-add", str(file.resolve())],
+            env=self.environ,
+            stdout=DEVNULL,
+            stderr=DEVNULL)
 
     def stop(self):
         """Kills the running ssh-agent."""
-        subprocess.check_call(["kill", self.pid])
+        run(["kill", self.pid])

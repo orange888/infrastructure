@@ -1,6 +1,4 @@
 ---
-- import_playbook: ssh.yml
-
 - hosts: guardians
   roles:
     - wireguard
