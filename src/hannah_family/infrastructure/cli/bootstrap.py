@@ -2,7 +2,7 @@ from click import ClickException, Context, argument, command, pass_context
 
 from hannah_family.infrastructure.ansible.host import InvalidHostNameError
 from hannah_family.infrastructure.ansible.playbook import run_playbook
-from hannah_family.infrastructure.ssh import ssh_agent
+from hannah_family.infrastructure.ssh.agent import SSHAgent
 
 
 @command(context_settings={
@@ -14,7 +14,7 @@ from hannah_family.infrastructure.ssh import ssh_agent
 def bootstrap(ctx: Context, hostnames):
     """Bootstrap a host or hosts."""
     try:
-        with ssh_agent() as agent:
+        with SSHAgent() as agent:
             run_playbook("bootstrap",
                          agent=agent,
                          hostnames=hostnames,

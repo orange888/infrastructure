@@ -1,17 +1,17 @@
 from pathlib import Path
 
-from hannah_family.infrastructure.utils import run
+from hannah_family.infrastructure.utils.subprocess import run
 
-from . import ssh_agent
+from .agent import SSHAgent
 
 
-def open_session(user, hostname, args=[], env={}):
+async def open_session(user, hostname, args=[], env={}):
+    config_path = Path.cwd().joinpath(".ssh", "config").resolve()
     cmd = [
         "ssh", "-F",
-        Path.cwd().joinpath(".ssh", "config").resolve(), *args,
-        "{}@{}".format(user, hostname)
+        str(config_path), *args, "{}@{}".format(user, hostname)
     ]
 
-    with ssh_agent() as agent:
-        agent.environ.update(env)
-        run(cmd, env=agent.environ)
+    async with SSHAgent(env) as agent:
+        proc = await run(*cmd, env=agent.env())
+        await proc.wait()

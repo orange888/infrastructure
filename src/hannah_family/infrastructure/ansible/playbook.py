@@ -1,8 +1,7 @@
 from pathlib import Path
-from pprint import pprint
 
-from hannah_family.infrastructure.ssh import ssh_agent
-from hannah_family.infrastructure.utils import run
+from hannah_family.infrastructure.ssh.agent import SSHAgent
+from hannah_family.infrastructure.utils.subprocess import run
 
 from .host import InvalidHostNameError
 from .loader import Loader
@@ -15,7 +14,7 @@ class InvalidPlaybookName(Exception):
     pass
 
 
-def run_playbook(playbook, agent=None, hostnames=[], args=[], env={}):
+async def run_playbook(playbook, agent=None, hostnames=[], args=[], env={}):
     """Run the named playbook.
 
     A process-local ssh-agent instance is started and loaded with the common
@@ -38,11 +37,18 @@ def run_playbook(playbook, agent=None, hostnames=[], args=[], env={}):
                 raise InvalidHostNameError(hostname)
 
     cmd = [
-        "pipenv", "run", "ansible-playbook", playbook_path, *args, "-l",
-        ",".join(hostnames)
+        "pipenv", "run", "ansible-playbook",
+        str(playbook_path), *args, "-l", ",".join(hostnames)
     ]
+    cmd_env = {}
+    cmd_env.update(DEFAULT_ENV)
+    cmd_env.update(env)
 
-    with ssh_agent(agent=agent) as agent:
-        agent.environ.update(DEFAULT_ENV)
-        agent.environ.update(env)
-        return run(cmd, env=agent.environ)
+    if agent is None:
+        agent = SSHAgent(env=cmd_env)
+    else:
+        agent.update(cmd_env)
+
+    async with agent:
+        proc = await run(*cmd, env=agent.env())
+        await proc.wait()
