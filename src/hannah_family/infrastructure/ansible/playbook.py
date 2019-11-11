@@ -1,4 +1,5 @@
 from pathlib import Path
+from pprint import pprint
 
 from hannah_family.infrastructure.ssh import ssh_agent
 from hannah_family.infrastructure.utils import run
@@ -26,16 +27,20 @@ def run_playbook(playbook, agent=None, hostnames=[], args=[], env={}):
         raise InvalidPlaybookName(playbook)
 
     loader = Loader()
-    inventory_hosts = loader.get_hosts()
+    inventory_hosts = map(lambda host: host.name, loader.get_hosts())
 
     if len(hostnames) == 0:
         hostnames = inventory_hosts
     else:
+        hostnames = list(hostnames)
         for hostname in hostnames:
             if hostname not in inventory_hosts:
                 raise InvalidHostNameError(hostname)
 
-    cmd = ["pipenv", "run", "ansible-playbook", playbook_path, *args]
+    cmd = [
+        "pipenv", "run", "ansible-playbook", playbook_path, *args, "-l",
+        ",".join(hostnames)
+    ]
 
     with ssh_agent(agent=agent) as agent:
         agent.environ.update(DEFAULT_ENV)

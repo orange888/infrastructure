@@ -1,6 +1,6 @@
 from click import Context, group, pass_context
 
-from .ansible import ansible
+from .ansible import ansible, playbook
 from .bootstrap import bootstrap
 from .ssh import ssh
 
@@ -13,4 +13,5 @@ def cli(ctx: Context):
 
 cli.add_command(ansible)
 cli.add_command(bootstrap)
+cli.add_command(playbook)
 cli.add_command(ssh)
