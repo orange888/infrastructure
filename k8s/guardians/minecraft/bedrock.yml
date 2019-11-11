@@ -78,8 +78,6 @@ spec:
         <<: *labels
     spec:
       serviceAccountName: bedrock
-      nodeSelector:
-        kubernetes.io/hostname: tapu-bulu.hannahs.family
       containers:
         - name: minecraft
           image: roemer/bedrock-server:1.13.0.34

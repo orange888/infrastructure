@@ -682,8 +682,6 @@ spec:
               name: config
             - mountPath: /data
               name: storage
-              subPath:
-      nodeSelector: {}
       securityContext:
         fsGroup: 10001
         runAsGroup: 10001

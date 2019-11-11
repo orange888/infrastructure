@@ -91,8 +91,6 @@ spec:
         vault.security.banzaicloud.io/vault-skip-verify: "true"
     spec:
       serviceAccountName: vanilla-creative
-      nodeSelector:
-        kubernetes.io/hostname: tapu-bulu.hannahs.family
       securityContext:
         fsGroup: 1000
       containers:
