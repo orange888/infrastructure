@@ -110,6 +110,8 @@ spec:
           livenessProbe: &probe
             tcpSocket:
               port: 25565
+            initialDelaySeconds: 60
+            periodSeconds: 30
           readinessProbe:
             <<: *probe
           resources:
