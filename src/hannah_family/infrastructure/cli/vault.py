@@ -6,8 +6,8 @@ from hannah_family.infrastructure.k8s.pods import get_pods
 from hannah_family.infrastructure.utils.click import AsyncGroup, async_command
 from hannah_family.infrastructure.utils.subprocess import run_batch
 from hannah_family.infrastructure.vault import (VAULT_DEFAULT_LABELS,
-                                                run_kubectl)
-from hannah_family.infrastructure.vault.commands import unseal
+                                                decrypt_file, run_kubectl)
+from hannah_family.infrastructure.vault.commands import login, unseal
 
 
 class Vault(AsyncGroup):
@@ -56,3 +56,16 @@ async def vault_unseal(ctx: Context, pods=[]):
                         pods=pods,
                         namespace="kube-system",
                         container="vault")
+
+
+@vault.async_command(name="login")
+@argument("pods", nargs=-1)
+@pass_context
+async def vault_login(ctx: Context, pods=[]):
+    """Log in to Vault from the local client using the initial root token."""
+    token_path = Path.cwd().joinpath("vault", "initial_root_token.pgp")
+    token = await decrypt_file(token_path)
+    return await login(token,
+                       pods=pods,
+                       namespace="kube-system",
+                       container="vault")

@@ -1,11 +1,31 @@
 from asyncio import gather
+from asyncio.subprocess import PIPE
 from pathlib import Path
 
 from hannah_family.infrastructure.k8s.kubectl import kubectl_exec
 from hannah_family.infrastructure.k8s.pods import get_pods
 from hannah_family.infrastructure.utils.subprocess import run
 
-from . import VAULT_DEFAULT_LABELS, decrypt_file
+from . import VAULT_DEFAULT_LABELS, decrypt_file, run_kubectl
+
+
+async def login(token,
+                pods=[],
+                labels=VAULT_DEFAULT_LABELS,
+                namespace=None,
+                container=None):
+    """Log in to one or more Vault pods with the given token."""
+    if len(pods) == 0:
+        pods = await get_pods(labels=labels, namespace=namespace)
+
+    procs, done = await run_kubectl("login",
+                                    "-",
+                                    pods=pods,
+                                    namespace=namespace,
+                                    container=container,
+                                    stdin=PIPE)
+    await gather(*(proc.communicate(token) for proc in procs))
+    return await done
 
 
 async def unseal(keys: [Path],
