@@ -4,7 +4,7 @@ from pathlib import Path
 
 from hannah_family.infrastructure.k8s.kubectl import kubectl_exec
 from hannah_family.infrastructure.k8s.pods import get_pods
-from hannah_family.infrastructure.utils import subprocess
+from hannah_family.infrastructure.utils.subprocess import run
 
 VAULT_DEFAULT_LABELS = {
     "app.kubernetes.io/name": "vault",
@@ -38,15 +38,15 @@ async def decrypt_file(file: Path):
     """Decrypt a base64-encoded, PGP-encrypted file with a PGP key stored in
     Keybase."""
     cat_cmd = ["cat", "{}".format(file)]
-    cat_proc = await subprocess.run(*cat_cmd, stdout=PIPE)
+    cat_proc = await run(*cat_cmd, stdout=PIPE)
     cat_stdout, cat_stderr = await cat_proc.communicate()
 
     decode_cmd = ["base64", "--decode"]
-    decode_proc = await subprocess.run(*decode_cmd, stdin=PIPE, stdout=PIPE)
+    decode_proc = await run(*decode_cmd, stdin=PIPE, stdout=PIPE)
     decode_stdout, decode_stderr = await decode_proc.communicate(cat_stdout)
 
     decrypt_cmd = ["keybase", "pgp", "decrypt"]
-    decrypt_proc = await subprocess.run(*decrypt_cmd, stdin=PIPE, stdout=PIPE)
+    decrypt_proc = await run(*decrypt_cmd, stdin=PIPE, stdout=PIPE)
     decrypt_stdout, decrypt_stderr = await decrypt_proc.communicate(
         decode_stdout)
 

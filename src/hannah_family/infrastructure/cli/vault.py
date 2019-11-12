@@ -1,13 +1,15 @@
+from asyncio import gather
 from pathlib import Path
 
 from click import Context, Group, argument, pass_context
 
 from hannah_family.infrastructure.k8s.pods import get_pods
 from hannah_family.infrastructure.utils.click import AsyncGroup, async_command
-from hannah_family.infrastructure.utils.subprocess import run_batch
+from hannah_family.infrastructure.utils.string import format_cmd
 from hannah_family.infrastructure.vault import (VAULT_DEFAULT_LABELS,
                                                 decrypt_file, run_kubectl)
-from hannah_family.infrastructure.vault.commands import login, unseal
+from hannah_family.infrastructure.vault.commands import (login, policy_write,
+                                                         unseal)
 
 
 class Vault(AsyncGroup):
@@ -69,3 +71,36 @@ async def vault_login(ctx: Context, pods=[]):
                        pods=pods,
                        namespace="kube-system",
                        container="vault")
+
+
+@vault.async_command()
+async def write_policies():
+    """Write all policies to the Vault instance."""
+    policies = Path.cwd().joinpath("vault", "policy").glob("*.hcl")
+    return await gather(*(
+        policy_write(policy, namespace="kube-system", container="vault")
+        for policy in policies))
+
+
+@vault.async_command()
+async def write_roles():
+    """Write all roles to the Vault instance."""
+    policies = Path.cwd().joinpath("vault", "policy").glob("*.hcl")
+
+    cmd = [
+        "write", "auth/kubernetes/role/{role}",
+        "bound_service_account_namespaces={namespace}",
+        "bound_service_account_names={name}", "policies={role}", "ttl=24h"
+    ]
+
+    results = await gather(*(
+        run_kubectl(*format_cmd(cmd, **_get_role_from_policy(policy)),
+                    container="vault",
+                    namespace="kube-system") for policy in policies))
+    return await gather(*(result[1] for result in results))
+
+
+def _get_role_from_policy(policy: Path):
+    stem = policy.stem
+    namespace, name = stem.split("__")
+    return {"role": stem, "namespace": namespace, "name": name}

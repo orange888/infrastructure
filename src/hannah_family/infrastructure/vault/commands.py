@@ -47,3 +47,22 @@ async def unseal(keys: [Path],
                                           container=container)
                              for key in unseal_keys))
     return await gather(*(result[1] for result in results))
+
+
+async def policy_write(policy: Path,
+                       labels=VAULT_DEFAULT_LABELS,
+                       namespace=None,
+                       container=None):
+    cat_cmd = ["cat", "{}".format(policy)]
+    cat_proc = await run(*cat_cmd, stdout=PIPE)
+    cat_stdout, cat_stderr = await cat_proc.communicate()
+
+    with open(policy, 'rb') as file:
+        procs, done = await run_kubectl("policy",
+                                        "write",
+                                        policy.stem,
+                                        "-",
+                                        namespace=namespace,
+                                        container=container,
+                                        stdin=file)
+        return await done

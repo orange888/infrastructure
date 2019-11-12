@@ -1,7 +1,6 @@
 from asyncio import Task, create_task, gather
 from asyncio.subprocess import create_subprocess_exec
 from os import environ
-from pprint import pprint
 from re import compile
 
 ENV_PATTERN = compile(r"([A-Z_]+)=([^;]+);")
@@ -36,21 +35,16 @@ async def run(*args, done_callback=_handle_task_done, **kwargs):
     return proc
 
 
-async def run_batch(cmds):
+async def run_batch(*cmds):
     """Run multiple commands simultaneously and wait for them all to
     complete, exiting if any commands exited with a nonzero return code."""
-    batches = (_run_from_batch(cmd) for cmd in cmds)
+    batches = (run(*cmd["args"], **cmd["kwargs"], done_callback=None) for cmd in cmds)
     procs = await gather(*batches)
 
     done = gather(*(proc.wait() for proc in procs))
     done.add_done_callback(_handle_batch_done)
 
     return procs, done
-
-
-def _run_from_batch(cmd: (list, dict)):
-    args, kwargs = cmd
-    return run(*args, **kwargs, done_callback=None)
 
 
 def _handle_batch_done(task: Task):

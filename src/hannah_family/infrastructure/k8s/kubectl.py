@@ -1,5 +1,6 @@
 from asyncio import gather
 
+from hannah_family.infrastructure.utils.string import format_cmd
 from hannah_family.infrastructure.utils.subprocess import run_batch
 
 
@@ -21,5 +22,8 @@ async def kubectl_exec(pods,
 
     cmd.extend(["--", command, *args])
 
-    return await run_batch(
-        ("\0".join(cmd).format(pod=pod).split("\0"), kwargs) for pod in pods)
+    cmds = [{
+        "args": format_cmd(cmd, pod=pod),
+        "kwargs": kwargs
+    } for pod in pods]
+    return await run_batch(*cmds)
