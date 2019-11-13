@@ -5,10 +5,10 @@ from click import ClickException, Context, argument, pass_context
 from hannah_family.infrastructure.ansible.host import (Host,
                                                        InvalidHostNameError)
 from hannah_family.infrastructure.ssh.session import open_session
-from hannah_family.infrastructure.utils.click import async_command
+from hannah_family.infrastructure.utils.click import command
 
 
-@async_command()
+@command()
 @argument("hostname", nargs=1, required=True)
 @pass_context
 async def ssh(ctx: Context, hostname):

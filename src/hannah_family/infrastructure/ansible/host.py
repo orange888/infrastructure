@@ -10,7 +10,9 @@ NONE_PLAY_DATA = {"name": "__None"}
 
 class InvalidHostNameError(Exception):
     """Raised when the host name does not match an inventory host entry."""
-    pass
+    def __init__(self, hostname):
+        super().__init__(
+            "No host named {} found in Ansible inventory".format(hostname))
 
 
 class Host:

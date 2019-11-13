@@ -1,10 +1,11 @@
 from asyncio import gather
 from pathlib import Path
+from subprocess import CalledProcessError
 
-from click import Context, Group, argument, pass_context
+from click import ClickException, Context, argument, pass_context
 
 from hannah_family.infrastructure.k8s.pods import get_pods
-from hannah_family.infrastructure.utils.click import AsyncGroup, async_command
+from hannah_family.infrastructure.utils.click import Group, command
 from hannah_family.infrastructure.utils.string import format_cmd
 from hannah_family.infrastructure.vault import (VAULT_DEFAULT_LABELS,
                                                 decrypt_file, run_kubectl)
@@ -12,7 +13,7 @@ from hannah_family.infrastructure.vault.commands import (login, policy_write,
                                                          unseal)
 
 
-class Vault(AsyncGroup):
+class Vault(Group):
     """Handle commands to Vault that don't have their own manually defined
     behavior by passing them to kubectl exec."""
     def get_command(self, ctx: Context, name: str):
@@ -26,11 +27,11 @@ class Vault(AsyncGroup):
         return cmd
 
     def _vault_command(self, ctx: Context, name: str):
-        @self.async_command(name=name,
-                            context_settings={
-                                "allow_extra_args": True,
-                                "ignore_unknown_options": True
-                            })
+        @self.command(name=name,
+                      context_settings={
+                          "allow_extra_args": True,
+                          "ignore_unknown_options": True
+                      })
         @pass_context
         async def cmd(ctx: Context):
             procs, done = await run_kubectl(name,
@@ -42,13 +43,13 @@ class Vault(AsyncGroup):
         return cmd
 
 
-@async_command(cls=Vault)
+@command(cls=Vault)
 @pass_context
 async def vault(ctx: Context):
     pass
 
 
-@vault.async_command(name="unseal")
+@vault.command(name="unseal")
 @argument("pods", nargs=-1)
 @pass_context
 async def vault_unseal(ctx: Context, pods=[]):
@@ -60,7 +61,7 @@ async def vault_unseal(ctx: Context, pods=[]):
                         container="vault")
 
 
-@vault.async_command(name="login")
+@vault.command(name="login")
 @argument("pods", nargs=-1)
 @pass_context
 async def vault_login(ctx: Context, pods=[]):
@@ -73,7 +74,7 @@ async def vault_login(ctx: Context, pods=[]):
                        container="vault")
 
 
-@vault.async_command()
+@vault.command()
 async def write_policies():
     """Write all policies to the Vault instance."""
     policies = Path.cwd().joinpath("vault", "policy").glob("*.hcl")
@@ -82,7 +83,7 @@ async def write_policies():
         for policy in policies))
 
 
-@vault.async_command()
+@vault.command()
 async def write_roles():
     """Write all roles to the Vault instance."""
     policies = Path.cwd().joinpath("vault", "policy").glob("*.hcl")
