@@ -16,8 +16,8 @@ async def ansible(ctx: Context):
     cmd = ["pipenv", "run", "ansible", *ctx.args]
 
     async with SSHAgent() as agent:
-        proc = await run(*cmd, env=agent.env())
-        await proc.wait()
+        proc, done = await run(*cmd, env=agent.env())
+        await done
 
 
 @command(context_settings={

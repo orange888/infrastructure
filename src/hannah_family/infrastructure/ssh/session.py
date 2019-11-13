@@ -13,5 +13,5 @@ async def open_session(user, hostname, args=[], env={}):
     ]
 
     async with SSHAgent(env) as agent:
-        proc = await run(*cmd, env=agent.env())
-        await proc.wait()
+        proc, done = await run(*cmd, env=agent.env())
+        await done

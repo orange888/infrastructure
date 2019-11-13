@@ -44,6 +44,6 @@ async def run_playbook(playbook, hostnames=[], args=[], env={}):
     cmd_env.update(DEFAULT_ENV)
     cmd_env.update(env)
 
-    async with SSHAgent(env=cmd_env):
+    async with SSHAgent(env=cmd_env) as agent:
         proc, done = await run(*cmd, env=agent.env())
         await done

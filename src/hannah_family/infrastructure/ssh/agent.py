@@ -35,12 +35,12 @@ class SSHAgent:
 
     async def add_key(self, file: Path):
         """Adds a key to the ssh-agent."""
-        proc = await run("ssh-add",
-                         str(file.resolve()),
-                         env=self._env,
-                         stdout=DEVNULL,
-                         stderr=DEVNULL)
-        await proc.wait()
+        proc, done = await run("ssh-add",
+                               str(file.resolve()),
+                               env=self._env,
+                               stdout=DEVNULL,
+                               stderr=DEVNULL)
+        return await done
 
     def env(self):
         """Get the ssh-agent environment."""
