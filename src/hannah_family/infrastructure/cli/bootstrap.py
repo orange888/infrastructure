@@ -12,19 +12,10 @@ from hannah_family.infrastructure.utils.click import command
 })
 @argument("hostnames", nargs=-1)
 @pass_context
-def bootstrap(ctx: Context, hostnames):
+async def bootstrap(ctx: Context, hostnames):
     """Bootstrap a host or hosts."""
-    try:
-        with SSHAgent() as agent:
-            run_playbook("bootstrap",
-                         agent=agent,
-                         hostnames=hostnames,
-                         args=ctx.args,
-                         env={"ANSIBLE_HOST_KEY_CHECKING": "false"})
-            run_playbook("all",
-                         agent=agent,
-                         hostnames=hostnames,
-                         args=ctx.args)
-    except InvalidHostNameError as e:
-        raise ClickException(
-            "No host named {} found in Ansible inventory".format(e))
+    await run_playbook("bootstrap",
+                       hostnames=hostnames,
+                       args=ctx.args,
+                       env={"ANSIBLE_HOST_KEY_CHECKING": "false"})
+    await run_playbook("all", hostnames=hostnames, args=ctx.args)

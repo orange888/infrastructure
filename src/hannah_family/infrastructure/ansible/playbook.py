@@ -14,7 +14,7 @@ class InvalidPlaybookName(Exception):
     pass
 
 
-async def run_playbook(playbook, agent=None, hostnames=[], args=[], env={}):
+async def run_playbook(playbook, hostnames=[], args=[], env={}):
     """Run the named playbook.
 
     A process-local ssh-agent instance is started and loaded with the common
@@ -44,11 +44,6 @@ async def run_playbook(playbook, agent=None, hostnames=[], args=[], env={}):
     cmd_env.update(DEFAULT_ENV)
     cmd_env.update(env)
 
-    if agent is None:
-        agent = SSHAgent(env=cmd_env)
-    else:
-        agent.update(cmd_env)
-
-    async with agent:
-        proc = await run(*cmd, env=agent.env())
-        await proc.wait()
+    async with SSHAgent(env=cmd_env):
+        proc, done = await run(*cmd, env=agent.env())
+        await done
