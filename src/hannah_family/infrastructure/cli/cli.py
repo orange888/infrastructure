@@ -27,26 +27,35 @@ class Group(click.Group):
         asyncio.run and exception handling."""
         return _command(super(), *args, **kwargs)
 
+    def group(self, *args, **kwargs):
+        kwargs["cls"] = Group
+        return _command(super(), *args, **kwargs)
 
-def command(*args, **kwargs):
+
+def command(name=None, cls=None, **attrs):
     """Wraps an async function as a Click command with asyncio.run and exception
     handling."""
-    return _command(click, *args, **kwargs)
+    return _command(click, name=name, cls=cls, **attrs)
 
 
-def _command(base, *args, **kwargs):
+def group(name=None, **attrs):
+    """Shortcut to add a subgroup to a group."""
+    return _command(click, name=name, cls=Group, **attrs)
+
+
+def _command(base, **attrs):
     def decorator(func):
-        @base.command(*args, **kwargs)
+        @base.command(**attrs)
         @wraps(func)
         def wrapper(*func_args, **func_kwargs):
-            return run(_wrapped_function(func, *func_args, **func_kwargs))
+            return run(_wrap_function(func, *func_args, **func_kwargs))
 
         return wrapper
 
     return decorator
 
 
-async def _wrapped_function(func, *args, **kwargs):
+async def _wrap_function(func, *args, **kwargs):
     try:
         result = func(*args, **kwargs)
 
@@ -58,3 +67,9 @@ async def _wrapped_function(func, *args, **kwargs):
         raise ClickCalledProcessError(err)
     except InvalidHostNameError as err:
         raise click.ClickException(err)
+
+
+@group()
+@click.pass_context
+def main(ctx: click.Context):
+    ctx.ensure_object(dict)

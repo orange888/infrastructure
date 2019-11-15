@@ -5,14 +5,15 @@ from click import ClickException, Context, argument, pass_context
 from hannah_family.infrastructure.ansible.host import (Host,
                                                        InvalidHostNameError)
 from hannah_family.infrastructure.ssh.session import open_session
-from hannah_family.infrastructure.utils.click import command
+
+from .cli import main
 
 
-@command()
+@main.command()
 @argument("hostname", nargs=1, required=True)
 @pass_context
 async def ssh(ctx: Context, hostname):
-    """Open an SSH connection to the Ansible inventory host at HOSTNAME.
+    """Open an SSH connection to a host by its Ansible inventory name.
 
     A process-local ssh-agent instance is started and loaded with the common
     private key for the duration of the SSH session."""

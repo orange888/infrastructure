@@ -21,5 +21,5 @@ setup(name="hannah_family.infrastructure",
       package_dir={"": "src"},
       python_requires="== 3.7.*",
       entry_points={
-          "console_scripts": "inf = hannah_family.infrastructure.cli:cli"
+          "console_scripts": "inf = hannah_family.infrastructure.cli:main"
       })

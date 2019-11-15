@@ -5,12 +5,13 @@ from subprocess import CalledProcessError
 from click import ClickException, Context, argument, pass_context
 
 from hannah_family.infrastructure.k8s.pods import get_pods
-from hannah_family.infrastructure.utils.click import Group, command
 from hannah_family.infrastructure.utils.string import format_cmd
 from hannah_family.infrastructure.vault import (VAULT_DEFAULT_LABELS,
                                                 decrypt_file, run_kubectl)
 from hannah_family.infrastructure.vault.commands import (login, policy_write,
                                                          unseal)
+
+from .cli import Group, main
 
 
 class Vault(Group):
@@ -43,9 +44,15 @@ class Vault(Group):
         return cmd
 
 
-@command(cls=Vault)
+@main.command(cls=Vault)
 @pass_context
 async def vault(ctx: Context):
+    """Run commands on a Vault instance with a remote client.
+
+    All commands not listed below are forwarded to the Vault client. Options can be passed directly to the `vault` command with `--`, e.g.:
+
+        inf vault -- -help
+    """
     pass
 
 
@@ -65,7 +72,7 @@ async def vault_unseal(ctx: Context, pods=[]):
 @argument("pods", nargs=-1)
 @pass_context
 async def vault_login(ctx: Context, pods=[]):
-    """Log in to Vault from the local client using the initial root token."""
+    """Log in to Vault using the initial root token."""
     token_path = Path.cwd().joinpath("vault", "initial_root_token.pgp")
     token = await decrypt_file(token_path)
     return await login(token,

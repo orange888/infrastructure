@@ -3,10 +3,11 @@ from click import ClickException, Context, argument, pass_context
 from hannah_family.infrastructure.ansible.host import InvalidHostNameError
 from hannah_family.infrastructure.ansible.playbook import run_playbook
 from hannah_family.infrastructure.ssh.agent import SSHAgent
-from hannah_family.infrastructure.utils.click import command
+
+from .cli import main
 
 
-@command(context_settings={
+@main.command(context_settings={
     "allow_extra_args": True,
     "ignore_unknown_options": True
 })
