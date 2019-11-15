@@ -17,10 +17,6 @@ async def ssh(ctx: Context, hostname):
 
     A process-local ssh-agent instance is started and loaded with the common
     private key for the duration of the SSH session."""
-    try:
-        host = Host(hostname)
-        await open_session(host.get_variable("service_user_name"),
-                           host.get_variable("ansible_host"))
-    except InvalidHostNameError as e:
-        raise ClickException(
-            "No host named {} found in Ansible inventory".format(hostname))
+    host = Host(hostname)
+    await open_session(host.get_variable("service_user_name"),
+                       host.get_variable("ansible_host"))
