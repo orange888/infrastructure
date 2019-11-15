@@ -32,9 +32,8 @@ async def run_batch(*cmds):
     complete, exiting if any commands exited with a nonzero return code."""
     batches = await gather(*(run(*cmd["args"], **cmd["kwargs"]) for cmd in cmds))
     procs, dones = zip(*batches)
-    done = gather(*(dones))
 
-    return procs, done
+    return procs, _batch_error_handler(dones)
 
 
 def _error_handler(proc: Process, cmd):
@@ -42,5 +41,15 @@ def _error_handler(proc: Process, cmd):
         returncode = await proc.wait()
         if returncode > 0:
             raise CalledProcessError(returncode=returncode, cmd=cmd)
+
+    return error_handler()
+
+
+def _batch_error_handler(dones):
+    async def error_handler():
+        results = await gather(*dones, return_exceptions=True)
+        for result in results:
+            if isinstance(result, Exception):
+                raise result
 
     return error_handler()
