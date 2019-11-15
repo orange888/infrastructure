@@ -19,7 +19,7 @@ setup(name="hannah_family.infrastructure",
       install_requires=read_requirements(),
       packages=find_packages("src"),
       package_dir={"": "src"},
-      python_requires="== 3.7.*",
+      python_requires="== 3.8.*",
       entry_points={
           "console_scripts": "inf = hannah_family.infrastructure.cli:main"
       })
