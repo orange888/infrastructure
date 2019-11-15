@@ -56,18 +56,17 @@ async def decrypt_file(file: Path):
     Keybase."""
     cat_cmd = ["cat", "{}".format(file)]
     cat_proc, cat_done = await _run(*cat_cmd, stdout=PIPE)
-    cat_stdout, cat_stderr = await cat_proc.communicate()
+    cat_stdout, _ = await cat_proc.communicate()
 
     decode_cmd = ["base64", "--decode"]
     decode_proc, decode_done = await _run(*decode_cmd, stdin=PIPE, stdout=PIPE)
-    decode_stdout, decode_stderr = await decode_proc.communicate(cat_stdout)
+    decode_stdout, _ = await decode_proc.communicate(cat_stdout)
 
     decrypt_cmd = ["keybase", "pgp", "decrypt"]
     decrypt_proc, decrypt_done = await _run(*decrypt_cmd,
                                             stdin=PIPE,
                                             stdout=PIPE)
-    decrypt_stdout, decrypt_stderr = await decrypt_proc.communicate(
-        decode_stdout)
+    decrypt_stdout, _ = await decrypt_proc.communicate(decode_stdout)
 
     await gather(cat_done, decode_done, decrypt_done)
     return decrypt_stdout

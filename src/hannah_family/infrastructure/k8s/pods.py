@@ -17,7 +17,7 @@ async def get_pods(labels={}, namespace=None):
         cmd.extend(["-n", namespace])
 
     proc, done = await run(*cmd, stdout=PIPE, stderr=PIPE)
-    stdout, stderr = await proc.communicate()
+    stdout, _ = await proc.communicate()
     pods = stdout.decode("utf-8").splitlines()
     await done
     return sorted(pods)

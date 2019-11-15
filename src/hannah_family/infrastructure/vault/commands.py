@@ -6,7 +6,7 @@ from hannah_family.infrastructure.k8s.kubectl import kubectl_exec
 from hannah_family.infrastructure.k8s.pods import get_pods
 from hannah_family.infrastructure.utils.subprocess import run as sub_run
 
-from . import VAULT_DEFAULT_LABELS, VAULT_EXECUTABLE, decrypt_file, run
+from . import VAULT_DEFAULT_LABELS, decrypt_file, run
 
 
 async def login(token,
@@ -35,18 +35,18 @@ async def logout(local=True,
                  container=None):
     """Delete the stored Vault token."""
     if local and not pods:
-        proc, done = await sub_run("sh", "-c", "rm $HOME/.vault-token")
+        _, done = await sub_run("sh", "-c", "rm $HOME/.vault-token")
         return await done
 
     if len(pods) == 0:
         pods = await get_pods(labels=labels, namespace=namespace)
 
-    procs, done = await kubectl_exec(pods,
-                                     namespace,
-                                     "sh",
-                                     "-c",
-                                     "rm $HOME/.vault-token",
-                                     container=container)
+    _, done = await kubectl_exec(pods,
+                                 namespace,
+                                 "sh",
+                                 "-c",
+                                 "rm $HOME/.vault-token",
+                                 container=container)
     return await done
 
 
@@ -77,11 +77,11 @@ async def policy_write(policy: Path,
                        container=None):
     """Read a policy from the filesystem and write it to the Vault."""
     with open(policy, 'rb') as file:
-        procs, done = await run("policy",
-                                "write",
-                                policy.stem,
-                                "-",
-                                namespace=namespace,
-                                container=container,
-                                stdin=file)
+        _, done = await run("policy",
+                            "write",
+                            policy.stem,
+                            "-",
+                            namespace=namespace,
+                            container=container,
+                            stdin=file)
         return await done

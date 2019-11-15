@@ -2,15 +2,11 @@ from asyncio import gather
 from asyncio import run as asyncio_run
 from asyncio.subprocess import PIPE
 from pathlib import Path
-from subprocess import CalledProcessError
 
-from click import (ClickException, Context, HelpFormatter, argument, option,
-                   pass_context)
+from click import Context, HelpFormatter, argument, option, pass_context
 
-from hannah_family.infrastructure.k8s.pods import get_pods
 from hannah_family.infrastructure.utils.string import format_cmd
-from hannah_family.infrastructure.vault import (VAULT_DEFAULT_LABELS,
-                                                decrypt_file, run)
+from hannah_family.infrastructure.vault import decrypt_file, run
 from hannah_family.infrastructure.vault.commands import (login, logout,
                                                          policy_write, unseal)
 
@@ -44,7 +40,7 @@ class Vault(Group):
                                                namespace="kube-system",
                                                container="vault",
                                                stderr=PIPE)
-        help_stdout, help_stderr = await help_proc.communicate()
+        _, help_stderr = await help_proc.communicate()
 
         groups = help_stderr.decode("utf-8").split("\n\n")[1:]
         await help_done
@@ -55,8 +51,8 @@ class Vault(Group):
                     name.split()[0])):
                 formatter.write_dl(
                     (name, "{}.".format(help))
-                    for (name, help) \
-                    in map(lambda row: row.split(maxsplit=1), rows)
+                    for (name,
+                         help) in map(lambda row: row.split(maxsplit=1), rows)
                     if name not in self.commands)
 
     def _vault_command(self, ctx: Context, name: str):
@@ -67,11 +63,11 @@ class Vault(Group):
                       })
         @pass_context
         async def cmd(ctx: Context):
-            procs, done = await run(name,
-                                    *ctx.args,
-                                    local=ctx.obj[VAULT_CTX_LOCAL_KEY],
-                                    container="vault",
-                                    namespace="kube-system")
+            _, done = await run(name,
+                                *ctx.args,
+                                local=ctx.obj[VAULT_CTX_LOCAL_KEY],
+                                container="vault",
+                                namespace="kube-system")
             return await done
 
         return cmd

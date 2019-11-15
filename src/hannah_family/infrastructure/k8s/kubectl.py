@@ -1,5 +1,3 @@
-from asyncio import gather
-
 from hannah_family.infrastructure.utils.string import format_cmd
 from hannah_family.infrastructure.utils.subprocess import run_batch
 

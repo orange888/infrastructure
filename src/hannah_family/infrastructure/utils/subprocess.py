@@ -1,7 +1,6 @@
-from asyncio import Task, create_task, gather
+from asyncio import gather
 from asyncio.subprocess import (Process, create_subprocess_exec,
                                 create_subprocess_shell)
-from functools import partial
 from os import environ
 from re import compile
 from shlex import join
@@ -25,16 +24,17 @@ async def run(*args, **kwargs):
 
     kwargs["env"] = _env
 
-    proc = await (create_subprocess_shell(join(args), **kwargs) \
-        if "shell" in kwargs and kwargs["shell"] \
-        else create_subprocess_exec(*args, **kwargs))
+    proc = await (create_subprocess_shell(join(args), **kwargs)
+                  if "shell" in kwargs and kwargs["shell"] else
+                  create_subprocess_exec(*args, **kwargs))
     return proc, _error_handler(proc, args)
 
 
 async def run_batch(*cmds):
     """Run multiple commands simultaneously and wait for them all to
     complete, exiting if any commands exited with a nonzero return code."""
-    batches = await gather(*(run(*cmd["args"], **cmd["kwargs"]) for cmd in cmds))
+    batches = await gather(*(run(*cmd["args"], **cmd["kwargs"])
+                             for cmd in cmds))
     procs, dones = zip(*batches)
 
     return procs, _batch_error_handler(dones)

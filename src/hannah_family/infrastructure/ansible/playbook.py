@@ -11,7 +11,6 @@ DEFAULT_ENV = {"OBJC_DISABLE_INITIALIZE_FORK_SAFETY": "YES"}
 
 class InvalidPlaybookName(Exception):
     """Raised when the playbook name does not match a known playbook."""
-    pass
 
 
 async def run_playbook(playbook, hostnames=[], args=[], env={}):

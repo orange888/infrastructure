@@ -1,6 +1,5 @@
 from json import dumps
 
-from ansible.playbook.play import Play
 from ansible.template import AnsibleJ2Template
 
 from .loader import Loader
@@ -39,7 +38,6 @@ class Host:
         return self._vars[vars_key]
 
     def get_variable(self, name, play_data={}):
-        play_vars = self.get_variables(play_data)
         var = self.get_variables(play_data).get(name)
 
         if isinstance(var, dict):

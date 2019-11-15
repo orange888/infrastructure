@@ -1,6 +1,5 @@
-from asyncio.subprocess import DEVNULL, PIPE, Process
+from asyncio.subprocess import DEVNULL, PIPE
 from pathlib import Path
-from typing import Dict
 
 from hannah_family.infrastructure.utils.subprocess import parse_env, run
 

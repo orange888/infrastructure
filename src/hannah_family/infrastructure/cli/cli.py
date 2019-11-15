@@ -17,7 +17,6 @@ class ClickCalledProcessError(click.ClickException):
 
     def show(self):
         """Mute superfluous error messages stating the return code."""
-        pass
 
 
 class Group(click.Group):

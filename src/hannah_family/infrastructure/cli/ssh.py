@@ -1,9 +1,6 @@
-from pathlib import Path
+from click import Context, argument, pass_context
 
-from click import ClickException, Context, argument, pass_context
-
-from hannah_family.infrastructure.ansible.host import (Host,
-                                                       InvalidHostNameError)
+from hannah_family.infrastructure.ansible.host import Host
 from hannah_family.infrastructure.ssh.session import open_session
 
 from .cli import main
