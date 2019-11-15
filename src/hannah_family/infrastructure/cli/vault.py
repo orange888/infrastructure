@@ -8,8 +8,8 @@ from hannah_family.infrastructure.k8s.pods import get_pods
 from hannah_family.infrastructure.utils.string import format_cmd
 from hannah_family.infrastructure.vault import (VAULT_DEFAULT_LABELS,
                                                 decrypt_file, run_kubectl)
-from hannah_family.infrastructure.vault.commands import (login, policy_write,
-                                                         unseal)
+from hannah_family.infrastructure.vault.commands import (login, logout,
+                                                         policy_write, unseal)
 
 from .cli import Group, main
 
@@ -79,6 +79,14 @@ async def vault_login(ctx: Context, pods=[]):
                        pods=pods,
                        namespace="kube-system",
                        container="vault")
+
+
+@vault.command(name="logout")
+@argument("pods", nargs=-1)
+@pass_context
+async def vault_logout(ctx: Context, pods=[]):
+    """Log out of Vault on the remote pods."""
+    return await logout(pods=pods, namespace="kube-system", container="vault")
 
 
 @vault.command()

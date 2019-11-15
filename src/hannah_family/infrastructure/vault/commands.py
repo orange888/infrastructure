@@ -1,5 +1,5 @@
 from asyncio import gather
-from asyncio.subprocess import PIPE
+from asyncio.subprocess import DEVNULL, PIPE
 from pathlib import Path
 
 from hannah_family.infrastructure.k8s.kubectl import kubectl_exec
@@ -23,8 +23,26 @@ async def login(token,
                                     pods=pods,
                                     namespace=namespace,
                                     container=container,
-                                    stdin=PIPE)
+                                    stdin=PIPE,
+                                    stdout=DEVNULL)
     await gather(*(proc.communicate(token) for proc in procs))
+    return await done
+
+
+async def logout(pods=[],
+                 labels=VAULT_DEFAULT_LABELS,
+                 namespace=None,
+                 container=None):
+    """Delete the stored token from one or more Vault pods."""
+    if len(pods) == 0:
+        pods = await get_pods(labels=labels, namespace=namespace)
+
+    procs, done = await kubectl_exec(pods,
+                                     namespace,
+                                     "sh",
+                                     "-c",
+                                     "rm $HOME/.vault-token",
+                                     container=container)
     return await done
 
 
