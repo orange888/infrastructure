@@ -1,8 +1,10 @@
 from asyncio import Task, create_task, gather
-from asyncio.subprocess import Process, create_subprocess_exec
+from asyncio.subprocess import (Process, create_subprocess_exec,
+                                create_subprocess_shell)
 from functools import partial
 from os import environ
 from re import compile
+from shlex import join
 from subprocess import CalledProcessError
 
 ENV_PATTERN = compile(r"([A-Z_]+)=([^;]+);")
@@ -23,7 +25,9 @@ async def run(*args, **kwargs):
 
     kwargs["env"] = _env
 
-    proc = await create_subprocess_exec(*args, **kwargs)
+    proc = await (create_subprocess_shell(join(args), **kwargs) \
+        if "shell" in kwargs and kwargs["shell"] \
+        else create_subprocess_exec(*args, **kwargs))
     return proc, _error_handler(proc, args)
 
 

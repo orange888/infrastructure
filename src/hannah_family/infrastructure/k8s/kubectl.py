@@ -17,8 +17,11 @@ async def kubectl_exec(pods,
     if container is not None:
         cmd.extend(["-c", container])
 
+    if "shell" in kwargs and kwargs["shell"]:
+        cmd.append("-t")
+
     if "stdin" in kwargs and kwargs["stdin"] is not None:
-        cmd.extend(["-i"])
+        cmd.append("-i")
 
     cmd.extend(["--", command, *args])
 
