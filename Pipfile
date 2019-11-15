@@ -4,15 +4,12 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
+importmagic = "*"
 pylint = "*"
 yapf = "*"
-importmagic = "*"
 
 [packages]
 hannah-family-infrastructure = {editable = true,path = "."}
-invoke = "*"
-passlib = "*"
-pyyaml = "*"
 
 [requires]
 python_version = "3.8"

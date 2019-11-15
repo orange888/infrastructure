@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "f36134a437040096690c31c2060689bb4a279e13dd70218d250538e2caf44128"
+            "sha256": "f1463ab3ce2cc41e74a2931b5bd933710badfc94ef559404dc07b51bfdc39b61"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -97,15 +97,6 @@
             "editable": true,
             "path": "."
         },
-        "invoke": {
-            "hashes": [
-                "sha256:c52274d2e8a6d64ef0d61093e1983268ea1fc0cd13facb9448c4ef0c9a7ac7da",
-                "sha256:f4ec8a134c0122ea042c8912529f87652445d9f4de590b353d23f95bfa1f0efd",
-                "sha256:fc803a5c9052f15e63310aa81a43498d7c55542beb18564db88a9d75a176fa44"
-            ],
-            "index": "pypi",
-            "version": "==1.3.0"
-        },
         "jinja2": {
             "hashes": [
                 "sha256:74320bb91f31270f9551d46522e33af46a80c3d619f4a4bf42b3164d30b5911f",
@@ -151,7 +142,6 @@
                 "sha256:3d948f64138c25633613f303bcc471126eae67c04d5e3f6b7b8ce6242f8653e0",
                 "sha256:43526aea08fa32c6b6dbbbe9963c4c767285b78147b7437597f992812f69d280"
             ],
-            "index": "pypi",
             "version": "==1.7.1"
         },
         "pycparser": {
@@ -176,7 +166,6 @@
                 "sha256:bf47c0607522fdbca6c9e817a6e81b08491de50f3766a7a0e6a5be7905961b41",
                 "sha256:f81025eddd0327c7d4cfe9b62cf33190e1e736cc6e97502b3ec425f574b3e7a8"
             ],
-            "index": "pypi",
             "version": "==5.1.2"
         },
         "six": {
