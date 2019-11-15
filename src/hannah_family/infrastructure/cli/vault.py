@@ -1,8 +1,11 @@
-from asyncio import gather
+import pprint
+from asyncio import gather, run
+from asyncio.subprocess import PIPE
 from pathlib import Path
 from subprocess import CalledProcessError
 
-from click import ClickException, Context, argument, pass_context
+from click import (ClickException, Context, HelpFormatter, argument,
+                   pass_context)
 
 from hannah_family.infrastructure.k8s.pods import get_pods
 from hannah_family.infrastructure.utils.string import format_cmd
@@ -27,6 +30,34 @@ class Vault(Group):
 
         return cmd
 
+    def format_commands(self, ctx: Context, formatter: HelpFormatter):
+        """Display commands passed directly to the Vault client below the
+        manually defined commands in the help text."""
+        super().format_commands(ctx, formatter)
+
+        run(self._get_remote_commands(formatter))
+
+    async def _get_remote_commands(self, formatter: HelpFormatter):
+        help_procs, help_done = await run_kubectl("-help",
+                                                  namespace="kube-system",
+                                                  container="vault",
+                                                  stderr=PIPE)
+        help_proc = help_procs[0]
+        help_stdout, help_stderr = await help_proc.communicate()
+
+        groups = help_stderr.decode("utf-8").split("\n\n")[1:]
+        await help_done
+
+        for group in groups:
+            name, *rows = group.splitlines()
+            with formatter.section("{} Vault commands".format(
+                    name.split()[0])):
+                formatter.write_dl(
+                    (name, "{}.".format(help))
+                    for (name, help) \
+                    in map(lambda row: row.split(maxsplit=1), rows)
+                    if name not in self.commands)
+
     def _vault_command(self, ctx: Context, name: str):
         @self.command(name=name,
                       context_settings={
@@ -49,7 +80,10 @@ class Vault(Group):
 async def vault(ctx: Context):
     """Run commands on a Vault instance with a remote client.
 
-    All commands not listed below are forwarded to the Vault client. Options can be passed directly to the `vault` command with `--`, e.g.:
+    Commands listed under "Common Vault commands" and "Other Vault commands"
+    below are forwarded to the Vault client.
+
+    Options to the Vault client can be passed with `--`, e.g.:
 
         inf vault -- -help
     """

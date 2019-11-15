@@ -13,7 +13,7 @@ from .cli import main
 @argument("hostname", nargs=1, required=True)
 @pass_context
 async def ssh(ctx: Context, hostname):
-    """Open an SSH connection to a host by its Ansible inventory name.
+    """Open an SSH connection to Ansible inventory host HOSTNAME.
 
     A process-local ssh-agent instance is started and loaded with the common
     private key for the duration of the SSH session."""
