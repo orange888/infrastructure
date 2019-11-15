@@ -1,20 +1,22 @@
-import pprint
-from asyncio import gather, run
+from asyncio import gather
+from asyncio import run as asyncio_run
 from asyncio.subprocess import PIPE
 from pathlib import Path
 from subprocess import CalledProcessError
 
-from click import (ClickException, Context, HelpFormatter, argument,
+from click import (ClickException, Context, HelpFormatter, argument, option,
                    pass_context)
 
 from hannah_family.infrastructure.k8s.pods import get_pods
 from hannah_family.infrastructure.utils.string import format_cmd
 from hannah_family.infrastructure.vault import (VAULT_DEFAULT_LABELS,
-                                                decrypt_file, run_kubectl)
+                                                decrypt_file, run)
 from hannah_family.infrastructure.vault.commands import (login, logout,
                                                          policy_write, unseal)
 
 from .cli import Group, main
+
+VAULT_CTX_LOCAL_KEY = "VAULT_CTX_LOCAL"
 
 
 class Vault(Group):
@@ -35,14 +37,13 @@ class Vault(Group):
         manually defined commands in the help text."""
         super().format_commands(ctx, formatter)
 
-        run(self._get_remote_commands(formatter))
+        asyncio_run(self._get_forwarded_commands(formatter))
 
-    async def _get_remote_commands(self, formatter: HelpFormatter):
-        help_procs, help_done = await run_kubectl("-help",
-                                                  namespace="kube-system",
-                                                  container="vault",
-                                                  stderr=PIPE)
-        help_proc = help_procs[0]
+    async def _get_forwarded_commands(self, formatter: HelpFormatter):
+        [help_proc, *_], help_done = await run("-help",
+                                               namespace="kube-system",
+                                               container="vault",
+                                               stderr=PIPE)
         help_stdout, help_stderr = await help_proc.communicate()
 
         groups = help_stderr.decode("utf-8").split("\n\n")[1:]
@@ -66,19 +67,24 @@ class Vault(Group):
                       })
         @pass_context
         async def cmd(ctx: Context):
-            procs, done = await run_kubectl(name,
-                                            *ctx.args,
-                                            container="vault",
-                                            namespace="kube-system")
+            procs, done = await run(name,
+                                    *ctx.args,
+                                    local=ctx.obj[VAULT_CTX_LOCAL_KEY],
+                                    container="vault",
+                                    namespace="kube-system")
             return await done
 
         return cmd
 
 
 @main.command(cls=Vault)
+@option("--local/--remote",
+        default=True,
+        help="Run the command using the locally installed client (default)"
+        " or on one or more remote pods.")
 @pass_context
-async def vault(ctx: Context):
-    """Run commands on a Vault instance with a remote client.
+async def vault(ctx: Context, local=True):
+    """Run commands on a Vault instance.
 
     Commands listed under "Common Vault commands" and "Other Vault commands"
     below are forwarded to the Vault client.
@@ -87,14 +93,18 @@ async def vault(ctx: Context):
 
         inf vault -- -help
     """
-    pass
+    ctx.ensure_object(dict)
+    ctx.obj[VAULT_CTX_LOCAL_KEY] = local
 
 
 @vault.command(name="unseal")
 @argument("pods", nargs=-1)
 @pass_context
 async def vault_unseal(ctx: Context, pods=[]):
-    """Unseal one or more Vault pods."""
+    """Unseal one or more Vault pods.
+
+    This command is always run remotely in order to target all or specific pods
+    for unsealing."""
     keys = Path.cwd().joinpath("vault").glob("unseal_key_*.pgp")
     return await unseal(keys,
                         pods=pods,
@@ -110,6 +120,7 @@ async def vault_login(ctx: Context, pods=[]):
     token_path = Path.cwd().joinpath("vault", "initial_root_token.pgp")
     token = await decrypt_file(token_path)
     return await login(token,
+                       local=ctx.obj[VAULT_CTX_LOCAL_KEY],
                        pods=pods,
                        namespace="kube-system",
                        container="vault")
@@ -120,20 +131,27 @@ async def vault_login(ctx: Context, pods=[]):
 @pass_context
 async def vault_logout(ctx: Context, pods=[]):
     """Log out of Vault on the remote pods."""
-    return await logout(pods=pods, namespace="kube-system", container="vault")
+    return await logout(local=ctx.obj[VAULT_CTX_LOCAL_KEY],
+                        pods=pods,
+                        namespace="kube-system",
+                        container="vault")
 
 
 @vault.command()
-async def write_policies():
+@pass_context
+async def write_policies(ctx: Context):
     """Write all policies to the Vault instance."""
     policies = Path.cwd().joinpath("vault", "policy").glob("*.hcl")
-    return await gather(*(
-        policy_write(policy, namespace="kube-system", container="vault")
-        for policy in policies))
+    return await gather(*(policy_write(policy,
+                                       local=ctx.obj[VAULT_CTX_LOCAL_KEY],
+                                       namespace="kube-system",
+                                       container="vault")
+                          for policy in policies))
 
 
 @vault.command()
-async def write_roles():
+@pass_context
+async def write_roles(ctx: Context):
     """Write all roles to the Vault instance."""
     policies = Path.cwd().joinpath("vault", "policy").glob("*.hcl")
 
@@ -144,9 +162,10 @@ async def write_roles():
     ]
 
     results = await gather(*(
-        run_kubectl(*format_cmd(cmd, **_get_role_from_policy(policy)),
-                    container="vault",
-                    namespace="kube-system") for policy in policies))
+        run(*format_cmd(cmd, **_get_role_from_policy(policy)),
+            local=ctx.obj[VAULT_CTX_LOCAL_KEY],
+            container="vault",
+            namespace="kube-system") for policy in policies))
     return await gather(*(result[1] for result in results))
 
 

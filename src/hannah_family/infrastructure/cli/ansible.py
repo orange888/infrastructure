@@ -13,7 +13,7 @@ from .cli import main
 })
 @pass_context
 async def ansible(ctx: Context):
-    """Run an Ansible command with a process-local ssh-agent instance."""
+    """Run an Ansible command."""
     cmd = ["pipenv", "run", "ansible", *ctx.args]
 
     async with SSHAgent() as agent:
