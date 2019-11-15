@@ -38,18 +38,21 @@ async def decrypt_file(file: Path):
     """Decrypt a base64-encoded, PGP-encrypted file with a PGP key stored in
     Keybase."""
     cat_cmd = ["cat", "{}".format(file)]
-    cat_proc = await run(*cat_cmd, stdout=PIPE)
+    cat_proc, cat_done = await run(*cat_cmd, stdout=PIPE)
     cat_stdout, cat_stderr = await cat_proc.communicate()
 
     decode_cmd = ["base64", "--decode"]
-    decode_proc = await run(*decode_cmd, stdin=PIPE, stdout=PIPE)
+    decode_proc, decode_done = await run(*decode_cmd, stdin=PIPE, stdout=PIPE)
     decode_stdout, decode_stderr = await decode_proc.communicate(cat_stdout)
 
     decrypt_cmd = ["keybase", "pgp", "decrypt"]
-    decrypt_proc = await run(*decrypt_cmd, stdin=PIPE, stdout=PIPE)
+    decrypt_proc, decrypt_done = await run(*decrypt_cmd,
+                                           stdin=PIPE,
+                                           stdout=PIPE)
     decrypt_stdout, decrypt_stderr = await decrypt_proc.communicate(
         decode_stdout)
 
+    await gather(cat_done, decode_done, decrypt_done)
     return decrypt_stdout
 
 
