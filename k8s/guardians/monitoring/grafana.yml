@@ -245,7 +245,7 @@ spec:
           name: sc-datasources-volume
       containers:
       - name: consul-template
-        image: hashicorp/consul-template:0.22.0-light
+        image: hashicorp/consul-template:0.23.0-alpine
         args:
         - -config=/vault/ct-config/config.hcl
         env:
