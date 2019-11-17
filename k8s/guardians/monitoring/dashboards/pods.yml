@@ -1,0 +1,275 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-pods
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+    app.kubernetes.io/name: grafana
+    app.kubernetes.io/instance: grafana
+data:
+  pods.json: |
+    {
+        "annotations": {
+            "list": [{
+                "builtIn": 1,
+                "datasource": "Prometheus",
+                "enable": true,
+                "hide": true,
+                "iconColor": "rgba(0, 211, 255, 1)",
+                "name": "Annotations & Alerts",
+                "type": "dashboard"
+            }]
+        },
+        "editable": true,
+        "gnetId": null,
+        "graphTooltip": 0,
+        "id": 1,
+        "iteration": 1562192696916,
+        "links": [],
+        "panels": [{
+                "aliasColors": {},
+                "bars": false,
+                "dashLength": 10,
+                "dashes": false,
+                "fill": 1,
+                "gridPos": {
+                    "h": 8,
+                    "w": 24,
+                    "x": 0,
+                    "y": 0
+                },
+                "id": 4,
+                "legend": {
+                    "alignAsTable": true,
+                    "avg": true,
+                    "current": true,
+                    "hideEmpty": true,
+                    "hideZero": true,
+                    "max": true,
+                    "min": true,
+                    "rightSide": true,
+                    "show": true,
+                    "sort": "current",
+                    "sortDesc": true,
+                    "total": false,
+                    "values": true
+                },
+                "lines": true,
+                "linewidth": 1,
+                "links": [],
+                "nullPointMode": "null",
+                "options": {},
+                "percentage": false,
+                "pointradius": 2,
+                "points": false,
+                "renderer": "flot",
+                "seriesOverrides": [],
+                "spaceLength": 10,
+                "stack": false,
+                "steppedLine": false,
+                "targets": [{
+                    "expr": "sum(rate(container_cpu_usage_seconds_total{pod!=\"\",node=~\"$node\"}[1m])) by (pod)",
+                    "format": "time_series",
+                    "intervalFactor": 1,
+                    "legendFormat": "{{ pod }}",
+                    "refId": "A"
+                }],
+                "thresholds": [],
+                "timeFrom": null,
+                "timeRegions": [],
+                "timeShift": null,
+                "title": "CPU Usage",
+                "tooltip": {
+                    "shared": true,
+                    "sort": 2,
+                    "value_type": "individual"
+                },
+                "transparent": true,
+                "type": "graph",
+                "xaxis": {
+                    "buckets": null,
+                    "mode": "time",
+                    "name": null,
+                    "show": true,
+                    "values": []
+                },
+                "yaxes": [{
+                        "format": "percentunit",
+                        "label": null,
+                        "logBase": 1,
+                        "max": null,
+                        "min": null,
+                        "show": true
+                    },
+                    {
+                        "format": "short",
+                        "label": null,
+                        "logBase": 1,
+                        "max": null,
+                        "min": null,
+                        "show": true
+                    }
+                ],
+                "yaxis": {
+                    "align": false,
+                    "alignLevel": null
+                }
+            },
+            {
+                "aliasColors": {},
+                "bars": false,
+                "dashLength": 10,
+                "dashes": false,
+                "fill": 1,
+                "gridPos": {
+                    "h": 9,
+                    "w": 24,
+                    "x": 0,
+                    "y": 8
+                },
+                "id": 2,
+                "legend": {
+                    "alignAsTable": true,
+                    "avg": true,
+                    "current": true,
+                    "hideEmpty": true,
+                    "hideZero": true,
+                    "max": true,
+                    "min": true,
+                    "rightSide": true,
+                    "show": true,
+                    "sort": "current",
+                    "sortDesc": true,
+                    "total": false,
+                    "values": true
+                },
+                "lines": true,
+                "linewidth": 1,
+                "links": [],
+                "nullPointMode": "null",
+                "options": {},
+                "percentage": false,
+                "pointradius": 2,
+                "points": false,
+                "renderer": "flot",
+                "seriesOverrides": [],
+                "spaceLength": 10,
+                "stack": false,
+                "steppedLine": false,
+                "targets": [{
+                    "expr": "sum(container_memory_usage_bytes{pod!=\"\",node=~\"$node\"}) by (pod)",
+                    "format": "time_series",
+                    "intervalFactor": 1,
+                    "legendFormat": "{{ pod }}",
+                    "refId": "A"
+                }],
+                "thresholds": [],
+                "timeFrom": null,
+                "timeRegions": [],
+                "timeShift": null,
+                "title": "Memory Usage",
+                "tooltip": {
+                    "shared": true,
+                    "sort": 2,
+                    "value_type": "individual"
+                },
+                "transparent": true,
+                "type": "graph",
+                "xaxis": {
+                    "buckets": null,
+                    "mode": "time",
+                    "name": null,
+                    "show": true,
+                    "values": []
+                },
+                "yaxes": [{
+                        "format": "decbytes",
+                        "label": null,
+                        "logBase": 1,
+                        "max": null,
+                        "min": null,
+                        "show": true
+                    },
+                    {
+                        "format": "short",
+                        "label": null,
+                        "logBase": 1,
+                        "max": null,
+                        "min": null,
+                        "show": true
+                    }
+                ],
+                "yaxis": {
+                    "align": false,
+                    "alignLevel": null
+                }
+            }
+        ],
+        "refresh": "5s",
+        "schemaVersion": 18,
+        "style": "dark",
+        "tags": [],
+        "templating": {
+            "list": [{
+                "allValue": ".*",
+                "current": {
+                    "tags": [],
+                    "text": "All",
+                    "value": "$__all"
+                },
+                "datasource": "Prometheus",
+                "definition": "kube_node_info{job=\"kube-state-metrics\"}",
+                "hide": 0,
+                "includeAll": true,
+                "label": "Node",
+                "multi": false,
+                "name": "node",
+                "options": [],
+                "query": "kube_node_info{job=\"kube-state-metrics\"}",
+                "refresh": 1,
+                "regex": "/node=\"(\\w+)\"/",
+                "skipUrlSync": false,
+                "sort": 0,
+                "tagValuesQuery": "",
+                "tags": [],
+                "tagsQuery": "",
+                "type": "query",
+                "useTags": false
+            }]
+        },
+        "time": {
+            "from": "now-3h",
+            "to": "now"
+        },
+        "timepicker": {
+            "refresh_intervals": [
+                "5s",
+                "10s",
+                "30s",
+                "1m",
+                "5m",
+                "15m",
+                "30m",
+                "1h",
+                "2h",
+                "1d"
+            ],
+            "time_options": [
+                "5m",
+                "15m",
+                "1h",
+                "6h",
+                "12h",
+                "24h",
+                "2d",
+                "7d",
+                "30d"
+            ]
+        },
+        "timezone": "",
+        "title": "Pods",
+        "uid": "M8JMIK4Wz",
+        "version": 418
+    }
