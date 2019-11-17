@@ -1,5 +1,5 @@
 from hannah_family.infrastructure.utils.string import format_cmd
-from hannah_family.infrastructure.utils.subprocess import run_batch
+from hannah_family.infrastructure.utils.subprocess import run, run_batch
 
 
 async def kubectl_exec(pods,
@@ -28,3 +28,11 @@ async def kubectl_exec(pods,
         "kwargs": kwargs
     } for pod in pods]
     return await run_batch(*cmds)
+
+
+async def kubectl_get(*resources, watch=False, **kubectl_args):
+    """Get resources of the given type(s)."""
+    cmd = ["kubectl", "get", ",".join(resources)]
+    cmd.extend("--{}={}".format(arg, val) for arg, val in kubectl_args.items())
+
+    return await run(*cmd, watch=watch)

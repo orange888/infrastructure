@@ -15,9 +15,11 @@ def parse_env(output: str):
     return {name: value for name, value in ENV_PATTERN.findall(output)}
 
 
-async def run(*args, **kwargs):
+async def run(*args, watch=False, **kwargs):
     """Run a command with asyncio.create_subprocess_exec."""
     _env = environ
+    if watch:
+        args = ["watch", "-t", *args]
 
     if "env" in kwargs:
         _env.update(kwargs["env"])
