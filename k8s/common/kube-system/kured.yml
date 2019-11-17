@@ -162,6 +162,11 @@ spec:
         - args:
             - --ds-name=kured
             - --ds-namespace=kube-system
+            - --start-time=3am
+            - --end-time=7am
+            - --time-zone=America/Phoenix
+            - --prometheus-url=http://prometheus-k8s.monitoring.svc:9090
+            - --alert-filter-regexp=^(Watchdog|RebootRequired)$
           command:
             - /usr/bin/kured
           env:
