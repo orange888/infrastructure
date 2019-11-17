@@ -9,7 +9,7 @@ metadata:
   namespace: kube-system
 spec:
   allowedCapabilities:
-  - "*"
+    - "*"
   fsGroup:
     rule: RunAsAny
   hostPID: true
@@ -21,7 +21,7 @@ spec:
   supplementalGroups:
     rule: RunAsAny
   volumes:
-  - "*"
+    - "*"
 
 ---
 apiVersion: v1
@@ -42,33 +42,33 @@ metadata:
   name: kured
   namespace: kube-system
 rules:
-- apiGroups:
-  - ""
-  resources:
-  - nodes
-  verbs:
-  - get
-  - patch
-- apiGroups:
-  - ""
-  resources:
-  - pods
-  verbs:
-  - list
-  - delete
-  - get
-- apiGroups:
-  - apps
-  resources:
-  - daemonsets
-  verbs:
-  - get
-- apiGroups:
-  - ""
-  resources:
-  - pods/eviction
-  verbs:
-  - create
+  - apiGroups:
+      - ""
+    resources:
+      - nodes
+    verbs:
+      - get
+      - patch
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+    verbs:
+      - list
+      - delete
+      - get
+  - apiGroups:
+      - apps
+    resources:
+      - daemonsets
+    verbs:
+      - get
+  - apiGroups:
+      - ""
+    resources:
+      - pods/eviction
+    verbs:
+      - create
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -83,9 +83,9 @@ roleRef:
   kind: ClusterRole
   name: kured
 subjects:
-- kind: ServiceAccount
-  name: kured
-  namespace: kube-system
+  - kind: ServiceAccount
+    name: kured
+    namespace: kube-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
@@ -96,22 +96,22 @@ metadata:
   name: kured
   namespace: kube-system
 rules:
-- apiGroups:
-  - apps
-  resourceNames:
-  - kured
-  resources:
-  - daemonsets
-  verbs:
-  - update
-- apiGroups:
-  - policy
-  resourceNames:
-  - kured
-  resources:
-  - podsecuritypolicies
-  verbs:
-  - use
+  - apiGroups:
+      - apps
+    resourceNames:
+      - kured
+    resources:
+      - daemonsets
+    verbs:
+      - update
+  - apiGroups:
+      - policy
+    resourceNames:
+      - kured
+    resources:
+      - podsecuritypolicies
+    verbs:
+      - use
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -126,9 +126,9 @@ roleRef:
   kind: Role
   name: kured
 subjects:
-- kind: ServiceAccount
-  name: kured
-  namespace: kube-system
+  - kind: ServiceAccount
+    name: kured
+    namespace: kube-system
 ---
 apiVersion: apps/v1
 kind: DaemonSet
@@ -139,7 +139,7 @@ metadata:
     app.kubernetes.io/instance: kured
     app.kubernetes.io/name: kured
   annotations:
-    fluxcd.io/tag.kured: semver:~1
+    fluxcd.io/tag.kured: regexp:^master-
     fluxcd.io/automated: "true"
 spec:
   selector:
@@ -154,36 +154,36 @@ spec:
         prometheus.io/scrape: "true"
     spec:
       containers:
-      - args:
-        - --ds-name=kured
-        - --ds-namespace=kube-system
-        - --start-time=3am
-        - --end-time=7am
-        - --time-zone=America/Phoenix
-        - --prometheus-url=http://prometheus-k8s.monitoring.svc:9090
-        - --alert-filter-regexp=^(Watchdog|RebootRequired)$
-        command:
-        - /usr/bin/kured
-        env:
-        - name: KURED_NODE_ID
-          valueFrom:
-            fieldRef:
-              fieldPath: spec.nodeName
-        ports:
-        - containerPort: 8080
-          name: metrics
-        image: weaveworks/kured:1.2.0
-        imagePullPolicy: Always
-        name: kured
-        resources:
-        securityContext:
-          privileged: true
+        - args:
+            - --ds-name=kured
+            - --ds-namespace=kube-system
+            - --start-time=3am
+            - --end-time=7am
+            - --time-zone=America/Phoenix
+            - --prometheus-url=http://prometheus-k8s.monitoring.svc:9090
+            - --alert-filter-regexp=^(Watchdog|RebootRequired)$
+          command:
+            - /usr/bin/kured
+          env:
+            - name: KURED_NODE_ID
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          ports:
+            - containerPort: 8080
+              name: metrics
+          image: weaveworks/kured:master-4beddb5
+          imagePullPolicy: Always
+          name: kured
+          resources:
+          securityContext:
+            privileged: true
       hostPID: true
       restartPolicy: Always
       serviceAccountName: kured
       tolerations:
-      - effect: NoSchedule
-        key: node-role.kubernetes.io/master
+        - effect: NoSchedule
+          key: node-role.kubernetes.io/master
 ---
 apiVersion: v1
 kind: Service
@@ -196,8 +196,8 @@ metadata:
 spec:
   clusterIP: None
   ports:
-  - name: metrics
-    port: 8080
+    - name: metrics
+      port: 8080
   selector:
     <<: *labels
 
@@ -212,10 +212,10 @@ metadata:
     app.kubernetes.io/name: kured
 spec:
   endpoints:
-  - port: metrics
+    - port: metrics
   namespaceSelector:
     matchNames:
-    - kube-system
+      - kube-system
   selector:
     matchLabels:
       <<: *labels
