@@ -45,29 +45,29 @@ metadata:
 spec:
   clusterIP: None
   ports:
-    - name: http
-      port: 8500
-    - name: rpc
-      port: 8400
-    - name: serflan-tcp
-      port: 8301
-      protocol: TCP
-    - name: serflan-udp
-      port: 8301
-      protocol: UDP
-    - name: serfwan-tcp
-      port: 8302
-      protocol: TCP
-    - name: serfwan-udp
-      port: 8302
-      protocol: UDP
-    - name: server
-      port: 8300
-    - name: consuldns-tcp
-      port: 8600
-    - name: consuldns-udp
-      port: 8600
-      protocol: UDP
+  - name: http
+    port: 8500
+  - name: rpc
+    port: 8400
+  - name: serflan-tcp
+    port: 8301
+    protocol: TCP
+  - name: serflan-udp
+    port: 8301
+    protocol: UDP
+  - name: serfwan-tcp
+    port: 8302
+    protocol: TCP
+  - name: serfwan-udp
+    port: 8302
+    protocol: UDP
+  - name: server
+    port: 8300
+  - name: consuldns-tcp
+    port: 8600
+  - name: consuldns-udp
+    port: 8600
+    protocol: UDP
   selector:
     <<: *labels
 ---
@@ -96,110 +96,110 @@ spec:
       affinity:
         podAntiAffinity:
           preferredDuringSchedulingIgnoredDuringExecution:
-            - podAffinityTerm:
-                labelSelector:
-                  matchLabels:
-                    <<: *labels
-                topologyKey: kubernetes.io/hostname
-              weight: 1
+          - podAffinityTerm:
+              labelSelector:
+                matchLabels:
+                  <<: *labels
+              topologyKey: kubernetes.io/hostname
+            weight: 1
       containers:
-        - name: consul
-          image: consul:1.6.1
-          command:
-            - consul
-          args:
-            - agent
-            - -config-dir=/etc/consul/config
-            - -encrypt=$(GOSSIP_KEY)
-            - -server
-            - -advertise=$(POD_IP)
-            - -bootstrap-expect=$(INITIAL_CLUSTER_SIZE)
-          env:
-            - name: GOSSIP_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: consul
-                  key: gossip-key
-            - name: INITIAL_CLUSTER_SIZE
-              value: "3"
-            - name: POD_IP
-              valueFrom:
-                fieldRef:
-                  fieldPath: status.podIP
-          lifecycle:
-            preStop:
-              exec:
-                command:
-                  - consul
-                  - leave
-          livenessProbe:
+      - name: consul
+        image: consul:1.6.2
+        command:
+        - consul
+        args:
+        - agent
+        - -config-dir=/etc/consul/config
+        - -encrypt=$(GOSSIP_KEY)
+        - -server
+        - -advertise=$(POD_IP)
+        - -bootstrap-expect=$(INITIAL_CLUSTER_SIZE)
+        env:
+        - name: GOSSIP_KEY
+          valueFrom:
+            secretKeyRef:
+              name: consul
+              key: gossip-key
+        - name: INITIAL_CLUSTER_SIZE
+          value: "3"
+        - name: POD_IP
+          valueFrom:
+            fieldRef:
+              fieldPath: status.podIP
+        lifecycle:
+          preStop:
             exec:
               command:
-                - consul
-                - members
-                - -http-addr=http://127.0.0.1:8500
-            initialDelaySeconds: 300
-            timeoutSeconds: 5
-          ports:
-            - containerPort: 8500
-              name: http
-            - containerPort: 8400
-              name: rpc
-            - containerPort: 8301
-              name: serflan-tcp
-              protocol: TCP
-            - containerPort: 8301
-              name: serflan-udp
-              protocol: UDP
-            - containerPort: 8302
-              name: serfwan-tcp
-              protocol: TCP
-            - containerPort: 8302
-              name: serfwan-udp
-              protocol: UDP
-            - containerPort: 8300
-              name: server
-            - containerPort: 8600
-              name: consuldns-tcp
-            - containerPort: 8600
-              name: consuldns-udp
-              protocol: UDP
-          resources:
-            limits: &resources
-              cpu: 150m
-              memory: 128Mi
-            requests:
-              <<: *resources
-          volumeMounts:
-            - mountPath: /var/lib/consul
-              name: datadir
-            - mountPath: /etc/consul/config
-              name: config
-              readOnly: true
-            - mountPath: /etc/consul/secrets
-              name: secrets
-              readOnly: true
+              - consul
+              - leave
+        livenessProbe:
+          exec:
+            command:
+            - consul
+            - members
+            - -http-addr=http://127.0.0.1:8500
+          initialDelaySeconds: 300
+          timeoutSeconds: 5
+        ports:
+        - containerPort: 8500
+          name: http
+        - containerPort: 8400
+          name: rpc
+        - containerPort: 8301
+          name: serflan-tcp
+          protocol: TCP
+        - containerPort: 8301
+          name: serflan-udp
+          protocol: UDP
+        - containerPort: 8302
+          name: serfwan-tcp
+          protocol: TCP
+        - containerPort: 8302
+          name: serfwan-udp
+          protocol: UDP
+        - containerPort: 8300
+          name: server
+        - containerPort: 8600
+          name: consuldns-tcp
+        - containerPort: 8600
+          name: consuldns-udp
+          protocol: UDP
+        resources:
+          limits: &resources
+            cpu: 150m
+            memory: 128Mi
+          requests:
+            <<: *resources
+        volumeMounts:
+        - mountPath: /var/lib/consul
+          name: datadir
+        - mountPath: /etc/consul/config
+          name: config
+          readOnly: true
+        - mountPath: /etc/consul/secrets
+          name: secrets
+          readOnly: true
       securityContext:
         fsGroup: 1000
       volumes:
-        - name: ca
-          hostPath:
-            path: /etc/ssl/certs/hannahs.family.ca.cert.pem
-            type: File
-        - name: config
-          configMap:
-            name: consul
-        - name: secrets
-          secret:
-            secretName: consul
+      - name: ca
+        hostPath:
+          path: /etc/ssl/certs/hannahs.family.ca.cert.pem
+          type: File
+      - name: config
+        configMap:
+          name: consul
+      - name: secrets
+        secret:
+          secretName: consul
   volumeClaimTemplates:
-    - metadata:
-        name: datadir
-        labels:
-          <<: *labels
-      spec:
-        accessModes:
-          - ReadWriteOnce
-        resources:
-          requests:
-            storage: 1Gi
+  - metadata:
+      name: datadir
+      labels:
+        <<: *labels
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi

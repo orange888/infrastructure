@@ -126,7 +126,7 @@ spec:
       serviceAccountName: vault
       containers:
       - name: consul-agent
-        image: consul:1.6.1
+        image: consul:1.6.2
         args:
         - agent
         - -config-dir=/etc/consul/config
