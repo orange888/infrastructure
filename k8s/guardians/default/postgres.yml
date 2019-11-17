@@ -48,7 +48,7 @@ spec:
       serviceAccountName: postgres
       containers:
         - name: postgres
-          image: postgres:11-alpine
+          image: postgres:12.0-alpine
           resources:
             limits: &res
               cpu: 250m
