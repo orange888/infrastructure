@@ -34,7 +34,7 @@ async def run(*args,
     the client is not installed, if one or more remote pods are provided, or if
     remote execution is otherwise specifically requested, the command is run on
     the pod or pods with `kubectl exec`."""
-    msg = "Running vault command `{}`".format(" ".join(args))
+    msg = "Running vault command `{}`".format(args[0])
 
     if which(VAULT_EXECUTABLE) and local and not pods:
         logger.debug("{} with local client".format(msg))
