@@ -75,6 +75,7 @@ class Vault(Group):
 
 @main.command(cls=Vault)
 @option("--local/--remote",
+        "-l/-r",
         default=True,
         help="Run the command using the locally installed client (default)"
         " or on one or more remote pods.")
