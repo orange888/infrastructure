@@ -7,7 +7,7 @@ async def get_pods(labels={}, namespace=None):
     """Get the names of pods matching the given labels and namespace."""
     cmd = ["kubectl", "get", "pod", "-o", "name"]
 
-    if len(labels) > 0:
+    if labels:
         cmd.extend(
             ["-l", ",".join("{}={}".format(k, v) for k, v in labels.items())])
 

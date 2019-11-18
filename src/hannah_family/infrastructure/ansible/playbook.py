@@ -27,7 +27,7 @@ async def run_playbook(playbook, hostnames=[], args=[], env={}):
     loader = Loader()
     inventory_hosts = map(lambda host: host.name, loader.get_hosts())
 
-    if len(hostnames) == 0:
+    if not hostnames:
         hostnames = inventory_hosts
     else:
         hostnames = list(hostnames)
