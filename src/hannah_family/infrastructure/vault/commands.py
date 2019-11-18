@@ -45,8 +45,9 @@ async def logout(local=True,
                                  namespace,
                                  "sh",
                                  "-c",
-                                 "rm $HOME/.vault-token",
-                                 container=container)
+                                 "rm -f $HOME/.vault-token",
+                                 container=container,
+                                 stderr=PIPE)
     return await done
 
 
