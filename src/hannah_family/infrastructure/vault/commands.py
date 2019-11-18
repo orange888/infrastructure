@@ -1,5 +1,6 @@
 from asyncio import gather
 from asyncio.subprocess import DEVNULL, PIPE
+from logging import getLogger
 from pathlib import Path
 
 from hannah_family.infrastructure.k8s.kubectl import kubectl_exec
@@ -7,6 +8,8 @@ from hannah_family.infrastructure.k8s.pods import get_pods
 from hannah_family.infrastructure.utils.subprocess import run as sub_run
 
 from . import VAULT_DEFAULT_LABELS, decrypt_file, run
+
+logger = getLogger(__name__)
 
 
 async def login(token,
@@ -19,7 +22,7 @@ async def login(token,
     procs, done = await run("login",
                             "-",
                             pods=pods,
-                            all_pods=(len(pods) == 0),
+                            all_pods=(not pods),
                             namespace=namespace,
                             container=container,
                             stdin=PIPE,
@@ -35,10 +38,14 @@ async def logout(local=True,
                  container=None):
     """Delete the stored Vault token."""
     if local and not pods:
-        _, done = await sub_run("sh", "-c", "rm $HOME/.vault-token")
+        logger.info("Removing locally stored Vault token")
+        _, done = await sub_run("sh", "-c", "rm -f $HOME/.vault-token")
         return await done
 
-    if len(pods) == 0:
+    logger.info("Removing Vault token from {}".format(
+        ", ".join(pods) if pods else "all pods"))
+
+    if not pods:
         pods = await get_pods(labels=labels, namespace=namespace)
 
     _, done = await kubectl_exec(pods,
@@ -57,7 +64,7 @@ async def unseal(keys: [Path],
                  namespace=None,
                  container=None):
     """Unseal one or more Vault pods, by pod name or by label."""
-    if len(pods) == 0:
+    if not pods:
         pods = await get_pods(labels=labels, namespace=namespace)
 
     unseal_keys = await gather(*(decrypt_file(key) for key in keys))

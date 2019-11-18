@@ -1,5 +1,6 @@
 from asyncio import gather
 from asyncio.subprocess import PIPE
+from logging import getLogger
 from os import environ
 from pathlib import Path
 from shutil import which
@@ -16,6 +17,8 @@ VAULT_DEFAULT_LABELS = {
 VAULT_ENV_KEY_ADDR = "VAULT_ADDR"
 VAULT_EXECUTABLE = "vault"
 
+logger = getLogger(__name__)
+
 
 async def run(*args,
               local=True,
@@ -31,16 +34,23 @@ async def run(*args,
     the client is not installed, if one or more remote pods are provided, or if
     remote execution is otherwise specifically requested, the command is run on
     the pod or pods with `kubectl exec`."""
+    msg = "Running vault command `{}`".format(" ".join(args))
+
     if which(VAULT_EXECUTABLE) and local and not pods:
+        logger.debug("{} with local client".format(msg))
+
         VAULT_ENV_KEY_ADDR in environ or kwargs.setdefault(
             "env", {}).setdefault(VAULT_ENV_KEY_ADDR, VAULT_DEFAULT_ADDRESS)
         proc, done = await _run(VAULT_EXECUTABLE, *args, **kwargs)
         return [proc], done
 
-    if len(pods) == 0:
+    if not pods:
         pods = (await
                 get_pods(labels=VAULT_DEFAULT_LABELS,
                          namespace=namespace))[:(None if all_pods else 1)]
+
+    logger.debug("{} with kubectl in {}".format(
+        msg, "all pods" if all_pods else ", ".join(pods)))
 
     return await kubectl_exec(pods,
                               namespace,

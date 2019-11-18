@@ -1,11 +1,15 @@
 from asyncio import run
 from functools import wraps
+from logging import DEBUG, getLogger
 from subprocess import CalledProcessError
 from typing import Coroutine
 
 import click
 
+from hannah_family.infrastructure import logger as base_logger
 from hannah_family.infrastructure.ansible.host import InvalidHostNameError
+
+logger = getLogger(__name__)
 
 
 class ClickCalledProcessError(click.ClickException):
@@ -69,6 +73,10 @@ async def _wrap_function(func, *args, **kwargs):
 
 
 @group()
+@click.option("--verbose", "-v", is_flag=True, default=False)
 @click.pass_context
-def main(ctx: click.Context):
+def main(ctx: click.Context, verbose=False):
+    if verbose:
+        base_logger.setLevel(DEBUG)
+
     ctx.ensure_object(dict)
