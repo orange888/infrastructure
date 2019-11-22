@@ -16,11 +16,11 @@ metadata:
     app.kubernetes.io/instance: flux
   name: flux
 rules:
-  - apiGroups: ["*"]
-    resources: ["*"]
-    verbs: ["*"]
-  - nonResourceURLs: ["*"]
-    verbs: ["*"]
+- apiGroups: ["*"]
+  resources: ["*"]
+  verbs: ["*"]
+- nonResourceURLs: ["*"]
+  verbs: ["*"]
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1beta1
@@ -35,9 +35,9 @@ roleRef:
   kind: ClusterRole
   name: flux
 subjects:
-  - kind: ServiceAccount
-    name: flux
-    namespace: default
+- kind: ServiceAccount
+  name: flux
+  namespace: default
 ---
 apiVersion: policy/v1beta1
 kind: PodSecurityPolicy
@@ -56,7 +56,7 @@ spec:
   readOnlyRootFilesystem: false
   allowPrivilegeEscalation: true
   allowedCapabilities:
-    - "*"
+  - "*"
   fsGroup:
     rule: RunAsAny
   runAsUser:
@@ -66,7 +66,7 @@ spec:
   supplementalGroups:
     rule: RunAsAny
   volumes:
-    - "*"
+  - "*"
 
 ---
 kind: ClusterRole
@@ -77,11 +77,11 @@ metadata:
     app.kubernetes.io/name: flux
     app.kubernetes.io/instance: flux
 rules:
-  - apiGroups: ["policy"]
-    resources: ["podsecuritypolicies"]
-    verbs: ["use"]
-    resourceNames:
-      - flux
+- apiGroups: ["policy"]
+  resources: ["podsecuritypolicies"]
+  verbs: ["use"]
+  resourceNames:
+  - flux
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -95,9 +95,9 @@ roleRef:
   kind: ClusterRole
   name: flux-psp
 subjects:
-  - kind: ServiceAccount
-    name: flux
-    namespace: default
+- kind: ServiceAccount
+  name: flux
+  namespace: default
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -126,51 +126,51 @@ spec:
     spec:
       serviceAccountName: flux
       volumes:
-        - name: git-key
-          secret:
-            secretName: flux-git-deploy
-            defaultMode: 0400
-        - name: git-keygen
-          emptyDir:
-            medium: Memory
+      - name: git-key
+        secret:
+          secretName: flux-git-deploy
+          defaultMode: 0400
+      - name: git-keygen
+        emptyDir:
+          medium: Memory
       containers:
+      - name: flux
+        image: fluxcd/flux:1.16.0
+        imagePullPolicy: IfNotPresent
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+        env:
+        - name: CLUSTER_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: cluster-info
+              key: CLUSTER_NAME
+        ports:
         - name: flux
-          image: fluxcd/flux:1.15.0
-          imagePullPolicy: IfNotPresent
-          resources:
-            requests:
-              cpu: 50m
-              memory: 64Mi
-          env:
-            - name: CLUSTER_NAME
-              valueFrom:
-                configMapKeyRef:
-                  name: cluster-info
-                  key: CLUSTER_NAME
-          ports:
-            - name: flux
-              containerPort: 3030
-            - name: metrics
-              containerPort: 3031
-          volumeMounts:
-            - name: git-key
-              mountPath: /etc/fluxd/ssh
-              readOnly: true
-            - name: git-keygen
-              mountPath: /var/fluxd/keygen
-          args:
-            - --git-url=git@github.com:hannahs-family/infrastructure
-            - --git-branch=master
-            - --git-path=k8s/common,k8s/$(CLUSTER_NAME)
-            - --git-label=flux-$(CLUSTER_NAME)
-            - --git-poll-interval=1h
-            - --listen-metrics=:3031
-            - --log-format=json
-            - --memcached-hostname=memcached.kube-system.svc
-            - --memcached-service=
-            - --ssh-keygen-dir=/var/fluxd/keygen
-            - --sync-garbage-collection
-            - --sync-interval=1h
+          containerPort: 3030
+        - name: metrics
+          containerPort: 3031
+        volumeMounts:
+        - name: git-key
+          mountPath: /etc/fluxd/ssh
+          readOnly: true
+        - name: git-keygen
+          mountPath: /var/fluxd/keygen
+        args:
+        - --git-url=git@github.com:hannahs-family/infrastructure
+        - --git-branch=master
+        - --git-path=k8s/common,k8s/$(CLUSTER_NAME)
+        - --git-label=flux-$(CLUSTER_NAME)
+        - --git-poll-interval=1h
+        - --listen-metrics=:3031
+        - --log-format=json
+        - --memcached-hostname=memcached.kube-system.svc
+        - --memcached-service=
+        - --ssh-keygen-dir=/var/fluxd/keygen
+        - --sync-garbage-collection
+        - --sync-interval=1h
 ---
 apiVersion: v1
 kind: Secret
@@ -178,7 +178,6 @@ metadata:
   name: flux-git-deploy
   namespace: default
 type: Opaque
-
 ---
 apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
@@ -190,11 +189,11 @@ metadata:
     app.kubernetes.io/instance: flux
 spec:
   podMetricsEndpoints:
-    - interval: 30s
-      port: metrics
+  - interval: 30s
+    port: metrics
   namespaceSelector:
     matchNames:
-      - default
+    - default
   selector:
     matchLabels:
       <<: *labels
@@ -211,95 +210,95 @@ metadata:
     prometheus: k8s
 spec:
   groups:
-    - name: flux.rules
-      rules:
-        - expr: |
-            histogram_quantile(0.99, sum(rate(flux_cache_request_duration_seconds_bucket[5m])) by (method, success, le))
-          labels:
-            quantile: "0.99"
-          record: flux:cache_request_duration_seconds:histogram_quantile
-        - expr: |
-            histogram_quantile(0.9, sum(rate(flux_cache_request_duration_seconds_bucket[5m])) by (method, success, le))
-          labels:
-            quantile: "0.9"
-          record: flux:cache_request_duration_seconds:histogram_quantile
-        - expr: |
-            histogram_quantile(0.5, sum(rate(flux_cache_request_duration_seconds_bucket[5m])) by (method, success, le))
-          labels:
-            quantile: "0.5"
-          record: flux:cache_request_duration_seconds:histogram_quantile
-        - expr: |
-            histogram_quantile(0.99, sum(rate(flux_client_fetch_duration_seconds_bucket[5m])) by (kind, success, le))
-          labels:
-            quantile: "0.99"
-          record: flux:client_fetch_duration_seconds:histogram_quantile
-        - expr: |
-            histogram_quantile(0.9, sum(rate(flux_client_fetch_duration_seconds_bucket[5m])) by (kind, success, le))
-          labels:
-            quantile: "0.9"
-          record: flux:client_fetch_duration_seconds:histogram_quantile
-        - expr: |
-            histogram_quantile(0.5, sum(rate(flux_client_fetch_duration_seconds_bucket[5m])) by (kind, success, le))
-          labels:
-            quantile: "0.5"
-          record: flux:client_fetch_duration_seconds:histogram_quantile
-        - expr: |
-            histogram_quantile(0.99, sum(rate(flux_daemon_job_duration_seconds_bucket[5m])) by (success, le))
-          labels:
-            quantile: "0.99"
-          record: flux:daemon:job_duration_seconds:histogram_quantile
-        - expr: |
-            histogram_quantile(0.9, sum(rate(flux_daemon_job_duration_seconds_bucket[5m])) by (success, le))
-          labels:
-            quantile: "0.9"
-          record: flux:daemon:job_duration_seconds:histogram_quantile
-        - expr: |
-            histogram_quantile(0.5, sum(rate(flux_daemon_job_duration_seconds_bucket[5m])) by (success, le))
-          labels:
-            quantile: "0.5"
-          record: flux:daemon:job_duration_seconds:histogram_quantile
-        - expr: |
-            histogram_quantile(0.99, sum(rate(flux_daemon_queue_duration_seconds_bucket[5m])) by (le))
-          labels:
-            quantile: "0.99"
-          record: flux:daemon:queue_duration_seconds:histogram_quantile
-        - expr: |
-            histogram_quantile(0.9, sum(rate(flux_daemon_queue_duration_seconds_bucket[5m])) by (le))
-          labels:
-            quantile: "0.9"
-          record: flux:daemon:queue_duration_seconds:histogram_quantile
-        - expr: |
-            histogram_quantile(0.5, sum(rate(flux_daemon_queue_duration_seconds_bucket[5m])) by (le))
-          labels:
-            quantile: "0.5"
-          record: flux:daemon:queue_duration_seconds:histogram_quantile
-        - expr: |
-            histogram_quantile(0.99, sum(rate(flux_daemon_sync_duration_seconds_bucket[5m])) by (success, le))
-          labels:
-            quantile: "0.99"
-          record: flux:daemon:sync_duration_seconds:histogram_quantile
-        - expr: |
-            histogram_quantile(0.9, sum(rate(flux_daemon_sync_duration_seconds_bucket[5m])) by (success, le))
-          labels:
-            quantile: "0.9"
-          record: flux:daemon:sync_duration_seconds:histogram_quantile
-        - expr: |
-            histogram_quantile(0.5, sum(rate(flux_daemon_sync_duration_seconds_bucket[5m])) by (success, le))
-          labels:
-            quantile: "0.5"
-          record: flux:daemon:sync_duration_seconds:histogram_quantile
-        - expr: |
-            histogram_quantile(0.99, sum(rate(flux_registry_fetch_duration_seconds_bucket[5m])) by (success, le))
-          labels:
-            quantile: "0.99"
-          record: flux:registry_fetch_duration_seconds:histogram_quantile
-        - expr: |
-            histogram_quantile(0.9, sum(rate(flux_registry_fetch_duration_seconds_bucket[5m])) by (success, le))
-          labels:
-            quantile: "0.9"
-          record: flux:registry_fetch_duration_seconds:histogram_quantile
-        - expr: |
-            histogram_quantile(0.5, sum(rate(flux_registry_fetch_duration_seconds_bucket[5m])) by (success, le))
-          labels:
-            quantile: "0.5"
-          record: flux:registry_fetch_duration_seconds:histogram_quantile
+  - name: flux.rules
+    rules:
+    - expr: |
+        histogram_quantile(0.99, sum(rate(flux_cache_request_duration_seconds_bucket[5m])) by (method, success, le))
+      labels:
+        quantile: "0.99"
+      record: flux:cache_request_duration_seconds:histogram_quantile
+    - expr: |
+        histogram_quantile(0.9, sum(rate(flux_cache_request_duration_seconds_bucket[5m])) by (method, success, le))
+      labels:
+        quantile: "0.9"
+      record: flux:cache_request_duration_seconds:histogram_quantile
+    - expr: |
+        histogram_quantile(0.5, sum(rate(flux_cache_request_duration_seconds_bucket[5m])) by (method, success, le))
+      labels:
+        quantile: "0.5"
+      record: flux:cache_request_duration_seconds:histogram_quantile
+    - expr: |
+        histogram_quantile(0.99, sum(rate(flux_client_fetch_duration_seconds_bucket[5m])) by (kind, success, le))
+      labels:
+        quantile: "0.99"
+      record: flux:client_fetch_duration_seconds:histogram_quantile
+    - expr: |
+        histogram_quantile(0.9, sum(rate(flux_client_fetch_duration_seconds_bucket[5m])) by (kind, success, le))
+      labels:
+        quantile: "0.9"
+      record: flux:client_fetch_duration_seconds:histogram_quantile
+    - expr: |
+        histogram_quantile(0.5, sum(rate(flux_client_fetch_duration_seconds_bucket[5m])) by (kind, success, le))
+      labels:
+        quantile: "0.5"
+      record: flux:client_fetch_duration_seconds:histogram_quantile
+    - expr: |
+        histogram_quantile(0.99, sum(rate(flux_daemon_job_duration_seconds_bucket[5m])) by (success, le))
+      labels:
+        quantile: "0.99"
+      record: flux:daemon:job_duration_seconds:histogram_quantile
+    - expr: |
+        histogram_quantile(0.9, sum(rate(flux_daemon_job_duration_seconds_bucket[5m])) by (success, le))
+      labels:
+        quantile: "0.9"
+      record: flux:daemon:job_duration_seconds:histogram_quantile
+    - expr: |
+        histogram_quantile(0.5, sum(rate(flux_daemon_job_duration_seconds_bucket[5m])) by (success, le))
+      labels:
+        quantile: "0.5"
+      record: flux:daemon:job_duration_seconds:histogram_quantile
+    - expr: |
+        histogram_quantile(0.99, sum(rate(flux_daemon_queue_duration_seconds_bucket[5m])) by (le))
+      labels:
+        quantile: "0.99"
+      record: flux:daemon:queue_duration_seconds:histogram_quantile
+    - expr: |
+        histogram_quantile(0.9, sum(rate(flux_daemon_queue_duration_seconds_bucket[5m])) by (le))
+      labels:
+        quantile: "0.9"
+      record: flux:daemon:queue_duration_seconds:histogram_quantile
+    - expr: |
+        histogram_quantile(0.5, sum(rate(flux_daemon_queue_duration_seconds_bucket[5m])) by (le))
+      labels:
+        quantile: "0.5"
+      record: flux:daemon:queue_duration_seconds:histogram_quantile
+    - expr: |
+        histogram_quantile(0.99, sum(rate(flux_daemon_sync_duration_seconds_bucket[5m])) by (success, le))
+      labels:
+        quantile: "0.99"
+      record: flux:daemon:sync_duration_seconds:histogram_quantile
+    - expr: |
+        histogram_quantile(0.9, sum(rate(flux_daemon_sync_duration_seconds_bucket[5m])) by (success, le))
+      labels:
+        quantile: "0.9"
+      record: flux:daemon:sync_duration_seconds:histogram_quantile
+    - expr: |
+        histogram_quantile(0.5, sum(rate(flux_daemon_sync_duration_seconds_bucket[5m])) by (success, le))
+      labels:
+        quantile: "0.5"
+      record: flux:daemon:sync_duration_seconds:histogram_quantile
+    - expr: |
+        histogram_quantile(0.99, sum(rate(flux_registry_fetch_duration_seconds_bucket[5m])) by (success, le))
+      labels:
+        quantile: "0.99"
+      record: flux:registry_fetch_duration_seconds:histogram_quantile
+    - expr: |
+        histogram_quantile(0.9, sum(rate(flux_registry_fetch_duration_seconds_bucket[5m])) by (success, le))
+      labels:
+        quantile: "0.9"
+      record: flux:registry_fetch_duration_seconds:histogram_quantile
+    - expr: |
+        histogram_quantile(0.5, sum(rate(flux_registry_fetch_duration_seconds_bucket[5m])) by (success, le))
+      labels:
+        quantile: "0.5"
+      record: flux:registry_fetch_duration_seconds:histogram_quantile
