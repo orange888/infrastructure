@@ -293,7 +293,7 @@ spec:
         - mountPath: /tmp/dashboards
           name: sc-dashboard-volume
       - name: grafana
-        image: grafana/grafana:6.4.4
+        image: grafana/grafana:6.4.5
         env:
         - name: GF_PATHS_CONFIG
           value: /etc/grafana/config/grafana.ini
