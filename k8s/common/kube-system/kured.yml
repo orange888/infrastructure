@@ -172,7 +172,7 @@ spec:
         ports:
         - containerPort: 8080
           name: metrics
-        image: weaveworks/kured:master-f2ae011
+        image: weaveworks/kured:master-f6e4062
         imagePullPolicy: Always
         name: kured
         resources:
