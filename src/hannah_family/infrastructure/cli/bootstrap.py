@@ -16,5 +16,5 @@ async def bootstrap(ctx: Context, hostnames):
     await run_playbook("bootstrap",
                        hostnames=hostnames,
                        args=ctx.args,
-                       env={"ANSIBLE_HOST_KEY_CHECKING": "false"})
+                       env={"ANSIBLE_HOST_KEY_CHECKING": "False"})
     await run_playbook("all", hostnames=hostnames, args=ctx.args)

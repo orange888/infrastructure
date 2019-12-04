@@ -21,7 +21,7 @@ class SSHAgent:
                                            stderr=PIPE)
 
         line = await self._proc.stdout.readuntil()
-        self._env = parse_env(line.decode("utf-8"))
+        self._env.update(parse_env(line.decode("utf-8")))
 
         await self.add_key(DEFAULT_SSH_KEY)
 
@@ -34,11 +34,11 @@ class SSHAgent:
 
     async def add_key(self, file: Path):
         """Adds a key to the ssh-agent."""
-        proc, done = await run("ssh-add",
-                               str(file.resolve()),
-                               env=self._env,
-                               stdout=DEVNULL,
-                               stderr=DEVNULL)
+        _, done = await run("ssh-add",
+                            str(file.resolve()),
+                            env=self._env,
+                            stdout=DEVNULL,
+                            stderr=DEVNULL)
         return await done
 
     def env(self):
